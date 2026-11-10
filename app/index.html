@@ -55,7 +55,7 @@
   .rangebox[hidden],.card[hidden],.paintbar[hidden],.weeklabel[hidden]{display:none}
 
   /* 칩 줄 */
-  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:26px 0 22px;flex-wrap:wrap}
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 16px;flex-wrap:wrap}
   .chips{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
   .chip{position:relative;height:44px;min-width:74px;padding:0 20px;border-radius:999px;border:1.5px solid var(--lineC);
         background:#fff;font-weight:700;font-size:15px;transition:background-color .12s;user-select:none;-webkit-user-select:none}
@@ -78,21 +78,23 @@
   .timepick select{border:none;background:transparent;font-weight:700;height:40px;padding:0 2px;cursor:pointer;outline:none}
 
   /* 칠하기 막대 */
-  .paintbar{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;margin:-8px 0 18px;padding:10px 12px;border:1.5px dashed #CFC7B5;border-radius:12px;background:#FFFDF6}
+  .paintbar{display:flex;align-items:center;gap:8px 10px;margin:-4px 0 14px;padding:8px 12px;border:1.5px dashed #CFC7B5;border-radius:12px;background:#FFFDF6}
   .pbwho{display:inline-flex;align-items:center;gap:6px;font-size:14px}
   .pbwho .dot{width:14px;height:14px}
   .pblabel{font-size:13px;color:var(--muted)}
-  .paintbar .pbinput{flex:0 1 230px;height:36px}
-  .recent{display:flex;gap:6px;flex-wrap:wrap}
-  .rchip{height:30px;padding:0 12px;border-radius:999px;border:1.2px solid var(--ink);background:#fff;font-size:13px}
+  .paintbar .pbinput{flex:0 1 200px;min-width:120px;height:34px}
+  .pbwho{flex:none}
+  .recent{display:flex;gap:6px;flex:1 1 0;min-width:0;overflow-x:auto;scrollbar-width:thin;padding:2px 0}
+  .rchip{flex:none}
+  .rchip{height:28px;padding:0 11px;border-radius:999px;border:1.2px solid var(--ink);background:#fff;font-size:13px;white-space:nowrap}
   .rchip.on{background:#FFF0B3;font-weight:700}
 
   /* 표 */
   .card{background:#fff;border:1.5px solid var(--ink);border-radius:16px;padding:6px 8px 14px;isolation:isolate}
-  .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .scroller{overflow:auto;-webkit-overflow-scrolling:touch;max-height:max(420px, calc(100vh - 96px));overscroll-behavior:contain}
   .table{min-width:680px}
-  .thead{display:flex;height:56px;align-items:center;border-bottom:1.5px solid var(--ink)}
-  .tcol{width:var(--tcol);flex:none;align-self:stretch;position:sticky;left:0;z-index:3;background:#fff}
+  .thead{display:flex;height:52px;align-items:center;border-bottom:1.5px solid var(--ink);position:sticky;top:0;z-index:4;background:#fff}
+  .tcol{width:var(--tcol);flex:none;align-self:stretch;position:sticky;left:0;z-index:5;background:#fff}
   .dhead{flex:1;min-width:0;text-align:center;font-weight:700;font-size:16px}
   .dhead small{font-weight:400;color:var(--muted);font-size:13px;margin-left:4px}
   .dhead.today{color:var(--accent)}
@@ -109,10 +111,15 @@
   .cell.free{background:#FFFAE3 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath d='M-1 1 L1 -1 M0 10 L10 0 M9 11 L11 9' stroke='%23F2D26E' stroke-width='1.3'/%3E%3C/svg%3E")}
   .blk{position:absolute;left:4px;right:4px;border-radius:9px;mix-blend-mode:multiply;opacity:.86;pointer-events:none}
   .painting .blk.mine{box-shadow:inset 0 0 0 1.5px var(--lineC)}
-  .lbl{position:absolute;left:8px;right:6px;z-index:1;display:flex;align-items:center;gap:4px;font-size:12px;line-height:15px;font-weight:500;color:var(--ink);pointer-events:none;white-space:nowrap;overflow:hidden}
-  .lbl i,.mlbl i{flex:none;width:7px;height:7px;border-radius:50%;border:1px solid}
-  .lbl i + i,.mlbl i + i{margin-left:-2px}
+  /* 이름표: 블록 색이 진해도 읽히도록 반투명 흰 바탕 */
+  .lbl{position:absolute;left:7px;max-width:calc(100% - 13px);z-index:1;display:flex;align-items:center;gap:4px;padding:1px 7px 1px 2px;
+       border-radius:9px;background:rgba(255,255,255,.86);font-size:12px;line-height:16px;font-weight:500;color:var(--ink);pointer-events:none;white-space:nowrap;overflow:hidden}
   .lbl span,.mlbl span{overflow:hidden;text-overflow:ellipsis}
+  /* 누구 일정인지: 이름 첫 글자 동그라미 */
+  .ini{flex:none;display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 2px;border-radius:8px;border:1.2px solid;font-size:10px;font-weight:700;line-height:1;color:var(--ink);font-style:normal;letter-spacing:-.5px}
+  .ini.more{background:#fff;border-color:var(--ink);font-weight:500}
+  .ini + .ini{margin-left:-4px}
+  .mlbl .ini{min-width:14px;height:14px;font-size:9px}
 
   /* 월간 */
   .mscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -127,7 +134,7 @@
   .mbar{position:relative;height:12px;flex:none;border:1px solid #D9D2C0;border-radius:4px;background:#fff;overflow:hidden;isolation:isolate}
   .mseg{position:absolute;top:0;bottom:0;mix-blend-mode:multiply;opacity:.9}
   .mfree{position:absolute;top:0;bottom:0;background:#FFFAE3 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Cpath d='M-1 1 L1 -1 M0 6 L6 0 M5 7 L7 5' stroke='%23F2D26E' stroke-width='1.2'/%3E%3C/svg%3E")}
-  .mlbl{display:flex;align-items:center;gap:4px;font-size:11.5px;line-height:15px;white-space:nowrap;overflow:hidden;min-width:0}
+  .mlbl{display:flex;align-items:center;gap:4px;font-size:11.5px;line-height:16px;white-space:nowrap;overflow:hidden;min-width:0}
   .mlbl em{font-style:normal;color:var(--muted);flex:none}
   .mmore{font-size:11px;color:var(--muted)}
 
@@ -171,7 +178,12 @@
     .chips{gap:8px}
     .chip{height:40px;min-width:64px;padding:0 14px;font-size:14px}
     .addchip{width:40px;height:40px}
-    .pill{height:40px}
+    .pill{height:38px;font-size:13px;padding:0 12px}
+    .tools{gap:8px}
+    .mepick{padding:0 4px 0 12px}
+    .timepick{padding:0 4px 0 12px}
+    .paintbar{flex-wrap:wrap}
+    .recent{flex-basis:100%}
     :root{--rowH:42px;--tcol:46px}
   }
 </style>
@@ -476,6 +488,38 @@
     for (let i = 0; i < COLORS.length; i++) if (!used.has(i)) return i;
     return 0;
   }
+  // 켜진 사람이 많을수록 블록을 옅게: 5명이 다 겹쳐도 검게 뭉개지지 않도록
+  const blockAlpha = (n) => (n <= 2 ? 0.86 : n === 3 ? 0.72 : n === 4 ? 0.62 : 0.55);
+  // 이름표에 쓸 짧은 이름: 첫 글자, 첫 글자가 겹치는 사람끼리는 두 글자 (재원·재민 → 재원·재민, 원식 → 원)
+  let TAGS = {};
+  function refreshTags() {
+    const list = peopleList();
+    const first = (p) => Array.from(p.name)[0] || '?';
+    const count = {};
+    list.forEach((p) => { count[first(p)] = (count[first(p)] || 0) + 1; });
+    TAGS = {};
+    list.forEach((p) => { TAGS[p.id] = count[first(p)] > 1 ? Array.from(p.name).slice(0, 2).join('') : first(p); });
+  }
+  // 이름 첫 글자 동그라미 (3명 이상이면 2명까지 + "+N")
+  function appendInitials(parent, people) {
+    const shown = people.length > 2 ? people.slice(0, 1) : people;
+    shown.forEach((p) => parent.appendChild(initialEl(p)));
+    if (people.length > shown.length) {
+      const m = document.createElement('i');
+      m.className = 'ini more';
+      m.textContent = `+${people.length - shown.length}`;
+      parent.appendChild(m);
+    }
+  }
+  function initialEl(p) {
+    const c = COLORS[p.color];
+    const el = document.createElement('i');
+    el.className = 'ini';
+    el.textContent = TAGS[p.id] || Array.from(p.name)[0] || '';
+    el.style.background = c.fill; el.style.borderColor = c.line;
+    el.title = p.name;
+    return el;
+  }
   // 하루 안에서 같은 이름이 이어진 칸을 한 덩어리로 묶기 → [{start, end, label}] (hours 기준 위치)
   function runsOf(set, labs, d, hours) {
     const runs = [];
@@ -670,11 +714,13 @@
     const ft = $('freeToggle');
     ft.classList.toggle('on', state.showFree);
     ft.setAttribute('aria-pressed', state.showFree);
+    refreshTags();
     if (state.view === 'month') { renderMonth(); return; }
     const visible = peopleList().filter((p) => !state.hidden.has(p.id));
     const painting = !!(state.me && state.people[state.me] && !state.readOnly);
     $('table').classList.toggle('painting', painting);
     const hours = hoursList();
+    const alpha = blockAlpha(visible.length);
 
     cols.forEach((col) => {
       col.el.querySelectorAll('.blk,.lbl').forEach((n) => n.remove());
@@ -686,14 +732,15 @@
           const blk = document.createElement('div');
           blk.className = 'blk' + (p.id === state.me ? ' mine' : '');
           blk.style.background = c.fill;
+          blk.style.opacity = alpha;
           blk.style.setProperty('--lineC', c.line);
           blk.style.top = `calc(var(--rowH) * ${r.start} + 3px)`;
           blk.style.height = `calc(var(--rowH) * ${r.end - r.start} - 6px)`;
           col.el.appendChild(blk);
           if (r.label) {
             const k = r.start + '|' + r.label;
-            if (!tags.has(k)) tags.set(k, { start: r.start, label: r.label, colors: [] });
-            tags.get(k).colors.push(c);
+            if (!tags.has(k)) tags.set(k, { start: r.start, label: r.label, people: [] });
+            tags.get(k).people.push(p);
           }
         });
       });
@@ -703,8 +750,8 @@
         stack[t.start] = k + 1;
         const lb = document.createElement('div');
         lb.className = 'lbl';
-        lb.style.top = `calc(var(--rowH) * ${t.start} + ${6 + k * 16}px)`;
-        t.colors.forEach((c) => { const dot = document.createElement('i'); dot.style.background = c.fill; dot.style.borderColor = c.line; lb.appendChild(dot); });
+        lb.style.top = `calc(var(--rowH) * ${t.start} + ${5 + k * 20}px)`;
+        appendInitials(lb, t.people);
         const tx = document.createElement('span');
         tx.textContent = t.label;
         lb.appendChild(tx);
@@ -760,6 +807,7 @@
           const seg = document.createElement('div');
           seg.className = 'mseg';
           seg.style.background = c.fill;
+          seg.style.opacity = blockAlpha(visible.length);
           seg.style.left = `${(r.start / n) * 100}%`; seg.style.width = `${((r.end - r.start) / n) * 100}%`;
           bar.appendChild(seg);
           items.push({ start: r.start, hour: hours[r.start], text: r.label, p });
@@ -769,14 +817,14 @@
       const groups = new Map();
       items.filter((x) => x.text).forEach((x) => {
         const k = x.start + '|' + x.text;
-        if (!groups.has(k)) groups.set(k, { start: x.start, hour: x.hour, text: x.text, colors: [] });
-        groups.get(k).colors.push(COLORS[x.p.color]);
+        if (!groups.has(k)) groups.set(k, { start: x.start, hour: x.hour, text: x.text, people: [] });
+        groups.get(k).people.push(x.p);
       });
       const named = [...groups.values()].sort((a, b) => a.start - b.start);
       named.slice(0, 3).forEach((x) => {
         const row = document.createElement('div');
         row.className = 'mlbl';
-        x.colors.forEach((c) => { const dot = document.createElement('i'); dot.style.background = c.fill; dot.style.borderColor = c.line; row.appendChild(dot); });
+        appendInitials(row, x.people);
         const tm = document.createElement('em');
         tm.textContent = `${x.hour}시`;
         const tx = document.createElement('span');
