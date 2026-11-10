@@ -17,9 +17,12 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 10
-        && request.resource.data.color is int
-        && request.resource.data.color >= 0
-        && request.resource.data.color <= 4;
+        // 색: 기본 색 번호 0~4 또는 직접 고른 색 '#RRGGBB'
+        && ((request.resource.data.color is int
+             && request.resource.data.color >= 0
+             && request.resource.data.color <= 4)
+            || (request.resource.data.color is string
+             && request.resource.data.color.matches('^#[0-9A-Fa-f]{6}$')));
     }
 
     match /rooms/{room}/busy/{id} {

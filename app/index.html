@@ -221,6 +221,16 @@
   .prow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
   .prow .sbtn{padding:0 10px}
   .dot{width:18px;height:18px;border-radius:50%;flex:none;border:1.5px solid}
+  .dot.pick{width:26px;height:26px;padding:0;cursor:pointer}
+  .dot.pick:hover{outline:2px solid var(--ink);outline-offset:2px}
+  .swatches{display:flex;flex-wrap:wrap;gap:8px;margin:-2px 0 12px 34px;padding:10px;border:1.5px dashed #CFC7B5;border-radius:12px;background:#fff}
+  .sw{position:relative;width:28px;height:28px;border-radius:50%;border:2px solid;padding:0;cursor:pointer}
+  .sw.on{outline:2.5px solid var(--ink);outline-offset:2px}
+  .sw.used::after{content:'';position:absolute;right:-3px;bottom:-3px;width:9px;height:9px;border-radius:50%;background:#fff;border:1.5px solid var(--ink)}
+  .sw.custom{display:grid;place-items:center;border:2px dashed var(--ink);background:#fff;color:var(--ink);overflow:hidden}
+  .sw.custom svg{width:14px;height:14px}
+  .sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .swnote{flex-basis:100%;font-size:12px;color:var(--muted)}
   .tin{flex:1;min-width:0;height:40px;border:1.5px solid var(--ink);border-radius:10px;padding:0 12px;background:#fff}
   .tin:focus{outline:2px solid #F0D27A;outline-offset:0}
   .sbtn{height:40px;border:1.5px solid var(--ink);border-radius:10px;background:#fff;padding:0 14px;font-weight:700;font-size:14px;white-space:nowrap}
@@ -351,7 +361,7 @@
 <div class="modal-bg" id="peopleModal" role="dialog" aria-modal="true" aria-labelledby="peopleTitle">
   <div class="modal">
     <h2 id="peopleTitle">함께 보는 사람</h2>
-    <p class="sub">최대 5명까지 추가할 수 있어요. 이름을 고치면 바로 저장돼요. "일정 비우기"는 사람은 남기고 그 사람의 모든 일정만 지워요.</p>
+    <p class="sub">최대 5명까지 추가할 수 있어요. 이름을 고치면 바로 저장돼요. 색 동그라미를 누르면 색을 바꿀 수 있어요. "일정 비우기"는 사람은 남기고 그 사람의 모든 일정만 지워요.</p>
     <div id="peopleList"></div>
     <hr class="divider">
     <div class="prow">
@@ -473,6 +483,36 @@
     { fill:'#C4B3E6', line:'#7D63B5' },
     { fill:'#9EC5EC', line:'#4A85C0' },
   ];
+  // 고를 수 있는 파스텔 색: 기본 5가지(위 COLORS, 번호로 저장) + 7가지(색 코드로 저장). "직접 고르기"로 아무 색이나.
+  const EXTRA_COLORS = ['#F6C28B', '#F2D57E', '#A8D8A0', '#F4A6A6', '#EBB2D6', '#B3B8EE', '#D8C3A5'];
+  // 칩 테두리·점에 쓰는 같은 색의 진한 톤을 만들어요
+  function darkTone(hex) {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+    let h = 0, sat = 0;
+    if (d) {
+      sat = d / (1 - Math.abs(2 * l - 1));
+      h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      h *= 60; if (h < 0) h += 360;
+    }
+    const L = Math.max(0.24, l - 0.24), S = Math.min(0.75, sat * 0.85 + 0.05);
+    const c = (1 - Math.abs(2 * L - 1)) * S, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = L - c / 2;
+    const [r1, g1, b1] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+    return '#' + [r1, g1, b1].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('').toUpperCase();
+  }
+  // 저장된 색: 0~4(기본 색 번호) 또는 '#RRGGBB'
+  function cleanColor(c) {
+    if (Number.isInteger(c) && c >= 0 && c < COLORS.length) return c;
+    if (typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c)) {
+      const k = c.toUpperCase(), i = COLORS.findIndex((x) => x.fill === k);
+      return i >= 0 ? i : k;
+    }
+    return 0;
+  }
+  function colorOf(c) {
+    const v = cleanColor(c);
+    return typeof v === 'number' ? COLORS[v] : { fill: v, line: darkTone(v) };
+  }
   const DAYS = ['월','화','수','목','금','토','일'];
   const MAX = 5;
   const MAX_RANGE = 31;   // 기간 보기 최대 일수
@@ -512,7 +552,7 @@
   const dayIdx = (d) => (d.getDay() + 6) % 7;
   const monthKeyOf = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
   const validCell = (c) => typeof c === 'string' && /^[0-6]-([0-9]|1[0-9]|2[0-3])$/.test(c);
-  const clampColor = (c) => (Number.isInteger(c) && c >= 0 && c < COLORS.length ? c : 0);
+  const clampColor = cleanColor;
   const cleanName = (s) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, 10);
   const cleanLabel = (s) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, 12);
   const thisWeekKey = () => weekKey(mondayOf(new Date()));
@@ -862,7 +902,7 @@
     if (many) parent.classList.add('many');
   }
   function initialEl(p, short = false) {
-    const c = COLORS[p.color];
+    const c = colorOf(p.color);
     const el = document.createElement('i');
     el.className = 'ini';
     el.textContent = short ? (SHORT[p.id] || Array.from(p.name)[0] || '') : (TAGS[p.id] || Array.from(p.name)[0] || '');
@@ -1009,7 +1049,7 @@
     box.innerHTML = '';
     const list = peopleList();
     list.forEach((p) => {
-      const c = COLORS[p.color];
+      const c = colorOf(p.color);
       const b = document.createElement('button');
       const on = !state.hidden.has(p.id);
       b.className = 'chip' + (on ? ' on' : '');
@@ -1053,7 +1093,7 @@
     const show = !!(me && !state.readOnly && state.view !== 'month' && state.mode !== 'pending');
     $('paintbar').hidden = !show;
     if (!show) return;
-    const c = COLORS[me.color];
+    const c = colorOf(me.color);
     $('pbDot').style.background = c.fill;
     $('pbDot').style.borderColor = c.line;
     $('pbName').textContent = me.name;
@@ -1092,7 +1132,7 @@
       const per = visible.map((p) => ({ p, set: cellsOf(p.id, col.wk), labs: labelsOf(p.id, col.wk) }));
       const tags = new Map();   // 같은 시각·같은 이름은 이름표 하나에 색 점 여러 개
       per.forEach(({ p, set, labs }) => {
-        const c = COLORS[p.color];
+        const c = colorOf(p.color);
         runsOf(set, labs, col.d, hours).forEach((r) => {
           const blk = document.createElement('div');
           blk.className = 'blk' + (p.id === state.me ? ' mine' : '');
@@ -1179,7 +1219,7 @@
       }
       const items = [];
       per.forEach(({ p, set, labs }) => {
-        const c = COLORS[p.color];
+        const c = colorOf(p.color);
         runsOf(set, labs, d, hours).forEach((r) => {
           const seg = document.createElement('div');
           seg.className = 'mseg';
@@ -1517,9 +1557,11 @@
     const list = peopleList();
     if (!list.length) { const p = document.createElement('p'); p.className = 'note'; p.textContent = '아직 아무도 없어요.'; box.appendChild(p); }
     list.forEach((p) => {
-      const c = COLORS[p.color];
+      const c = colorOf(p.color);
       const row = document.createElement('div'); row.className = 'prow';
-      const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = c.fill; dot.style.borderColor = c.line;
+      const dot = document.createElement('button'); dot.className = 'dot pick'; dot.style.background = c.fill; dot.style.borderColor = c.line;
+      dot.title = `${p.name} 색 바꾸기`; dot.setAttribute('aria-label', `${p.name} 색 바꾸기`); dot.disabled = state.readOnly;
+      dot.addEventListener('click', () => { swatchFor = swatchFor === p.id ? '' : p.id; renderPeopleModal(); });
       const inp = document.createElement('input'); inp.className = 'tin'; inp.maxLength = 10; inp.value = p.name; inp.setAttribute('aria-label', `${p.name} 이름`);
       const commit = () => {
         const n = cleanName(inp.value);
@@ -1548,16 +1590,64 @@
         clearSchedules(p.id);
       });
       row.append(dot, inp, clr, del); box.appendChild(row);
+      if (swatchFor === p.id && !state.readOnly) box.appendChild(swatchPanel(p));
     });
     const full = list.length >= MAX;
-    const nc = COLORS[freeColor()];
+    const nc = colorOf(freeColor());
     $('newDot').style.background = full ? '#fff' : nc.fill;
     $('newDot').style.borderColor = full ? '#CFC7B5' : nc.line;
     $('newName').disabled = full || state.readOnly;
     $('addBtn').disabled = full || state.readOnly;
     $('addNote').textContent = state.readOnly ? '보기 전용이라 바꿀 수 없어요.' : full ? '최대 5명까지 함께 볼 수 있어요. 새로 넣으려면 한 명을 삭제해 주세요.' : '';
   }
-  function openPeople() { renderPeopleModal(); openModal('peopleModal'); if (!$('newName').disabled && !peopleList().length) $('newName').focus(); }
+  // 색 고르기 판: 파스텔 12가지 + 직접 고르기
+  let swatchFor = '';
+  function setPersonColor(pid, value) {
+    const cur = state.people[pid];
+    if (!cur || state.readOnly) return;
+    const color = cleanColor(value);
+    swatchFor = '';
+    if (color !== cur.color) { savePerson(pid, { ...cur, color }); renderAll(); }
+    renderPeopleModal();
+  }
+  function swatchPanel(p) {
+    const wrap = document.createElement('div');
+    wrap.className = 'swatches';
+    const mine = cleanColor(p.color);
+    const usedBy = {};
+    peopleList().forEach((q) => { if (q.id !== p.id) usedBy[String(cleanColor(q.color))] = q.name; });
+    const all = [...COLORS.map((_, i) => i), ...EXTRA_COLORS];
+    all.forEach((val) => {
+      const c = colorOf(val), key = String(cleanColor(val));
+      const b = document.createElement('button');
+      b.className = 'sw' + (key === String(mine) ? ' on' : '');
+      b.style.background = c.fill; b.style.borderColor = c.line;
+      b.title = usedBy[key] ? `${usedBy[key]}이(가) 쓰는 색` : '이 색으로 바꾸기';
+      if (usedBy[key]) b.classList.add('used');
+      b.addEventListener('click', () => setPersonColor(p.id, val));
+      wrap.appendChild(b);
+    });
+    // 직접 고르기
+    const custom = document.createElement('label');
+    const isCustom = typeof mine === 'string' && !EXTRA_COLORS.includes(mine);
+    custom.className = 'sw custom' + (isCustom ? ' on' : '');
+    custom.title = '직접 고르기';
+    if (isCustom) { custom.style.background = mine; custom.style.borderColor = darkTone(mine); custom.style.borderStyle = 'solid'; }
+    else custom.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 5v10M5 10h10"/></svg>';
+    const ci = document.createElement('input');
+    ci.type = 'color';
+    ci.value = colorOf(p.color).fill.toLowerCase();
+    ci.setAttribute('aria-label', `${p.name} 색 직접 고르기`);
+    ci.addEventListener('change', () => setPersonColor(p.id, ci.value));
+    custom.appendChild(ci);
+    wrap.appendChild(custom);
+    const note = document.createElement('div');
+    note.className = 'swnote';
+    note.textContent = '색을 고르면 바로 바뀌어요. 테두리용 진한 색은 자동으로 맞춰져요.';
+    wrap.appendChild(note);
+    return wrap;
+  }
+  function openPeople() { swatchFor = ''; renderPeopleModal(); openModal('peopleModal'); if (!$('newName').disabled && !peopleList().length) $('newName').focus(); }
   function addPerson() {
     const name = cleanName($('newName').value);
     if (!name || state.readOnly || peopleList().length >= MAX) return;
