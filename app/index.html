@@ -105,6 +105,10 @@
   .seg button{border:none;background:transparent;padding:7px 15px;font-size:14px;font-weight:700}
   .seg button + button{border-left:1.5px solid var(--ink)}
   .seg button.on{background:var(--ink);color:#fff}
+  .seg button[hidden]{display:none}
+  .datetoggle{height:36px;border-radius:999px;padding:0 14px;font-size:13px}
+  .datetoggle.on{background:#FFF0B3}
+  .navbtn[hidden]{display:none}
   .rangebox{display:inline-flex;align-items:center;gap:6px;font-weight:700}
   .rangebox input{height:36px;border:1.5px solid var(--ink);border-radius:8px;background:#fff;padding:0 8px;font-size:14px;font-weight:500}
   .rangebox[hidden],.card[hidden],.paintbar[hidden],.weeklabel[hidden]{display:none}
@@ -184,6 +188,11 @@
   .mhead{text-align:center;font-weight:700;font-size:14px;padding:12px 0 10px;border-bottom:1.5px solid var(--ink)}
   .mday{display:flex;flex-direction:column;gap:5px;min-height:112px;min-width:0;padding:7px 7px 8px;border:none;border-top:1px solid var(--line);background:#fff;text-align:left;cursor:pointer}
   .mday:not(.c0){border-left:1px solid var(--line)}
+  .mgrid.routine{grid-template-columns:64px repeat(7,minmax(0,1fr))}
+  .mweek{border:none;border-top:1px solid var(--line);background:#FFFDF6;font-weight:700;font-size:13px;cursor:pointer}
+  .mweek:hover{background:#FFF0B3}
+  .mgrid.routine .mday.c0{border-left:1px solid var(--line)}
+  .mgrid.routine .mnum{display:none}
   .mday:hover{background:#FFFDF6}
   .mday.other{opacity:.42}
   .mnum{font-size:13px;font-weight:700}
@@ -266,6 +275,7 @@
       <h1 id="calTitle" tabindex="0" title="눌러서 이름 바꾸기">우리 일정</h1>
     </div>
     <div class="headright">
+    <button class="pill datetoggle" id="routineToggle" aria-pressed="false" title="날짜 없이 요일·시간만으로 정하는 루틴 시간표">날짜 없애기</button>
     <div class="seg" role="tablist" aria-label="보기 방식">
       <button data-view="week" role="tab">주간</button><button data-view="month" role="tab">월간</button><button data-view="range" role="tab">기간</button>
     </div>
@@ -326,6 +336,7 @@
     <span id="status"></span>
     <div class="acts">
       <button class="linkbtn" id="copyLastWeek" hidden>지난주 내 일정 가져오기</button>
+      <button class="linkbtn" id="weekToRoutine" hidden>보던 주를 루틴으로 가져오기</button>
       <button class="sharebtn" id="roomBtn" hidden>함께 쓰기</button>
       <button class="sharebtn" id="shareLink">링크로 일정 보내기</button>
       <button class="sharebtn" id="installBtn" hidden>앱으로 설치</button>
@@ -506,6 +517,11 @@
   const cleanLabel = (s) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, 12);
   const thisWeekKey = () => weekKey(mondayOf(new Date()));
   const isDateKey = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  // 날짜 없는 루틴은 날짜 대신 이 이름으로 저장해요: RW = 매주 루틴, RM1~RM5 = 매달 1~5주차 루틴
+  const ROUTINE_MONTH = ['RM1', 'RM2', 'RM3', 'RM4', 'RM5'];
+  const isRoutineKey = (s) => s === 'RW' || ROUTINE_MONTH.includes(s);
+  const isWeekKey = (s) => isDateKey(s) || isRoutineKey(s);
+  const routineLabel = (k) => (k === 'RW' ? '매주' : `매달 ${k.slice(2)}주차`);
   // 칸 이름표 정리: 칠한 칸에 붙은 이름만 남김
   function cleanLabels(obj, cells) {
     const out = {};
@@ -531,6 +547,8 @@
     month: monthKeyOf(new Date()),
     range: { start: thisWeekKey(), end: dayKey(addDays(mondayOf(new Date()), 13)) },
     hours: { start: 9, end: 21 },   // 표에 보일 시간대 (끝 시각은 포함 안 함)
+    routine: false,           // 날짜 없애기(루틴 시간표)
+    rweek: 'RW',              // 루틴에서 보고 있는 주: RW(매주) 또는 RM1~RM5(매달 n주차)
     label: '',                // 지금 칠하는 일정 이름
     recent: [],               // 최근 쓴 일정 이름
     hidden: new Set(),
@@ -751,6 +769,9 @@
       if (typeof p.me === 'string') state.me = p.me;
       state.showFree = !!p.showFree;
       if (['week', 'month', 'range'].includes(p.view)) state.view = p.view;
+      state.routine = !!p.routine;
+      if (isRoutineKey(p.rweek)) state.rweek = p.rweek;
+      if (state.routine && state.view === 'range') state.view = 'week';
       const h = p.hours;
       if (h && Number.isInteger(h.start) && Number.isInteger(h.end) && h.start >= 0 && h.end <= 24 && h.end > h.start) state.hours = { start: h.start, end: h.end };
       if (p.range && isDateKey(p.range.start) && isDateKey(p.range.end)) { const r = normRange(p.range.start, p.range.end); state.range = { start: r.start, end: r.end }; }
@@ -763,7 +784,7 @@
       localStorage.setItem(prefKey(), JSON.stringify({
         hidden: [...state.hidden], me: state.me, showFree: state.showFree,
         view: state.view, hours: state.hours, range: { start: state.range.start, end: state.range.end },
-        recent: state.recent, label: state.label,
+        recent: state.recent, label: state.label, routine: state.routine, rweek: state.rweek,
       }));
     } catch (e) {}
   }
@@ -788,7 +809,14 @@
     const s = mondayOf(new Date(y, m - 1, 1)), e = addDays(mondayOf(new Date(y, m, 0)), 6);
     return Array.from({ length: daysBetween(s, e) + 1 }, (_, i) => addDays(s, i));
   }
-  const neededWeeks = () => [...new Set((state.view === 'month' ? monthDates() : tableDates()).map(weekOf))];
+  const neededWeeks = () => {
+    if (state.routine) return state.view === 'month' ? [...ROUTINE_MONTH] : [state.rweek];
+    return [...new Set((state.view === 'month' ? monthDates() : tableDates()).map(weekOf))];
+  };
+  // 표의 세로줄: 날짜 달력이면 날짜마다, 루틴이면 월~일 (날짜 없음)
+  const tableCols = () => (state.routine
+    ? DAYS.map((_, d) => ({ date: null, wk: state.rweek, d }))
+    : tableDates().map((date) => ({ date, wk: weekOf(date), d: dayIdx(date) })));
   const entry = (pid, wk) => state.busy[`${wk}_${pid}`];
   function cellsOf(pid, wk = state.week) {
     if (drag && drag.pid === pid && drag.sets.has(wk)) return drag.sets.get(wk);
@@ -875,8 +903,8 @@
   /* ---------- 표 만들기 (주간·기간) ---------- */
   let tableSig = '', cols = [];
   function buildTable() {
-    const dates = tableDates(), hours = hoursList();
-    const sig = dates.map(dayKey).join(',') + '|' + hours.join(',');
+    const specs = tableCols(), hours = hoursList();
+    const sig = specs.map((c) => c.wk + ':' + c.d).join(',') + '|' + hours.join(',');
     if (sig === tableSig) return;
     tableSig = sig;
     const thead = $('thead'), tbody = $('tbody'), timeInner = $('timeInner');
@@ -890,8 +918,7 @@
       s.style.top = `calc(var(--rowH) * ${i})`;
       timeInner.appendChild(s);
     }
-    cols = dates.map((date) => {
-      const wk = weekOf(date), d = dayIdx(date);
+    cols = specs.map(({ date, wk, d }) => {
       const head = document.createElement('div');
       head.className = 'dhead';
       thead.appendChild(head);
@@ -908,7 +935,7 @@
       tbody.appendChild(el);
       return { date, wk, d, head, el, cells };
     });
-    $('table').style.minWidth = `${Math.max(680, 56 + dates.length * 84)}px`;
+    $('table').style.minWidth = `${Math.max(680, 56 + specs.length * 84)}px`;
   }
 
   /* ---------- 그리기 ---------- */
@@ -920,10 +947,22 @@
     });
     const isRange = state.view === 'range', isMonth = state.view === 'month';
     const now = new Date();
+    const rt = state.routine;
+    $('routineToggle').classList.toggle('on', rt);
+    $('routineToggle').setAttribute('aria-pressed', rt);
+    document.querySelector('.seg button[data-view="range"]').hidden = rt;
     $('weekLabel').hidden = isRange;
     $('rangeBox').hidden = !isRange;
     let atNow = false;
-    if (state.view === 'week') {
+    if (rt) {
+      // 루틴: 매주는 넘길 게 없고, 매달 n주차는 1~5주차 사이를 넘겨요
+      $('weekLabel').textContent = isMonth ? '매달 반복 · 1~5주차' : state.rweek === 'RW' ? '매주 반복' : `${routineLabel(state.rweek)} 반복`;
+      const navOn = !isMonth && state.rweek !== 'RW';
+      $('prevWeek').hidden = !navOn; $('nextWeek').hidden = !navOn;
+      atNow = true;
+      $('prevWeek').setAttribute('aria-label', '이전 주차');
+      $('nextWeek').setAttribute('aria-label', '다음 주차');
+    } else if (state.view === 'week') {
       const mon = parseKey(state.week), sun = addDays(mon, 6);
       const left = `${mon.getMonth() + 1}월 ${mon.getDate()}일`;
       const right = mon.getMonth() === sun.getMonth() ? `${sun.getDate()}일` : `${sun.getMonth() + 1}월 ${sun.getDate()}일`;
@@ -939,9 +978,12 @@
       const t = dayKey(now);
       atNow = state.range.start <= t && t <= state.range.end;
     }
-    const unit = state.view === 'week' ? '주' : isMonth ? '달' : '기간';
-    $('prevWeek').setAttribute('aria-label', `이전 ${unit}`);
-    $('nextWeek').setAttribute('aria-label', `다음 ${unit}`);
+    if (!rt) {
+      $('prevWeek').hidden = false; $('nextWeek').hidden = false;
+      const unit = state.view === 'week' ? '주' : isMonth ? '달' : '기간';
+      $('prevWeek').setAttribute('aria-label', `이전 ${unit}`);
+      $('nextWeek').setAttribute('aria-label', `다음 ${unit}`);
+    }
     $('thisWeek').textContent = state.view === 'week' ? '이번 주' : isMonth ? '이번 달' : '오늘부터';
     $('thisWeek').hidden = atNow;
     $('tableCard').hidden = isMonth;
@@ -951,6 +993,7 @@
       cols.forEach((c, i) => {
         c.head.innerHTML = '';
         c.head.append(DAYS[c.d]);
+        if (!c.date) { c.head.classList.toggle('today', state.rweek === 'RW' && c.d === dayIdx(now)); return; }   // 루틴: 날짜 없음
         const sm = document.createElement('small');
         sm.textContent = (c.date.getDate() === 1 || (i === 0 && isRange)) ? `${c.date.getMonth() + 1}/${c.date.getDate()}` : c.date.getDate();
         c.head.appendChild(sm);
@@ -1085,7 +1128,7 @@
         const cell = col.cells[i];
         const free = visible.length > 0 && who.length === 0;
         cell.classList.toggle('free', state.showFree && free);
-        cell.title = `${col.date.getMonth() + 1}/${col.date.getDate()}(${DAYS[col.d]}) ${h}시–${h + 1}시 · ` + (visible.length === 0 ? '고른 사람이 없어요' : who.length ? who.join(', ') : '모두 비어 있어요');
+        cell.title = (col.date ? `${col.date.getMonth() + 1}/${col.date.getDate()}(${DAYS[col.d]})` : `${routineLabel(col.wk)} ${DAYS[col.d]}요일`) + ` ${h}시–${h + 1}시 · ` + (visible.length === 0 ? '고른 사람이 없어요' : who.length ? who.join(', ') : '모두 비어 있어요');
       });
     });
   }
@@ -1094,18 +1137,30 @@
   function renderMonth() {
     const box = $('mgrid');
     box.innerHTML = '';
+    const rt = state.routine;
+    box.classList.toggle('routine', rt);
+    if (rt) { const h = document.createElement('div'); h.className = 'mhead'; box.appendChild(h); }
     DAYS.forEach((d) => { const h = document.createElement('div'); h.className = 'mhead'; h.textContent = d; box.appendChild(h); });
     const visible = peopleList().filter((p) => !state.hidden.has(p.id));
     const hours = hoursList(), n = hours.length;
     const m = Number(state.month.split('-')[1]);
     const t = dayKey(new Date());
-    monthDates().forEach((date) => {
-      const wk = weekOf(date), d = dayIdx(date);
+    // 날짜 달력: 이번 달 날짜들 / 루틴: 1~5주차 × 월~일 (날짜 없음)
+    const slots = rt
+      ? ROUTINE_MONTH.flatMap((wk, wi) => DAYS.map((_, d) => ({ wk, d, date: null, wi })))
+      : monthDates().map((date) => ({ wk: weekOf(date), d: dayIdx(date), date }));
+    slots.forEach(({ wk, d, date, wi }) => {
+      if (rt && d === 0) {
+        const rh = document.createElement('button');
+        rh.className = 'mweek'; rh.textContent = `${wi + 1}주차`; rh.title = `매달 ${wi + 1}주차 표 열기`;
+        rh.addEventListener('click', () => { state.rweek = wk; setView('week'); });
+        box.appendChild(rh);
+      }
       const cell = document.createElement('button');
-      cell.className = 'mday' + (d === 0 ? ' c0' : '') + (date.getMonth() + 1 !== m ? ' other' : '') + (dayKey(date) === t ? ' today' : '');
+      cell.className = 'mday' + (d === 0 ? ' c0' : '') + (date && date.getMonth() + 1 !== m ? ' other' : '') + (date && dayKey(date) === t ? ' today' : '');
       const num = document.createElement('div');
       num.className = 'mnum';
-      num.textContent = date.getDate();
+      num.textContent = date ? date.getDate() : '';   // 루틴은 날짜 없음
       const bar = document.createElement('div');
       bar.className = 'mbar';
       const per = visible.map((p) => ({ p, set: cellsOf(p.id, wk), labs: labelsOf(p.id, wk) }));
@@ -1156,8 +1211,8 @@
       });
       if (named.length > 3) { const more = document.createElement('div'); more.className = 'mmore'; more.textContent = `+${named.length - 3}개 더`; cell.appendChild(more); }
       const busyNames = [...new Set(items.map((x) => x.p.name))];
-      cell.title = `${date.getMonth() + 1}/${date.getDate()}(${DAYS[d]})` + (busyNames.length ? ` · ${busyNames.join(', ')} 일정 있음` : ' · 일정 없음') + ' · 누르면 이 주를 자세히 봐요';
-      cell.addEventListener('click', () => { state.week = wk; setView('week'); });
+      cell.title = (date ? `${date.getMonth() + 1}/${date.getDate()}(${DAYS[d]})` : `매달 ${wi + 1}주차 ${DAYS[d]}요일`) + (busyNames.length ? ` · ${busyNames.join(', ')} 일정 있음` : ' · 일정 없음') + (date ? ' · 누르면 이 주를 자세히 봐요' : ' · 누르면 이 주차를 자세히 봐요');
+      cell.addEventListener('click', () => { if (rt) state.rweek = wk; else state.week = wk; setView('week'); });
       box.appendChild(cell);
     });
   }
@@ -1169,11 +1224,12 @@
     const me = state.people[state.me];
     if (state.mode === 'pending') h.textContent = '일정을 불러오는 중이에요…';
     else if (!peopleList().length) h.textContent = '+ 버튼을 눌러 함께 볼 사람을 추가해 보세요.';
+    else if (state.routine && state.view === 'month') h.textContent = '날짜 없이 매달 반복되는 루틴이에요(1~5주차). 주차나 칸을 누르면 그 주차 표로 들어가 칠할 수 있어요. 매주 반복되는 시간표는 "주간"에 있어요.';
     else if (state.view === 'month') h.textContent = '날짜마다 색 막대(왼쪽이 이른 시간)와 일정 이름이 보여요. 색이 겹쳐 진한 곳은 여러 명이 바쁜 시간이에요. 날짜를 누르면 그 주를 자세히 보고 칠할 수 있어요.';
     else if (me && !state.readOnly) h.textContent = state.label
       ? `${me.name}의 "${state.label}" 일정을 칠하는 중이에요. 칸을 누르거나 끌어서 칠하고, 같은 이름으로 칠한 칸을 다시 누르면 지워져요.`
       : `${me.name}의 바쁜 시간을 칠하는 중이에요. 위 "일정 이름"을 적고 칠하면 칸에 이름이 같이 보여요. 칠한 칸을 다시 누르면 지워져요.`;
-    else h.textContent = DEFAULT_HINT;
+    else h.textContent = state.routine ? `날짜 없이 요일과 시간만으로 저장되는 ${routineLabel(state.rweek)} 루틴이에요. 학교 시간표처럼 칠해 두세요.` : DEFAULT_HINT;
   }
   function flash(msg) {
     const h = $('hint');
@@ -1192,7 +1248,10 @@
     if (state.statusNote) s = state.statusNote;
     $('status').textContent = s;
     const me = state.people[state.me];
-    $('copyLastWeek').hidden = !(me && !state.readOnly && state.mode !== 'pending' && state.view === 'week' && cellsOf(state.me, state.week).size === 0);
+    $('copyLastWeek').hidden = state.routine || !(me && !state.readOnly && state.mode !== 'pending' && state.view === 'week' && cellsOf(state.me, state.week).size === 0);
+    // 루틴(매주)이 비어 있으면, 날짜 달력에서 보던 주를 통째로 옮겨 올 수 있게
+    const routineEmpty = state.routine && state.view === 'week' && state.rweek === 'RW' && peopleList().every((p) => cellsOf(p.id, 'RW').size === 0);
+    $('weekToRoutine').hidden = !(routineEmpty && peopleList().length && !state.readOnly && state.mode !== 'pending');
     $('shareLink').hidden = state.mode === 'db';   // 공유 저장소에서는 이미 모두 같은 일정을 봐요
     $('roomBtn').hidden = !CLOUD_READY || IS_ARTIFACT || state.mode === 'pending';
     $('roomBtn').textContent = state.room ? `함께 쓰는 방 ${fmtRoom(state.room).slice(0, 4)}…` : '함께 쓰기';
@@ -1320,9 +1379,45 @@
     if (state.mode === 'db') subscribeBusy();
     renderAll();
   }
-  function setView(v) { state.view = v; savePrefs(); onViewChange(); }
-  document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
+  function setView(v) {
+    if (state.routine && v === 'range') v = 'week';
+    state.view = v; savePrefs(); onViewChange();
+  }
+  $('routineToggle').addEventListener('click', () => {
+    state.routine = !state.routine;
+    if (state.routine) { state.rweek = 'RW'; if (state.view === 'range') state.view = 'week'; }
+    savePrefs(); onViewChange();
+    flash(state.routine ? '날짜를 없앴어요. 요일과 시간만으로 정하는 루틴 시간표예요. 날짜 달력과는 따로 저장돼요.' : '날짜 달력으로 돌아왔어요. 루틴은 "날짜 없애기"를 다시 켜면 그대로 있어요.');
+  });
+  $('weekToRoutine').addEventListener('click', async () => {
+    // 날짜 달력에서 마지막으로 보던 주(state.week)의 모든 사람 일정을 매주 루틴으로 복사
+    const src = state.week;
+    let rows = [];
+    if (state.mode === 'db') {
+      try { const snap = await db.collection('busy').where('week', '==', src).get(); rows = snap.docs.map((d) => d.data()).filter(Boolean); }
+      catch (e) { flash('보던 주 일정을 불러오지 못했어요.'); return; }
+    } else rows = Object.values(state.busy).filter((b) => b.week === src);
+    let n = 0;
+    rows.forEach((b) => {
+      if (!state.people[b.pid] || !Array.isArray(b.cells) || !b.cells.length) return;
+      const cells = b.cells.filter(validCell).sort();
+      saveCells('RW', b.pid, cells, cleanLabels(b.labels, cells)); n++;
+    });
+    renderGrid(); renderPaintbar(); renderFoot();
+    const mon = parseKey(src);
+    flash(n ? `${mon.getMonth() + 1}월 ${mon.getDate()}일 주의 일정을 매주 루틴으로 옮겼어요. (${n}명)` : `${mon.getMonth() + 1}월 ${mon.getDate()}일 주에는 옮길 일정이 없어요. 날짜 달력에서 옮길 주를 먼저 열어 주세요.`);
+  });
+  document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+    if (state.routine && b.dataset.view === 'week') state.rweek = 'RW';   // 루틴에서 "주간" 탭 = 매주 표
+    setView(b.dataset.view);
+  }));
   function shiftView(n) {
+    if (state.routine) {
+      if (state.view !== 'week' || state.rweek === 'RW') return;
+      const i = ROUTINE_MONTH.indexOf(state.rweek);
+      state.rweek = ROUTINE_MONTH[(i + n + 5) % 5];
+      savePrefs(); onViewChange(); return;
+    }
     if (state.view === 'week') state.week = shiftWeek(state.week, n);
     else if (state.view === 'month') { const [y, m] = state.month.split('-').map(Number); state.month = monthKeyOf(new Date(y, m - 1 + n, 1)); }
     else {
@@ -1485,7 +1580,7 @@
     if (state.mode === 'db') {
       try {
         const snap = await db.collection('busy').where('pid', '==', pid).get();
-        snap.docs.forEach((d) => { const v = d.data(); if (v && isDateKey(v.week) && Array.isArray(v.cells) && v.cells.length) weeks.add(v.week); });
+        snap.docs.forEach((d) => { const v = d.data(); if (v && isWeekKey(v.week) && Array.isArray(v.cells) && v.cells.length) weeks.add(v.week); });
       } catch (e) { flash('일정을 다 불러오지 못해서 지금 보이는 주만 비웠어요.'); }
     }
     weeks.forEach((wk) => saveCells(wk, pid, [], {}));
@@ -1575,7 +1670,7 @@
       known.add(p.id); added++;
     }
     for (const b of data.busy) {
-      if (!b || typeof b.pid !== 'string' || !known.has(b.pid) || typeof b.week !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(b.week) || !Array.isArray(b.cells)) continue;
+      if (!b || typeof b.pid !== 'string' || !known.has(b.pid) || typeof b.week !== 'string' || !isWeekKey(b.week) || !Array.isArray(b.cells)) continue;
       const id = `${b.week}_${b.pid}`;
       const cur = state.busy[id];
       let curUpdated = cur ? cur.updatedAt || 0 : 0;
@@ -1779,7 +1874,7 @@
     }
     state.busy = {};
     if (data.busy && typeof data.busy === 'object') for (const [k, b] of Object.entries(data.busy)) {
-      if (!b || !isDateKey(b.week) || typeof b.pid !== 'string' || !Array.isArray(b.cells)) continue;
+      if (!b || !isWeekKey(b.week) || typeof b.pid !== 'string' || !Array.isArray(b.cells)) continue;
       const cells = b.cells.filter(validCell);
       state.busy[k] = { week: b.week, pid: b.pid, cells, labels: cleanLabels(b.labels, cells), updatedAt: Number(b.updatedAt) || 0 };
     }
@@ -1853,7 +1948,7 @@
       roomPeople.set(id, body); added++;
     }
     for (const b of Object.values(local.busy || {})) {
-      if (!b || !roomPeople.has(b.pid) || !isDateKey(b.week) || !Array.isArray(b.cells)) continue;
+      if (!b || !roomPeople.has(b.pid) || !isWeekKey(b.week) || !Array.isArray(b.cells)) continue;
       const id = `${b.week}_${b.pid}`;
       const cur = roomBusy.get(id);
       if (cur && (Number(cur.updatedAt) || 0) >= (Number(b.updatedAt) || 0)) continue;
@@ -1986,7 +2081,7 @@
     document.querySelectorAll('.modal-bg.open').forEach((m) => m.classList.remove('open'));
     Object.assign(state, {
       mode: 'pending', people: {}, busy: {}, room: '', readOnly: false, saving: 0, statusNote: '', peopleLoaded: false,
-      view: 'week', week: thisWeekKey(), month: monthKeyOf(new Date()),
+      view: 'week', week: thisWeekKey(), month: monthKeyOf(new Date()), routine: false, rweek: 'RW',
       range: { start: thisWeekKey(), end: dayKey(addDays(mondayOf(new Date()), 13)) },
       hours: { start: 9, end: 21 }, label: '', recent: [], hidden: new Set(), me: '', showFree: false,
     });
