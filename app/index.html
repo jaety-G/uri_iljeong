@@ -145,7 +145,8 @@
   .modal{background:#FFFDF6;border:1.5px solid var(--ink);border-radius:16px;width:min(440px,100%);max-height:90vh;overflow:auto;padding:22px 22px 18px}
   .modal h2{font-family:'Gowun Dodum',sans-serif;font-weight:400;font-size:22px;margin:0 0 4px}
   .modal .sub{color:var(--muted);font-size:13px;margin:0 0 16px}
-  .prow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .prow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .prow .sbtn{padding:0 10px}
   .dot{width:18px;height:18px;border-radius:50%;flex:none;border:1.5px solid}
   .tin{flex:1;min-width:0;height:40px;border:1.5px solid var(--ink);border-radius:10px;padding:0 12px;background:#fff}
   .tin:focus{outline:2px solid #F0D27A;outline-offset:0}
@@ -251,7 +252,7 @@
 <div class="modal-bg" id="peopleModal" role="dialog" aria-modal="true" aria-labelledby="peopleTitle">
   <div class="modal">
     <h2 id="peopleTitle">함께 보는 사람</h2>
-    <p class="sub">최대 5명까지 추가할 수 있어요. 이름을 고치면 바로 저장돼요.</p>
+    <p class="sub">최대 5명까지 추가할 수 있어요. 이름을 고치면 바로 저장돼요. "일정 비우기"는 사람은 남기고 그 사람의 모든 일정만 지워요.</p>
     <div id="peopleList"></div>
     <hr class="divider">
     <div class="prow">
@@ -1063,7 +1064,17 @@
         if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = '정말 삭제'; setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = '삭제'; } }, 3000); return; }
         deletePerson(p.id);
       });
-      row.append(dot, inp, del); box.appendChild(row);
+      // 이 사람의 일정만 모두 비우기 (사람은 그대로)
+      const clr = document.createElement('button'); clr.className = 'sbtn'; clr.textContent = '일정 비우기';
+      const hasAny = Object.values(state.busy).some((b) => b.pid === p.id && b.cells && b.cells.length);
+      clr.disabled = state.readOnly || (!hasAny && state.mode !== 'db');
+      clr.title = hasAny || state.mode === 'db' ? `${p.name}의 모든 주 일정을 지워요` : '비울 일정이 없어요';
+      clr.addEventListener('click', () => {
+        if (state.readOnly) return;
+        if (!clr.dataset.armed) { clr.dataset.armed = '1'; clr.textContent = '정말 비우기'; clr.classList.add('danger'); setTimeout(() => { if (clr.isConnected) { delete clr.dataset.armed; clr.textContent = '일정 비우기'; clr.classList.remove('danger'); } }, 3000); return; }
+        clearSchedules(p.id);
+      });
+      row.append(dot, inp, clr, del); box.appendChild(row);
     });
     const full = list.length >= MAX;
     const nc = COLORS[freeColor()];
@@ -1086,6 +1097,23 @@
   }
   $('addBtn').addEventListener('click', addPerson);
   $('newName').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addPerson(); } });
+
+  // 한 사람의 일정을 모든 주에서 비우기.
+  // 지우는 대신 "빈 일정"으로 덮어써서, 친구에게 보내는 코드·링크에도 비운 상태가 전해지고
+  // 예전 코드를 다시 받아도 되살아나지 않아요(더 최근에 고친 쪽이 남으니까요).
+  async function clearSchedules(pid) {
+    const name = state.people[pid] ? state.people[pid].name : '';
+    const weeks = new Set(Object.values(state.busy).filter((b) => b.pid === pid && b.cells && b.cells.length).map((b) => b.week));
+    if (state.mode === 'db') {
+      try {
+        const snap = await db.collection('busy').where('pid', '==', pid).get();
+        snap.docs.forEach((d) => { const v = d.data(); if (v && isDateKey(v.week) && Array.isArray(v.cells) && v.cells.length) weeks.add(v.week); });
+      } catch (e) { flash('일정을 다 불러오지 못해서 지금 보이는 주만 비웠어요.'); }
+    }
+    weeks.forEach((wk) => saveCells(wk, pid, [], {}));
+    renderPeopleModal(); renderAll();
+    flash(weeks.size ? `${name}의 일정을 모두 비웠어요. (${weeks.size}주)` : `${name}의 비울 일정이 없어요.`);
+  }
 
   async function deletePerson(id) {
     savePerson(id, null);
@@ -1213,7 +1241,8 @@
     const p = peopleList().map((x) => [x.id, x.name, x.color, x.createdAt || 0]);
     const w = {};
     Object.values(state.busy).forEach((b) => {
-      if (!b || b.week < from || !state.people[b.pid] || !b.cells || !b.cells.length) return;
+      if (!b || !state.people[b.pid] || !Array.isArray(b.cells)) return;
+      if (b.cells.length && b.week < from) return;   // 비운 주(빈 일정)는 날짜와 상관없이 담아 비운 상태를 전해요
       const item = [cellsToBits(b.cells), Math.round((b.updatedAt || 0) / 1000)];
       const byLab = {};
       Object.entries(b.labels || {}).forEach(([k, l]) => { (byLab[l] || (byLab[l] = [])).push(k); });
