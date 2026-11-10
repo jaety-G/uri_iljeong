@@ -34,6 +34,8 @@
   .sharebtn{border:1.5px solid var(--ink);background:#fff;color:var(--ink);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700}
   .sharebtn[hidden]{display:none}
   .install-steps{margin:0;padding-left:20px;line-height:1.8;font-size:14px}
+  .roomcode{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:26px;font-weight:700;letter-spacing:2px;text-align:center;padding:14px 10px;margin:6px 0 4px;border:1.5px dashed var(--ink);border-radius:12px;background:#fff}
+  #roomOut[hidden],#roomIn[hidden]{display:none}
 
   /* 상단 */
   header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -255,6 +257,7 @@
     <span id="status"></span>
     <div class="acts">
       <button class="linkbtn" id="copyLastWeek" hidden>지난주 내 일정 가져오기</button>
+      <button class="sharebtn" id="roomBtn" hidden>함께 쓰기</button>
       <button class="sharebtn" id="shareLink">링크로 일정 보내기</button>
       <button class="sharebtn" id="installBtn" hidden>앱으로 설치</button>
       <button class="linkbtn" id="openShare">받은 링크 붙여넣기 · 백업</button>
@@ -295,6 +298,34 @@
     <strong style="font-size:14px">전체 백업 (JSON)</strong>
     <textarea class="tin" id="exportText" readonly style="margin-top:6px"></textarea>
     <div class="row2"><button class="sbtn" id="copyBtn">복사하기</button></div>
+    <div class="mfoot"><button class="sbtn" data-close>닫기</button></div>
+  </div>
+</div>
+
+<!-- 함께 쓰기 -->
+<div class="modal-bg" id="roomModal" role="dialog" aria-modal="true" aria-labelledby="roomTitle">
+  <div class="modal">
+    <h2 id="roomTitle">함께 쓰기</h2>
+    <div id="roomOut">
+      <p class="sub">방을 만들면 같은 방에 들어온 사람끼리 일정이 실시간으로 맞춰져요. 컴퓨터·휴대폰 어디서든 같은 방 코드로 들어오면 돼요.</p>
+      <strong style="font-size:14px">새 방 만들기</strong>
+      <p class="note">지금 이 기기에 있는 사람과 일정이 새 방으로 올라가요.</p>
+      <div class="row2"><button class="sbtn primary" id="createRoom">새 방 만들기</button></div>
+      <hr class="divider">
+      <strong style="font-size:14px">방 코드로 들어가기</strong>
+      <div class="row2"><input class="tin" id="joinCode" placeholder="예: ABCD-EFGH-JKLM" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1"><button class="sbtn primary" id="joinRoom">들어가기</button></div>
+      <label class="note" style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" id="joinMerge"> 이 기기에 있는 일정도 방에 합치기</label>
+    </div>
+    <div id="roomIn" hidden>
+      <p class="sub">이 방에 들어온 사람끼리 일정이 실시간으로 맞춰지고 있어요.</p>
+      <div class="roomcode" id="roomCode"></div>
+      <div class="row2"><button class="sbtn primary" id="copyInvite">친구 초대하기</button></div>
+      <p class="note">친구는 앱 아래 "함께 쓰기 → 방 코드로 들어가기"에 이 코드를 넣으면 돼요.</p>
+      <hr class="divider">
+      <div class="row2"><button class="sbtn danger" id="leaveRoom">방 나가기</button></div>
+      <p class="note">나가면 지금 보던 일정이 이 기기에 복사되고, 그다음부터는 이 기기에만 저장돼요.</p>
+    </div>
+    <div class="msg" id="roomMsg"></div>
     <div class="mfoot"><button class="sbtn" data-close>닫기</button></div>
   </div>
 </div>
@@ -365,11 +396,18 @@
   const MAX_RANGE = 31;   // 기간 보기 최대 일수
   const LS_DATA = 'uri-iljeong:data:v1';
   const LS_PREF = 'uri-iljeong:pref:v1';
+  const LS_ROOM = 'uri-iljeong:room:v1';
+  // 함께 쓰기(실시간 방)에 쓰는 Firebase 설정.
+  // Firebase 콘솔 → 프로젝트 설정 → 내 앱 → "SDK 설정 및 구성"의 firebaseConfig 값을 넣어요. 비워 두면(null) 함께 쓰기 버튼이 숨겨져요.
+  const FIREBASE_CONFIG = null;
+  const FIREBASE_VER = '13.2.0';
+  const WEB_APP_URL = 'https://jaety-g.github.io/uri_iljeong/app/';   // 초대 링크에 쓰는 웹 버전 주소
   // 안드로이드 앱(Capacitor) 안에서 열렸는지
   const CAP = window.Capacitor;
   const IS_NATIVE = !!(CAP && typeof CAP.isNativePlatform === 'function' && CAP.isNativePlatform());
   const nativePlugin = (name) => (IS_NATIVE && CAP.Plugins && CAP.Plugins[name]) || null;
   const IS_WEB = /^https?:$/.test(location.protocol) && !IS_NATIVE;
+  const IS_ARTIFACT = !!(window.claude && typeof window.claude.use === 'function');   // claude.ai 안에서 열림
   const DEFAULT_HINT = '이름을 눌러 일정을 겹쳐 보세요. 색이 겹쳐 진해진 곳은 여러 명이 바쁜 시간이고, 아무 색도 없는 칸은 고른 사람 모두 비어 있는 시간이에요.';
 
   const $ = (id) => document.getElementById(id);
@@ -422,6 +460,7 @@
     showFree: false,
     readOnly: false,
     saving: 0,
+    room: '',                 // 함께 쓰는 방 코드 (Firebase)
     statusNote: '',
     peopleLoaded: false,
   };
@@ -872,13 +911,15 @@
     if (state.mode === 'pending') s = '불러오는 중…';
     else if (state.mode === 'db') {
       if (state.readOnly) s = '보기 전용이에요 — 칠하려면 소유자에게 편집 권한을 받아 주세요.';
-      else s = state.saving > 0 ? '저장 중…' : '모두와 함께 보는 일정 · 자동 저장돼요';
+      else s = state.saving > 0 ? '저장 중…' : state.room ? `방 ${fmtRoom(state.room)}에서 함께 쓰는 중 · 자동 저장돼요` : '모두와 함께 보는 일정 · 자동 저장돼요';
     } else s = !IS_WEB ? '이 기기에 저장돼요 · "일정 코드 보내기"로 친구와 맞춰 보세요' : localOK ? '이 기기에 저장돼요 · "링크로 일정 보내기"로 친구와 맞춰 보세요' : '저장할 수 없는 환경이에요 · "JSON으로 주고받기"로 따로 보관해 주세요';
     if (state.statusNote) s = state.statusNote;
     $('status').textContent = s;
     const me = state.people[state.me];
     $('copyLastWeek').hidden = !(me && !state.readOnly && state.mode !== 'pending' && state.view === 'week' && cellsOf(state.me, state.week).size === 0);
     $('shareLink').hidden = state.mode === 'db';   // 공유 저장소에서는 이미 모두 같은 일정을 봐요
+    $('roomBtn').hidden = !CLOUD_READY || IS_ARTIFACT || state.mode === 'pending';
+    $('roomBtn').textContent = state.room ? `함께 쓰는 방 ${fmtRoom(state.room).slice(0, 4)}…` : '함께 쓰기';
   }
 
   function renderAll() {
@@ -896,6 +937,7 @@
     const code = e && e.code;
     if (code === 'invalid_argument' || code === 'not_granted') { state.readOnly = true; state.statusNote = ''; }
     else if (code === 'quota_exceeded') state.statusNote = '저장 공간이 가득 찼어요. 지난 일정을 정리해 주세요.';
+    else if (code === 'permission_denied') state.statusNote = '함께 쓰기 저장소에 저장하지 못했어요. Firebase 규칙 설정을 확인해 주세요.';
     else if (code === 'revoked') { state.readOnly = true; }
     else state.statusNote = '저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.';
     renderAll();
@@ -1380,7 +1422,7 @@
   $('linkInModal').addEventListener('click', (e) => {
     if (e.target === e.currentTarget || e.target.hasAttribute('data-close')) { pendingLink = null; clearHash(); }
   });
-  window.addEventListener('hashchange', () => { if (state.mode !== 'pending') checkIncomingLink(); });
+  window.addEventListener('hashchange', () => { if (state.mode !== 'pending' && !checkRoomLink()) checkIncomingLink(); });
 
   /* ---------- 앱 설치 ---------- */
   let installEvt = null;
@@ -1459,6 +1501,179 @@
     saveLocal();
   }
 
+  /* ---------- 함께 쓰기 (Firebase 실시간 방) ----------
+     방 하나 = Firestore의 rooms/{방 코드} 아래에 people/{사람}, busy/{주_사람} 문서.
+     claude.ai 공유 저장소와 같은 모양으로 감싸서, 위의 공유 저장 코드(db 모드)를 그대로 써요. */
+  const ROOM_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // 헷갈리는 O·0·I·1 뺌
+  const loadRoom = () => { try { const r = localStorage.getItem(LS_ROOM) || ''; return /^[A-Z2-9]{12}$/.test(r) ? r : ''; } catch (e) { return ''; } };
+  const saveRoom = (r) => { try { if (r) localStorage.setItem(LS_ROOM, r); else localStorage.removeItem(LS_ROOM); return true; } catch (e) { return false; } };
+  const fmtRoom = (r) => (r || '').replace(/(.{4})(?=.)/g, '$1-');
+  const normRoom = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  function newRoomCode() {
+    const a = new Uint32Array(12);
+    crypto.getRandomValues(a);
+    return Array.from(a, (x) => ROOM_ALPHABET[x % ROOM_ALPHABET.length]).join('');
+  }
+  async function connectCloud(room) {
+    const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VER}/`;
+    const appMod = await import(base + 'firebase-app.js');
+    const fs = await import(base + 'firebase-firestore.js');
+    const app = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(FIREBASE_CONFIG);
+    let fdb;
+    try { fdb = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) }); }
+    catch (e) { fdb = fs.getFirestore(app); }
+    const root = `rooms/${room}`;
+    const mapErr = (e) => ({ code: e && e.code === 'permission-denied' ? 'permission_denied' : (e && e.code) || 'unavailable', message: String((e && e.message) || e) });
+    const docSnap = (s) => ({ id: s.id, exists: s.exists(), data: () => s.data(), metadata: s.metadata });
+    const querySnap = (q) => ({ docs: q.docs.map(docSnap), size: q.size, empty: q.empty, metadata: q.metadata });
+    const docRef = (path) => {
+      const r = fs.doc(fdb, `${root}/${path}`);
+      return {
+        id: r.id,
+        get: () => fs.getDoc(r).then(docSnap).catch((e) => { throw mapErr(e); }),
+        set: (d) => fs.setDoc(r, d).catch((e) => { throw mapErr(e); }),
+        delete: () => fs.deleteDoc(r).catch((e) => { throw mapErr(e); }),
+        onSnapshot: (next, err) => fs.onSnapshot(r, { includeMetadataChanges: true }, (s) => next(docSnap(s)), (e) => err && err(mapErr(e))),
+      };
+    };
+    const wrapQuery = (q) => ({
+      where: (f, op, v) => wrapQuery(fs.query(q, fs.where(f, op, v))),
+      get: () => fs.getDocs(q).then(querySnap).catch((e) => { throw mapErr(e); }),
+      onSnapshot: (next, err) => fs.onSnapshot(q, { includeMetadataChanges: true }, (s) => next(querySnap(s)), (e) => err && err(mapErr(e))),
+    });
+    return {
+      doc: docRef,
+      collection: (path) => ({ ...wrapQuery(fs.collection(fdb, `${root}/${path}`)), doc: (id) => docRef(`${path}/${id}`) }),
+    };
+  }
+  const cloudConnector = window.__uriCloudConnector || connectCloud;   // (테스트용으로 바꿔 끼울 수 있어요)
+  const CLOUD_READY = !!(FIREBASE_CONFIG || window.__uriCloudConnector);
+
+  // 이 기기에 저장된 일정을 방으로 올리기 (방에 이미 있으면 더 최근에 고친 쪽이 남아요)
+  async function uploadLocal(cdb) {
+    let local = { people: {}, busy: {} };
+    try { local = JSON.parse(localStorage.getItem(LS_DATA) || 'null') || local; } catch (e) {}
+    const [ps, bs] = await Promise.all([cdb.collection('people').get(), cdb.collection('busy').get()]);
+    const roomPeople = new Map(ps.docs.map((d) => [d.id, d.data()]));
+    const roomBusy = new Map(bs.docs.map((d) => [d.id, d.data()]));
+    const usedColors = new Set([...roomPeople.values()].map((p) => p && p.color));
+    let added = 0, wrote = 0, skipped = 0;
+    for (const [id, p] of Object.entries(local.people || {})) {
+      if (roomPeople.has(id) || !p || !cleanName(p.name)) continue;
+      if (roomPeople.size >= MAX) { skipped++; continue; }
+      let color = clampColor(p.color);
+      if (usedColors.has(color)) { const f = [0, 1, 2, 3, 4].find((c) => !usedColors.has(c)); color = f === undefined ? 0 : f; }
+      usedColors.add(color);
+      const body = { name: cleanName(p.name), color, createdAt: Number(p.createdAt) || Date.now() };
+      await cdb.doc(`people/${id}`).set(body);
+      roomPeople.set(id, body); added++;
+    }
+    for (const b of Object.values(local.busy || {})) {
+      if (!b || !roomPeople.has(b.pid) || !isDateKey(b.week) || !Array.isArray(b.cells)) continue;
+      const id = `${b.week}_${b.pid}`;
+      const cur = roomBusy.get(id);
+      if (cur && (Number(cur.updatedAt) || 0) >= (Number(b.updatedAt) || 0)) continue;
+      const cells = b.cells.filter(validCell);
+      if (!cur && !cells.length) continue;
+      await cdb.doc(`busy/${id}`).set({ week: b.week, pid: b.pid, cells, labels: cleanLabels(b.labels, cells), updatedAt: Number(b.updatedAt) || Date.now() });
+      wrote++;
+    }
+    return { added, wrote, skipped };
+  }
+
+  function renderRoomModal() {
+    const inRoom = !!state.room;
+    $('roomOut').hidden = inRoom;
+    $('roomIn').hidden = !inRoom;
+    $('roomMsg').textContent = '';
+    if (inRoom) $('roomCode').textContent = fmtRoom(state.room);
+  }
+  function openRoom(prefill) {
+    renderRoomModal();
+    if (prefill) { $('joinCode').value = fmtRoom(prefill); }
+    openModal('roomModal');
+  }
+  const roomBusyUI = (on) => { ['createRoom', 'joinRoom', 'leaveRoom'].forEach((id) => { $(id).disabled = on; }); };
+  const roomErrMsg = (e) => (e && e.code === 'permission_denied'
+    ? '함께 쓰기 저장소에 들어가지 못했어요. Firebase 규칙 설정을 확인해 주세요.'
+    : '연결하지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.');
+  function enterRoom(room) {
+    if (!saveRoom(room)) { $('roomMsg').textContent = '이 기기에 방을 기억해 둘 수 없어요.'; return; }
+    clearHash();
+    location.reload();
+  }
+  $('roomBtn').addEventListener('click', () => openRoom());
+  $('createRoom').addEventListener('click', async () => {
+    const msg = $('roomMsg');
+    roomBusyUI(true);
+    msg.textContent = '방을 만들고 이 기기의 일정을 올리는 중이에요…';
+    try {
+      const room = newRoomCode();
+      const cdb = await cloudConnector(room);
+      const r = await uploadLocal(cdb);
+      msg.textContent = `방을 만들었어요. 사람 ${r.added}명, 주간 일정 ${r.wrote}개를 올렸어요.`;
+      enterRoom(room);
+    } catch (e) { msg.textContent = roomErrMsg(e); roomBusyUI(false); }
+  });
+  $('joinRoom').addEventListener('click', async () => {
+    const msg = $('roomMsg');
+    const room = normRoom($('joinCode').value);
+    if (!/^[A-Z2-9]{12}$/.test(room)) { msg.textContent = '방 코드는 12글자예요. 받은 코드를 다시 확인해 주세요.'; return; }
+    if (room === state.room) { msg.textContent = '이미 이 방에서 함께 쓰고 있어요.'; return; }
+    roomBusyUI(true);
+    msg.textContent = '방에 들어가는 중이에요…';
+    try {
+      const cdb = await cloudConnector(room);
+      const ps = await cdb.collection('people').get();
+      if ($('joinMerge').checked) await uploadLocal(cdb);
+      else if (ps.empty) msg.textContent = '아직 아무도 없는 방이에요. 들어가서 사람을 추가해 보세요.';
+      enterRoom(room);
+    } catch (e) { msg.textContent = roomErrMsg(e); roomBusyUI(false); }
+  });
+  $('joinCode').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); $('joinRoom').click(); } });
+  function inviteText() {
+    const link = (IS_WEB ? location.origin + location.pathname : WEB_APP_URL) + '#room=' + state.room;
+    return `[우리 일정] 같이 일정 맞춰요!\n방 코드: ${fmtRoom(state.room)}\n앱에서 "함께 쓰기 → 방 코드로 들어가기"에 넣거나, 이 링크를 열어 주세요.\n${link}`;
+  }
+  $('copyInvite').addEventListener('click', async () => {
+    const text = inviteText();
+    const share = nativePlugin('Share');
+    if (share) { try { await share.share({ title: '우리 일정 함께 쓰기', text, dialogTitle: '방 초대하기' }); return; } catch (e) { if (e && /cancel/i.test(String(e.message || e))) return; } }
+    if (navigator.share && IS_WEB && location.protocol === 'https:') { try { await navigator.share({ title: '우리 일정 함께 쓰기', text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(text); $('roomMsg').textContent = '초대 글을 복사했어요. 카카오톡 등에 붙여 넣어 보내 주세요.'; }
+    catch (e) { $('roomMsg').textContent = `복사가 막혔어요. 방 코드 ${fmtRoom(state.room)}를 직접 알려 주세요.`; }
+  });
+  $('leaveRoom').addEventListener('click', async () => {
+    const btn = $('leaveRoom');
+    if (!btn.dataset.armed) {
+      btn.dataset.armed = '1'; btn.textContent = '정말 나가기';
+      setTimeout(() => { if (btn.isConnected) { delete btn.dataset.armed; btn.textContent = '방 나가기'; } }, 3000);
+      return;
+    }
+    roomBusyUI(true);
+    $('roomMsg').textContent = '방 일정을 이 기기에 복사해 두는 중이에요…';
+    try {
+      // 나가도 지금 보던 일정이 이 기기에 남도록 복사
+      const data = JSON.parse(await buildExport());
+      const people = {}, busy = {};
+      data.people.forEach((p) => { people[p.id] = { name: p.name, color: p.color, createdAt: p.createdAt }; });
+      data.busy.forEach((b) => { busy[`${b.week}_${b.pid}`] = b; });
+      localStorage.setItem(LS_DATA, JSON.stringify({ people, busy }));
+    } catch (e) { /* 복사에 실패해도 나가기는 해요 */ }
+    saveRoom('');
+    location.reload();
+  });
+  function checkRoomLink() {
+    const m = location.hash.match(/^#room=([A-Za-z0-9-]{12,16})$/);
+    if (!m) return false;
+    const room = normRoom(m[1]);
+    if (!CLOUD_READY || !/^[A-Z2-9]{12}$/.test(room)) { clearHash(); return false; }
+    if (room === state.room) { clearHash(); flash('이미 이 방에서 함께 쓰고 있어요.'); return true; }
+    openRoom(room);
+    $('roomMsg').textContent = '초대받은 방이에요. "들어가기"를 눌러 주세요.';
+    return true;
+  }
+
   async function init() {
     if (!IS_WEB) {
       $('shareLink').textContent = '일정 코드 보내기';
@@ -1473,13 +1688,26 @@
     if (window.claude && typeof window.claude.use === 'function') {
       try { ns = await window.claude.use('db'); } catch (e) { ns = null; }
     }
+    const savedRoom = !ns && CLOUD_READY ? loadRoom() : '';
     if (ns) {
       db = ns; state.mode = 'db';
       loadTimer = setTimeout(() => { state.statusNote = '공유 저장소에 아직 연결되지 않았어요. 인터넷 연결을 확인해 주세요.'; renderFoot(); }, 10000);
       subscribePeople(); subscribeBusy();
+    } else if (savedRoom) {
+      try {
+        db = await cloudConnector(savedRoom);
+        state.room = savedRoom; state.mode = 'db';
+        loadTimer = setTimeout(() => { state.statusNote = '함께 쓰는 방에 아직 연결되지 않았어요. 인터넷 연결을 확인해 주세요.'; renderFoot(); }, 10000);
+        subscribePeople(); subscribeBusy();
+      } catch (e) {
+        // 방에 연결하지 못하면 이 기기 일정을 보여 주되, 나중에 섞이지 않게 고치지는 못하게 해요
+        db = null; startLocal();
+        state.readOnly = true;
+        state.statusNote = `함께 쓰는 방(${fmtRoom(savedRoom)})에 연결하지 못해서 이 기기에 저장된 일정을 보기만 할 수 있어요. 인터넷을 확인하고 다시 열어 주세요.`;
+      }
     } else startLocal();
     renderAll();
-    checkIncomingLink();
+    if (!checkRoomLink()) checkIncomingLink();
   }
   init();
 })();

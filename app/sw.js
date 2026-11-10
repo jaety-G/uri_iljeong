@@ -1,6 +1,6 @@
 // 우리 일정 — 오프라인 실행용 서비스 워커
 // 앱 파일을 바꿔 올릴 때는 아래 버전 숫자를 하나 올려 주세요.
-const VERSION = 'uri-iljeong-v1';
+const VERSION = 'uri-iljeong-v2';
 const SHELL = [
   './',
   './index.html',
@@ -39,8 +39,8 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // 글꼴(Google Fonts): 저장해 둔 것을 먼저 쓰고 뒤에서 새로 받아 둠
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+  // 글꼴(Google Fonts)과 함께 쓰기용 Firebase 라이브러리: 저장해 둔 것을 먼저 쓰고 뒤에서 새로 받아 둠
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com' || (url.hostname === 'www.gstatic.com' && url.pathname.startsWith('/firebasejs/'))) {
     e.respondWith(
       caches.open(VERSION + '-fonts').then(async (c) => {
         const hit = await c.match(req);

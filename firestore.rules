@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// 우리 일정 — 함께 쓰기 저장소 규칙
+// 방 하나 = rooms/{방 코드 12글자} 아래의 people(사람), busy(주간 일정) 문서.
+// 방 코드를 아는 사람만 그 방을 읽고 쓸 수 있어요. 방 목록 자체는 아무도 볼 수 없어요.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function validRoom(room) {
+      return room.matches('^[A-Z2-9]{12}$');
+    }
+
+    match /rooms/{room}/people/{pid} {
+      allow read, delete: if validRoom(room);
+      allow create, update: if validRoom(room)
+        && request.resource.data.keys().hasOnly(['name', 'color', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 10
+        && request.resource.data.color is int
+        && request.resource.data.color >= 0
+        && request.resource.data.color <= 4;
+    }
+
+    match /rooms/{room}/busy/{id} {
+      allow read, delete: if validRoom(room);
+      allow create, update: if validRoom(room)
+        && request.resource.data.keys().hasOnly(['week', 'pid', 'cells', 'labels', 'updatedAt'])
+        && request.resource.data.week is string
+        && request.resource.data.pid is string
+        && request.resource.data.cells is list
+        && request.resource.data.cells.size() <= 168
+        && request.resource.data.labels is map
+        && request.resource.data.labels.size() <= 168;
+    }
+  }
+}
