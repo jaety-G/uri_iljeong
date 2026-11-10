@@ -37,6 +37,54 @@
   .roomcode{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:26px;font-weight:700;letter-spacing:2px;text-align:center;padding:14px 10px;margin:6px 0 4px;border:1.5px dashed var(--ink);border-radius:12px;background:#fff}
   #roomOut[hidden],#roomIn[hidden]{display:none}
 
+  /* 왼쪽 메뉴바 (일정표 목록) */
+  .app{display:flex;min-height:100vh}
+  .mainarea{flex:1;min-width:0}
+  .sidebar{width:252px;flex:none;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;background:#F3EDDD;border-right:1.5px solid #E2D9C3;
+           padding:calc(18px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left))}
+  .app.collapsed .sidebar,.app.noside .sidebar,.app.noside .menubtn{display:none}
+  .sbhead{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 16px 8px}
+  .sbtitle{font-family:'Gowun Dodum',sans-serif;font-size:21px}
+  .iconbtn{width:34px;height:34px;flex:none;border:none;background:transparent;border-radius:8px;display:grid;place-items:center;color:var(--ink)}
+  .iconbtn:hover{background:rgba(43,43,43,.07)}
+  .iconbtn svg{width:19px;height:19px}
+  .newcal{display:flex;align-items:center;gap:8px;height:40px;margin:0 2px 18px;padding:0 12px;border:1.5px solid var(--ink);border-radius:10px;background:#fff;font-weight:700;font-size:14px}
+  .newcal svg{width:16px;height:16px}
+  .newcal:hover{background:#FFFDF6}
+  .sblabel{font-size:12px;color:var(--muted);padding:0 10px 6px}
+  .callist{display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;min-height:0;padding:0 2px}
+  .calitem{position:relative;display:flex;align-items:center;gap:6px;min-height:38px;padding:0 4px 0 10px;border:1.5px solid transparent;border-radius:9px;cursor:pointer;font-size:14px}
+  .calitem:hover{background:rgba(43,43,43,.05)}
+  .calitem.on{background:#fff;border-color:var(--ink);font-weight:700}
+  .calitem:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+  .calname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .caltag{flex:none;font-size:11px;font-weight:700;padding:0 6px;line-height:17px;border-radius:999px;border:1.2px solid var(--ink);background:#FFF0B3}
+  .calmore{width:28px;height:28px;opacity:0}
+  .calmore svg{width:16px;height:16px}
+  .calitem:hover .calmore,.calitem.on .calmore,.calmore:focus-visible{opacity:1}
+  .calmenu{position:absolute;right:2px;top:36px;z-index:20;display:flex;flex-direction:column;min-width:150px;padding:4px;background:#FFFDF6;border:1.5px solid var(--ink);border-radius:10px;font-weight:400}
+  .calmenu button{border:none;background:transparent;text-align:left;padding:8px 10px;border-radius:7px;font-size:13px}
+  .calmenu button:hover{background:#F3EDDD}
+  .calmenu .danger{color:var(--accent)}
+  .calrename{flex:1;min-width:0;height:28px;border:1.5px solid var(--ink);border-radius:6px;padding:0 6px;font-size:14px;background:#fff}
+  .sbfoot{font-size:12px;color:var(--muted);padding:12px 10px 0;line-height:1.5}
+  .titlewrap{display:flex;align-items:center;gap:6px;min-width:0}
+  .menubtn{display:none;margin-left:-8px}
+  .app.collapsed .menubtn{display:grid}
+  #calTitle{cursor:text;border-bottom:1.5px dashed transparent;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #calTitle:hover{border-bottom-color:#CFC7B5}
+  .app.noside #calTitle{cursor:default;border-bottom-color:transparent}
+  .titlerename{font-family:'Gowun Dodum',sans-serif;font-size:30px;width:min(420px,70vw);height:46px;border:1.5px solid var(--ink);border-radius:10px;padding:0 10px;background:#fff}
+  .scrim{display:none}
+  @media (max-width:900px){
+    .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:60;transform:translateX(-102%);transition:transform .18s ease}
+    .app.collapsed .sidebar{display:flex}
+    .app.drawer .sidebar{transform:none}
+    .scrim{position:fixed;inset:0;z-index:55;background:rgba(43,43,43,.28)}
+    .app.drawer .scrim{display:block}
+    .menubtn{display:grid}
+  }
+
   /* 상단 */
   header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
   h1{font-family:'Gowun Dodum',sans-serif;font-weight:400;font-size:34px;margin:0;letter-spacing:-.5px}
@@ -178,6 +226,7 @@
     .wrap{padding:calc(20px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(36px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
     .foot{flex-direction:column;align-items:flex-start}
     h1{font-size:28px}
+    .titlerename{font-size:24px;height:42px}
     .toolbar{margin:20px 0 16px}
     .chips{gap:8px}
     .chip{height:40px;min-width:64px;padding:0 14px;font-size:14px}
@@ -193,9 +242,25 @@
 </style>
 </head>
 <body>
+<div class="app" id="app">
+<aside class="sidebar" id="sidebar" aria-label="일정표 목록">
+  <div class="sbhead">
+    <span class="sbtitle">우리 일정</span>
+    <button class="iconbtn" id="sideClose" aria-label="메뉴 닫기" title="메뉴 닫기"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5"/><path d="M7.5 3.5v13"/></svg></button>
+  </div>
+  <button class="newcal" id="newCal"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>새로 만들기</button>
+  <div class="sblabel">일정표</div>
+  <div class="callist" id="calList"></div>
+  <div class="sbfoot">일정표마다 사람과 일정이 따로 저장돼요.</div>
+</aside>
+<div class="scrim" id="scrim"></div>
+<main class="mainarea">
 <div class="wrap">
   <header>
-    <h1>우리 일정</h1>
+    <div class="titlewrap">
+      <button class="iconbtn menubtn" id="menuBtn" aria-label="일정표 목록 열기" title="일정표 목록"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5"/><path d="M7.5 3.5v13"/></svg></button>
+      <h1 id="calTitle" tabindex="0" title="눌러서 이름 바꾸기">우리 일정</h1>
+    </div>
     <div class="headright">
     <div class="seg" role="tablist" aria-label="보기 방식">
       <button data-view="week" role="tab">주간</button><button data-view="month" role="tab">월간</button><button data-view="range" role="tab">기간</button>
@@ -264,6 +329,8 @@
     </div>
   </div>
 </div>
+</main>
+</div>
 
 <!-- 사람 관리 -->
 <div class="modal-bg" id="peopleModal" role="dialog" aria-modal="true" aria-labelledby="peopleTitle">
@@ -309,12 +376,12 @@
     <div id="roomOut">
       <p class="sub">방을 만들면 같은 방에 들어온 사람끼리 일정이 실시간으로 맞춰져요. 컴퓨터·휴대폰 어디서든 같은 방 코드로 들어오면 돼요.</p>
       <strong style="font-size:14px">새 방 만들기</strong>
-      <p class="note">지금 이 기기에 있는 사람과 일정이 새 방으로 올라가요.</p>
+      <p class="note" id="createNote">지금 보고 있는 일정표의 사람과 일정이 새 방으로 올라가요.</p>
       <div class="row2"><button class="sbtn primary" id="createRoom">새 방 만들기</button></div>
       <hr class="divider">
       <strong style="font-size:14px">방 코드로 들어가기</strong>
       <div class="row2"><input class="tin" id="joinCode" placeholder="예: ABCD-EFGH-JKLM" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1"><button class="sbtn primary" id="joinRoom">들어가기</button></div>
-      <label class="note" style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" id="joinMerge"> 이 기기에 있는 일정도 방에 합치기</label>
+      <p class="note">들어가면 왼쪽 목록에 새 일정표로 추가돼요. 지금 보던 일정표는 그대로예요.</p>
     </div>
     <div id="roomIn" hidden>
       <p class="sub">이 방에 들어온 사람끼리 일정이 실시간으로 맞춰지고 있어요.</p>
@@ -396,7 +463,7 @@
   const MAX_RANGE = 31;   // 기간 보기 최대 일수
   const LS_DATA = 'uri-iljeong:data:v1';
   const LS_PREF = 'uri-iljeong:pref:v1';
-  const LS_ROOM = 'uri-iljeong:room:v1';
+  const LS_ROOM_OLD = 'uri-iljeong:room:v1';   // 예전(일정표 하나일 때) 방 코드 — 처음 한 번 옮겨 와요
   // 함께 쓰기(실시간 방)에 쓰는 Firebase 설정.
   // Firebase 콘솔 → 프로젝트 설정 → 내 앱 → "SDK 설정 및 구성"의 firebaseConfig 값을 넣어요. 비워 두면(null) 함께 쓰기 버튼이 숨겨져요.
   const FIREBASE_CONFIG = {
@@ -474,10 +541,163 @@
   let db = null, unsubBusy = null, busySig = '', drag = null, flashTimer = null, loadTimer = null;
   let localOK = true;
 
+  /* ---------- 일정표 여러 개 (왼쪽 메뉴바) ----------
+     일정표마다 사람·일정·보기 설정·함께 쓰는 방이 따로예요. 목록은 이 기기에 저장돼요.
+     첫 일정표(id: main)는 예전 저장 이름을 그대로 써서, 전에 쓰던 일정이 그대로 보여요. */
+  const LS_CALS = 'uri-iljeong:cals:v1';
+  const LS_SIDE = 'uri-iljeong:sidebar:v1';
+  const DOTS_SVG = '<svg viewBox="0 0 20 20" fill="currentColor"><circle cx="4.5" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/></svg>';
+  let CALS = { list: [], current: 'main' };
+  let openToken = 0, unsubPeople = null, artifactDb;
+  const cleanCalName = (s) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, 20);
+  const curCal = () => CALS.list.find((c) => c.id === CALS.current) || CALS.list[0];
+  const dataKey = (id = CALS.current) => (id === 'main' ? LS_DATA : `${LS_DATA}:${id}`);
+  const prefKey = (id = CALS.current) => (id === 'main' ? LS_PREF : `${LS_PREF}:${id}`);
+  const calsByNewest = () => [...CALS.list].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  function saveCals() { try { localStorage.setItem(LS_CALS, JSON.stringify(CALS)); } catch (e) {} }
+  function loadCals() {
+    try {
+      const c = JSON.parse(localStorage.getItem(LS_CALS) || 'null');
+      if (c && Array.isArray(c.list)) {
+        CALS = {
+          list: c.list.filter((x) => x && typeof x.id === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(x.id))
+            .map((x) => ({ id: x.id, name: cleanCalName(x.name) || '이름 없는 일정표', room: /^[A-Z2-9]{12}$/.test(x.room || '') ? x.room : '', createdAt: Number(x.createdAt) || 0 })),
+          current: String(c.current || ''),
+        };
+      }
+    } catch (e) {}
+    if (!CALS.list.length) {
+      const main = { id: 'main', name: '우리 일정', room: '', createdAt: 1 };
+      try { const r = localStorage.getItem(LS_ROOM_OLD) || ''; if (/^[A-Z2-9]{12}$/.test(r)) main.room = r; localStorage.removeItem(LS_ROOM_OLD); } catch (e) {}
+      CALS = { list: [main], current: 'main' };
+      saveCals();
+    }
+    if (!CALS.list.some((c) => c.id === CALS.current)) CALS.current = calsByNewest()[0].id;
+  }
+  function uniqueCalName(base) {
+    const names = new Set(CALS.list.map((c) => c.name));
+    if (!names.has(base)) return base;
+    for (let i = 2; ; i++) if (!names.has(`${base} ${i}`)) return `${base} ${i}`;
+  }
+  function addCalendar(name, room = '') {
+    const id = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    CALS.list.push({ id, name: uniqueCalName(cleanCalName(name) || '새 일정표'), room, createdAt: Date.now() });
+    CALS.current = id;
+    saveCals();
+    return id;
+  }
+  function renameCalendar(id, name) {
+    const n = cleanCalName(name), c = CALS.list.find((x) => x.id === id);
+    if (c && n && n !== c.name) { c.name = n; saveCals(); }
+  }
+  const isNarrow = () => window.matchMedia('(max-width: 900px)').matches;
+  const closeDrawer = () => $('app').classList.remove('drawer');
+  function closeCalMenu() { document.querySelectorAll('.calmenu').forEach((m) => m.remove()); }
+  function renderSidebar() {
+    $('app').classList.toggle('noside', IS_ARTIFACT);
+    const cur = curCal();
+    $('calTitle').textContent = IS_ARTIFACT ? '우리 일정' : cur.name;
+    document.title = !IS_ARTIFACT && cur.name !== '우리 일정' ? `${cur.name} · 우리 일정` : '우리 일정';
+    const box = $('calList');
+    box.innerHTML = '';
+    calsByNewest().forEach((c) => {
+      const it = document.createElement('div');
+      it.className = 'calitem' + (c.id === CALS.current ? ' on' : '');
+      it.dataset.id = c.id;
+      it.tabIndex = 0;
+      it.setAttribute('role', 'button');
+      const nm = document.createElement('span');
+      nm.className = 'calname';
+      nm.textContent = c.name;
+      it.appendChild(nm);
+      if (c.room && CLOUD_READY) {
+        const t = document.createElement('span');
+        t.className = 'caltag'; t.textContent = '함께'; t.title = `방 ${fmtRoom(c.room)}에서 함께 쓰는 일정표`;
+        it.appendChild(t);
+      }
+      const more = document.createElement('button');
+      more.className = 'iconbtn calmore';
+      more.setAttribute('aria-label', `${c.name} 메뉴`);
+      more.innerHTML = DOTS_SVG;
+      more.addEventListener('click', (e) => { e.stopPropagation(); openCalMenu(c.id, it); });
+      it.appendChild(more);
+      it.addEventListener('click', () => switchCalendar(c.id));
+      it.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target === it) switchCalendar(c.id); });
+      box.appendChild(it);
+    });
+  }
+  function openCalMenu(id, item) {
+    const had = item.querySelector('.calmenu');
+    closeCalMenu();
+    if (had) return;
+    const c = CALS.list.find((x) => x.id === id);
+    const m = document.createElement('div');
+    m.className = 'calmenu';
+    const rn = document.createElement('button');
+    rn.textContent = '이름 바꾸기';
+    rn.addEventListener('click', (e) => { e.stopPropagation(); closeCalMenu(); startRenameItem(id); });
+    const del = document.createElement('button');
+    del.className = 'danger';
+    del.textContent = '삭제';
+    del.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = c.room ? '정말 삭제 (방에서 나가요)' : '정말 삭제'; return; }
+      closeCalMenu(); deleteCalendar(id);
+    });
+    m.append(rn, del);
+    m.addEventListener('click', (e) => e.stopPropagation());
+    item.appendChild(m);
+  }
+  function inlineEdit(input, onDone) {
+    let done = false;
+    const finish = (save) => { if (done) return; done = true; onDone(save ? input.value : null); };
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); finish(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(false); }
+    });
+    input.addEventListener('blur', () => finish(true));
+    input.addEventListener('click', (e) => e.stopPropagation());
+    input.focus(); input.select();
+  }
+  function startRenameItem(id) {
+    const it = document.querySelector(`.calitem[data-id="${id}"]`);
+    const c = CALS.list.find((x) => x.id === id);
+    if (!it || !c) return;
+    const inp = document.createElement('input');
+    inp.className = 'calrename'; inp.maxLength = 20; inp.value = c.name; inp.setAttribute('aria-label', '일정표 이름');
+    it.querySelector('.calname').replaceWith(inp);
+    inlineEdit(inp, (v) => { if (v !== null) renameCalendar(id, v); renderSidebar(); });
+  }
+  function startRenameTitle() {
+    if (IS_ARTIFACT) return;
+    const h = $('calTitle'), c = curCal();
+    if (h.hidden) return;
+    const inp = document.createElement('input');
+    inp.className = 'titlerename'; inp.maxLength = 20; inp.value = c.name; inp.setAttribute('aria-label', '일정표 이름');
+    h.hidden = true; h.after(inp);
+    inlineEdit(inp, (v) => { if (v !== null) renameCalendar(c.id, v); inp.remove(); h.hidden = false; renderSidebar(); });
+  }
+  function switchCalendar(id) {
+    closeCalMenu(); closeDrawer();
+    if (id === CALS.current) return;
+    CALS.current = id; saveCals();
+    openCalendar();
+  }
+  function deleteCalendar(id) {
+    const wasCurrent = id === CALS.current;
+    try { localStorage.removeItem(dataKey(id)); localStorage.removeItem(prefKey(id)); } catch (e) {}
+    CALS.list = CALS.list.filter((c) => c.id !== id);
+    if (!CALS.list.length) addCalendar('새 일정표');
+    else if (wasCurrent) CALS.current = calsByNewest()[0].id;
+    saveCals();
+    if (wasCurrent || !CALS.list.some((c) => c.id === CALS.current)) openCalendar().then(() => flash('일정표를 지웠어요.'));
+    else { renderSidebar(); flash('일정표를 지웠어요.'); }
+  }
+
   /* ---------- 개인 설정(이 브라우저) ---------- */
   function loadPrefs() {
     try {
-      const p = JSON.parse(localStorage.getItem(LS_PREF) || '{}');
+      const p = JSON.parse(localStorage.getItem(prefKey()) || '{}');
       if (Array.isArray(p.hidden)) state.hidden = new Set(p.hidden.filter((x) => typeof x === 'string'));
       if (typeof p.me === 'string') state.me = p.me;
       state.showFree = !!p.showFree;
@@ -491,7 +711,7 @@
   }
   function savePrefs() {
     try {
-      localStorage.setItem(LS_PREF, JSON.stringify({
+      localStorage.setItem(prefKey(), JSON.stringify({
         hidden: [...state.hidden], me: state.me, showFree: state.showFree,
         view: state.view, hours: state.hours, range: { start: state.range.start, end: state.range.end },
         recent: state.recent, label: state.label,
@@ -937,7 +1157,7 @@
 
   /* ---------- 저장 ---------- */
   function saveLocal() {
-    try { localStorage.setItem(LS_DATA, JSON.stringify({ people: state.people, busy: state.busy })); localOK = true; }
+    try { localStorage.setItem(dataKey(), JSON.stringify({ people: state.people, busy: state.busy })); localOK = true; }
     catch (e) { localOK = false; }
   }
   function onWriteError(e) {
@@ -951,25 +1171,30 @@
   }
   const queues = {};
   async function writeDoc(path, body) {   // body=null 이면 삭제. 같은 문서는 한 번에 하나씩.
-    if (state.mode !== 'db') return;
-    const q = queues[path] || (queues[path] = { running: false, pending: undefined });
-    q.pending = body;
+    if (state.mode !== 'db' || !db) return;
+    // 일정표를 바꾸는 중에 쓰기가 남아 있어도, 원래 일정표의 저장소에 써요
+    const key = CALS.current + '|' + path;
+    const q = queues[key] || (queues[key] = { running: false, pending: undefined, db: null, cal: '' });
+    q.pending = body; q.db = db; q.cal = CALS.current;
     if (q.running) return;
     q.running = true; state.saving++; renderFoot();
     while (q.pending !== undefined) {
       const b = q.pending; q.pending = undefined;
+      const store = q.db;
       try {
-        const ref = db.doc(path);
+        const ref = store.doc(path);
         if (b === null) await ref.delete(); else await ref.set(b);
         state.statusNote = '';
       } catch (e) {
         if (e && e.code === 'unavailable') {
           await new Promise((r) => setTimeout(r, 600 + Math.random() * 800));
-          try { const ref = db.doc(path); if (b === null) await ref.delete(); else await ref.set(b); continue; } catch (e2) { onWriteError(e2); }
+          try { const ref = store.doc(path); if (b === null) await ref.delete(); else await ref.set(b); continue; } catch (e2) { onWriteError(e2); }
         } else onWriteError(e);
       }
     }
-    q.running = false; state.saving--; renderFoot();
+    q.running = false;
+    if (q.cal === CALS.current) state.saving = Math.max(0, state.saving - 1);
+    renderFoot();
   }
   function saveCells(wk, pid, cells, labels = {}) {
     const id = `${wk}_${pid}`;
@@ -1453,7 +1678,9 @@
 
   /* ---------- 공유 저장소 / 브라우저 저장 ---------- */
   function subscribePeople() {
-    db.collection('people').onSnapshot((snap) => {
+    const tok = openToken;
+    unsubPeople = db.collection('people').onSnapshot((snap) => {
+      if (tok !== openToken) return;
       const p = {};
       snap.docs.forEach((d) => {
         const v = d.data();
@@ -1463,6 +1690,7 @@
       if (!snap.metadata.fromCache) { state.peopleLoaded = true; clearTimeout(loadTimer); if (state.statusNote.startsWith('공유 저장소')) state.statusNote = ''; }
       renderAll();
     }, (err) => {
+      if (tok !== openToken) return;
       clearTimeout(loadTimer);
       if (err && err.code === 'revoked') state.readOnly = true;
       state.statusNote = '공유 일정을 더 이상 받아오지 못하고 있어요. 새로고침해 주세요.';
@@ -1476,8 +1704,9 @@
     if (unsubBusy) unsubBusy();
     busySig = sig;
     const wanted = new Set(weeks);
+    const tok = openToken;
     unsubBusy = db.collection('busy').where('week', 'in', weeks).onSnapshot((snap) => {
-      if (sig !== busySig) return;
+      if (sig !== busySig || tok !== openToken) return;
       for (const k of Object.keys(state.busy)) if (wanted.has(state.busy[k].week)) delete state.busy[k];
       snap.docs.forEach((d) => {
         const v = d.data();
@@ -1492,8 +1721,9 @@
   function startLocal() {
     state.mode = 'local';
     let data = null;
-    try { data = JSON.parse(localStorage.getItem(LS_DATA) || 'null'); } catch (e) { localOK = false; }
-    if (!data || typeof data.people !== 'object' || data.people === null) data = sampleData(thisWeekKey());
+    try { data = JSON.parse(localStorage.getItem(dataKey()) || 'null'); } catch (e) { localOK = false; }
+    // 예시 일정은 첫 일정표를 처음 열 때만. 새로 만든 일정표는 빈 상태로 시작해요.
+    if (!data || typeof data.people !== 'object' || data.people === null) data = CALS.current === 'main' ? sampleData(thisWeekKey()) : { people: {}, busy: {} };
     state.people = {};
     for (const [id, p] of Object.entries(data.people)) {
       if (p && cleanName(p.name)) state.people[id] = { name: cleanName(p.name), color: clampColor(p.color), createdAt: Number(p.createdAt) || 0 };
@@ -1512,8 +1742,6 @@
      방 하나 = Firestore의 rooms/{방 코드} 아래에 people/{사람}, busy/{주_사람} 문서.
      claude.ai 공유 저장소와 같은 모양으로 감싸서, 위의 공유 저장 코드(db 모드)를 그대로 써요. */
   const ROOM_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // 헷갈리는 O·0·I·1 뺌
-  const loadRoom = () => { try { const r = localStorage.getItem(LS_ROOM) || ''; return /^[A-Z2-9]{12}$/.test(r) ? r : ''; } catch (e) { return ''; } };
-  const saveRoom = (r) => { try { if (r) localStorage.setItem(LS_ROOM, r); else localStorage.removeItem(LS_ROOM); return true; } catch (e) { return false; } };
   const fmtRoom = (r) => (r || '').replace(/(.{4})(?=.)/g, '$1-');
   const normRoom = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   function newRoomCode() {
@@ -1559,7 +1787,7 @@
   // 이 기기에 저장된 일정을 방으로 올리기 (방에 이미 있으면 더 최근에 고친 쪽이 남아요)
   async function uploadLocal(cdb) {
     let local = { people: {}, busy: {} };
-    try { local = JSON.parse(localStorage.getItem(LS_DATA) || 'null') || local; } catch (e) {}
+    try { local = JSON.parse(localStorage.getItem(dataKey()) || 'null') || local; } catch (e) {}
     const [ps, bs] = await Promise.all([cdb.collection('people').get(), cdb.collection('busy').get()]);
     const roomPeople = new Map(ps.docs.map((d) => [d.id, d.data()]));
     const roomBusy = new Map(bs.docs.map((d) => [d.id, d.data()]));
@@ -1594,6 +1822,7 @@
     $('roomIn').hidden = !inRoom;
     $('roomMsg').textContent = '';
     if (inRoom) $('roomCode').textContent = fmtRoom(state.room);
+    $('createNote').textContent = `지금 보고 있는 일정표 "${curCal().name}"의 사람과 일정이 새 방으로 올라가요.`;
   }
   function openRoom(prefill) {
     renderRoomModal();
@@ -1604,38 +1833,50 @@
   const roomErrMsg = (e) => (e && e.code === 'permission_denied'
     ? '함께 쓰기 저장소에 들어가지 못했어요. Firebase 규칙 설정을 확인해 주세요.'
     : '연결하지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.');
-  function enterRoom(room) {
-    if (!saveRoom(room)) { $('roomMsg').textContent = '이 기기에 방을 기억해 둘 수 없어요.'; return; }
-    clearHash();
-    location.reload();
-  }
   $('roomBtn').addEventListener('click', () => openRoom());
+  // 새 방: 지금 일정표를 방에 연결
   $('createRoom').addEventListener('click', async () => {
     const msg = $('roomMsg');
+    const cal = curCal();
     roomBusyUI(true);
-    msg.textContent = '방을 만들고 이 기기의 일정을 올리는 중이에요…';
+    msg.textContent = '방을 만들고 이 일정표의 일정을 올리는 중이에요…';
     try {
       const room = newRoomCode();
       const cdb = await cloudConnector(room);
       const r = await uploadLocal(cdb);
-      msg.textContent = `방을 만들었어요. 사람 ${r.added}명, 주간 일정 ${r.wrote}개를 올렸어요.`;
-      enterRoom(room);
-    } catch (e) { msg.textContent = roomErrMsg(e); roomBusyUI(false); }
+      cal.room = room; saveCals();
+      closeModal('roomModal'); clearHash();
+      if (CALS.current === cal.id) await openCalendar();
+      flash(`방을 만들었어요. 사람 ${r.added}명, 주간 일정 ${r.wrote}개를 올렸어요. "함께 쓰는 방"에서 친구를 초대해 보세요.`);
+    } catch (e) { msg.textContent = roomErrMsg(e); }
+    finally { roomBusyUI(false); }
   });
+  // 방 들어가기: 새 일정표로 추가 (지금 일정표는 그대로)
   $('joinRoom').addEventListener('click', async () => {
     const msg = $('roomMsg');
     const room = normRoom($('joinCode').value);
     if (!/^[A-Z2-9]{12}$/.test(room)) { msg.textContent = '방 코드는 12글자예요. 받은 코드를 다시 확인해 주세요.'; return; }
-    if (room === state.room) { msg.textContent = '이미 이 방에서 함께 쓰고 있어요.'; return; }
+    const existing = CALS.list.find((c) => c.room === room);
+    if (existing) {
+      closeModal('roomModal'); clearHash();
+      if (existing.id !== CALS.current) { switchCalendar(existing.id); flash(`이미 들어와 있는 방이라 "${existing.name}" 일정표로 옮겼어요.`); }
+      else flash('이미 이 방에서 함께 쓰고 있어요.');
+      return;
+    }
     roomBusyUI(true);
     msg.textContent = '방에 들어가는 중이에요…';
     try {
       const cdb = await cloudConnector(room);
       const ps = await cdb.collection('people').get();
-      if ($('joinMerge').checked) await uploadLocal(cdb);
-      else if (ps.empty) msg.textContent = '아직 아무도 없는 방이에요. 들어가서 사람을 추가해 보세요.';
-      enterRoom(room);
-    } catch (e) { msg.textContent = roomErrMsg(e); roomBusyUI(false); }
+      const names = ps.docs.map((d) => d.data()).filter((p) => p && cleanName(p.name))
+        .sort((a, b) => (Number(a.createdAt) || 0) - (Number(b.createdAt) || 0)).map((p) => cleanName(p.name));
+      const name = names.length ? names.slice(0, 3).join('·') + (names.length > 3 ? ' 외' : '') : '함께 쓰는 일정';
+      addCalendar(name, room);
+      closeModal('roomModal'); clearHash();
+      await openCalendar();
+      flash(ps.empty ? '아직 아무도 없는 방이에요. + 버튼으로 사람을 추가해 보세요.' : `방에 들어왔어요. 왼쪽 목록에 "${curCal().name}" 일정표로 추가했어요.`);
+    } catch (e) { msg.textContent = roomErrMsg(e); }
+    finally { roomBusyUI(false); }
   });
   $('joinCode').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); $('joinRoom').click(); } });
   function inviteText() {
@@ -1658,17 +1899,22 @@
       return;
     }
     roomBusyUI(true);
-    $('roomMsg').textContent = '방 일정을 이 기기에 복사해 두는 중이에요…';
+    $('roomMsg').textContent = '방 일정을 이 일정표에 복사해 두는 중이에요…';
+    const cal = curCal();
     try {
-      // 나가도 지금 보던 일정이 이 기기에 남도록 복사
+      // 나가도 지금 보던 일정이 이 일정표에 남도록 복사
       const data = JSON.parse(await buildExport());
       const people = {}, busy = {};
       data.people.forEach((p) => { people[p.id] = { name: p.name, color: p.color, createdAt: p.createdAt }; });
       data.busy.forEach((b) => { busy[`${b.week}_${b.pid}`] = b; });
-      localStorage.setItem(LS_DATA, JSON.stringify({ people, busy }));
+      localStorage.setItem(dataKey(cal.id), JSON.stringify({ people, busy }));
     } catch (e) { /* 복사에 실패해도 나가기는 해요 */ }
-    saveRoom('');
-    location.reload();
+    cal.room = ''; saveCals();
+    delete btn.dataset.armed; btn.textContent = '방 나가기';
+    roomBusyUI(false);
+    closeModal('roomModal');
+    if (CALS.current === cal.id) await openCalendar();
+    flash('방에서 나왔어요. 지금까지의 일정은 이 일정표에 그대로 남아 있어요.');
   });
   function checkRoomLink() {
     const m = location.hash.match(/^#room=([A-Za-z0-9-]{12,16})$/);
@@ -1681,6 +1927,69 @@
     return true;
   }
 
+  // 일정표 하나를 열기: 화면과 연결을 모두 새로 시작해요
+  async function openCalendar() {
+    const tok = ++openToken;
+    if (unsubPeople) { unsubPeople(); unsubPeople = null; }
+    if (unsubBusy) { unsubBusy(); unsubBusy = null; }
+    busySig = ''; clearTimeout(loadTimer); clearTimeout(flashTimer); flashTimer = null;
+    drag = null; db = null; tableSig = '';
+    document.querySelectorAll('.modal-bg.open').forEach((m) => m.classList.remove('open'));
+    Object.assign(state, {
+      mode: 'pending', people: {}, busy: {}, room: '', readOnly: false, saving: 0, statusNote: '', peopleLoaded: false,
+      view: 'week', week: thisWeekKey(), month: monthKeyOf(new Date()),
+      range: { start: thisWeekKey(), end: dayKey(addDays(mondayOf(new Date()), 13)) },
+      hours: { start: 9, end: 21 }, label: '', recent: [], hidden: new Set(), me: '', showFree: false,
+    });
+    loadPrefs(); renderSidebar(); renderAll();
+    const cal = curCal();
+    if (IS_ARTIFACT) {
+      if (artifactDb === undefined) { try { artifactDb = await window.claude.use('db'); } catch (e) { artifactDb = null; } }
+      if (tok !== openToken) return;
+      if (artifactDb) {
+        db = artifactDb; state.mode = 'db';
+        loadTimer = setTimeout(() => { state.statusNote = '공유 저장소에 아직 연결되지 않았어요. 인터넷 연결을 확인해 주세요.'; renderFoot(); }, 10000);
+        subscribePeople(); subscribeBusy();
+      } else startLocal();
+    } else if (CLOUD_READY && cal.room) {
+      try {
+        const cdb = await cloudConnector(cal.room);
+        if (tok !== openToken) return;
+        db = cdb; state.room = cal.room; state.mode = 'db';
+        loadTimer = setTimeout(() => { state.statusNote = '함께 쓰는 방에 아직 연결되지 않았어요. 인터넷 연결을 확인해 주세요.'; renderFoot(); }, 10000);
+        subscribePeople(); subscribeBusy();
+      } catch (e) {
+        if (tok !== openToken) return;
+        // 방에 연결하지 못하면 이 일정표의 기기 일정을 보여 주되, 나중에 섞이지 않게 고치지는 못하게 해요
+        db = null; startLocal();
+        state.readOnly = true;
+        state.statusNote = `함께 쓰는 방(${fmtRoom(cal.room)})에 연결하지 못해서 이 기기에 저장된 일정을 보기만 할 수 있어요. 인터넷을 확인하고 다시 열어 주세요.`;
+      }
+    } else startLocal();
+    renderSidebar(); renderAll();
+  }
+
+  // 메뉴바 조작
+  $('newCal').addEventListener('click', async () => {
+    addCalendar('새 일정표');
+    closeDrawer();
+    await openCalendar();
+    startRenameTitle();   // 바로 이름을 붙일 수 있게
+  });
+  $('calTitle').addEventListener('click', startRenameTitle);
+  $('calTitle').addEventListener('keydown', (e) => { if (e.key === 'Enter') startRenameTitle(); });
+  $('sideClose').addEventListener('click', () => {
+    if (isNarrow()) closeDrawer();
+    else { $('app').classList.add('collapsed'); try { localStorage.setItem(LS_SIDE, 'collapsed'); } catch (e) {} }
+  });
+  $('menuBtn').addEventListener('click', () => {
+    if (isNarrow()) $('app').classList.add('drawer');
+    else { $('app').classList.remove('collapsed'); try { localStorage.setItem(LS_SIDE, 'open'); } catch (e) {} }
+  });
+  $('scrim').addEventListener('click', closeDrawer);
+  document.addEventListener('click', closeCalMenu);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeCalMenu(); closeDrawer(); } });
+
   async function init() {
     if (!IS_WEB) {
       $('shareLink').textContent = '일정 코드 보내기';
@@ -1690,30 +1999,9 @@
       $('linkOutSub').textContent = '아래 글을 복사해 카카오톡 등으로 보내 주세요. 친구가 "우리 일정" 앱의 "받은 코드 붙여넣기"에 넣으면 지금 내 화면의 사람과 일정이 친구 쪽에 합쳐져요.';
       $('importText').placeholder = '받은 일정 코드(또는 링크, JSON)를 여기에 붙여 넣으세요';
     }
-    loadPrefs(); renderAll();
-    let ns = null;
-    if (window.claude && typeof window.claude.use === 'function') {
-      try { ns = await window.claude.use('db'); } catch (e) { ns = null; }
-    }
-    const savedRoom = !ns && CLOUD_READY ? loadRoom() : '';
-    if (ns) {
-      db = ns; state.mode = 'db';
-      loadTimer = setTimeout(() => { state.statusNote = '공유 저장소에 아직 연결되지 않았어요. 인터넷 연결을 확인해 주세요.'; renderFoot(); }, 10000);
-      subscribePeople(); subscribeBusy();
-    } else if (savedRoom) {
-      try {
-        db = await cloudConnector(savedRoom);
-        state.room = savedRoom; state.mode = 'db';
-        loadTimer = setTimeout(() => { state.statusNote = '함께 쓰는 방에 아직 연결되지 않았어요. 인터넷 연결을 확인해 주세요.'; renderFoot(); }, 10000);
-        subscribePeople(); subscribeBusy();
-      } catch (e) {
-        // 방에 연결하지 못하면 이 기기 일정을 보여 주되, 나중에 섞이지 않게 고치지는 못하게 해요
-        db = null; startLocal();
-        state.readOnly = true;
-        state.statusNote = `함께 쓰는 방(${fmtRoom(savedRoom)})에 연결하지 못해서 이 기기에 저장된 일정을 보기만 할 수 있어요. 인터넷을 확인하고 다시 열어 주세요.`;
-      }
-    } else startLocal();
-    renderAll();
+    loadCals();
+    try { if (localStorage.getItem(LS_SIDE) === 'collapsed') $('app').classList.add('collapsed'); } catch (e) {}
+    await openCalendar();
     if (!checkRoomLink()) checkIncomingLink();
   }
   init();
