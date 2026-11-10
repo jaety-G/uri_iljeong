@@ -52,6 +52,8 @@
   .newcal svg{width:16px;height:16px}
   .newcal:hover{background:#FFFDF6}
   .sblabel{font-size:12px;color:var(--muted);padding:0 10px 6px}
+  .callist .sblabel{padding:10px 10px 6px}
+  .callist .sblabel:first-child{padding-top:0}
   .callist{display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;min-height:0;padding:0 2px}
   .calitem{position:relative;display:flex;align-items:center;gap:6px;min-height:38px;padding:0 4px 0 10px;border:1.5px solid transparent;border-radius:9px;cursor:pointer;font-size:14px}
   .calitem:hover{background:rgba(43,43,43,.05)}
@@ -59,6 +61,9 @@
   .calitem:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
   .calname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .caltag{flex:none;font-size:11px;font-weight:700;padding:0 6px;line-height:17px;border-radius:999px;border:1.2px solid var(--ink);background:#FFF0B3}
+  .caltag.main{background:var(--ink);color:#fff}
+  .calpin{flex:none;display:grid;place-items:center;color:var(--muted)}
+  .calpin svg{width:14px;height:14px}
   .calmore{width:28px;height:28px;opacity:0}
   .calmore svg{width:16px;height:16px}
   .calitem:hover .calmore,.calitem.on .calmore,.calmore:focus-visible{opacity:1}
@@ -249,9 +254,8 @@
     <button class="iconbtn" id="sideClose" aria-label="메뉴 닫기" title="메뉴 닫기"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5"/><path d="M7.5 3.5v13"/></svg></button>
   </div>
   <button class="newcal" id="newCal"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>새로 만들기</button>
-  <div class="sblabel">일정표</div>
   <div class="callist" id="calList"></div>
-  <div class="sbfoot">일정표마다 사람과 일정이 따로 저장돼요.</div>
+  <div class="sbfoot">일정표마다 사람과 일정이 따로 저장돼요. "메인" 일정표는 앱을 열면 먼저 보여요.</div>
 </aside>
 <div class="scrim" id="scrim"></div>
 <main class="mainarea">
@@ -546,8 +550,9 @@
      첫 일정표(id: main)는 예전 저장 이름을 그대로 써서, 전에 쓰던 일정이 그대로 보여요. */
   const LS_CALS = 'uri-iljeong:cals:v1';
   const LS_SIDE = 'uri-iljeong:sidebar:v1';
+  const PIN_SVG = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 3.5h5l-.8 4.5 2.8 2.5v1.5h-9V10.5l2.8-2.5z"/><path d="M10 12v4.5"/></svg>';
   const DOTS_SVG = '<svg viewBox="0 0 20 20" fill="currentColor"><circle cx="4.5" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/></svg>';
-  let CALS = { list: [], current: 'main' };
+  let CALS = { list: [], current: 'main', main: 'main' };
   let openToken = 0, unsubPeople = null, artifactDb;
   const cleanCalName = (s) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, 20);
   const curCal = () => CALS.list.find((c) => c.id === CALS.current) || CALS.list[0];
@@ -561,17 +566,20 @@
       if (c && Array.isArray(c.list)) {
         CALS = {
           list: c.list.filter((x) => x && typeof x.id === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(x.id))
-            .map((x) => ({ id: x.id, name: cleanCalName(x.name) || '이름 없는 일정표', room: /^[A-Z2-9]{12}$/.test(x.room || '') ? x.room : '', createdAt: Number(x.createdAt) || 0 })),
+            .map((x) => ({ id: x.id, name: cleanCalName(x.name) || '이름 없는 일정표', room: /^[A-Z2-9]{12}$/.test(x.room || '') ? x.room : '', createdAt: Number(x.createdAt) || 0, pinnedAt: Number(x.pinnedAt) || 0 })),
           current: String(c.current || ''),
+          // 메인 일정표: 앱을 열면 먼저 보이는 일정표 (예전 목록엔 없으니 첫 일정표로)
+          main: typeof c.main === 'string' ? c.main : 'main',
         };
       }
     } catch (e) {}
     if (!CALS.list.length) {
       const main = { id: 'main', name: '우리 일정', room: '', createdAt: 1 };
       try { const r = localStorage.getItem(LS_ROOM_OLD) || ''; if (/^[A-Z2-9]{12}$/.test(r)) main.room = r; localStorage.removeItem(LS_ROOM_OLD); } catch (e) {}
-      CALS = { list: [main], current: 'main' };
+      CALS = { list: [main], current: 'main', main: 'main' };
       saveCals();
     }
+    if (!CALS.list.some((c) => c.id === CALS.main)) CALS.main = '';
     if (!CALS.list.some((c) => c.id === CALS.current)) CALS.current = calsByNewest()[0].id;
   }
   function uniqueCalName(base) {
@@ -581,10 +589,24 @@
   }
   function addCalendar(name, room = '') {
     const id = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    CALS.list.push({ id, name: uniqueCalName(cleanCalName(name) || '새 일정표'), room, createdAt: Date.now() });
+    CALS.list.push({ id, name: uniqueCalName(cleanCalName(name) || '새 일정표'), room, createdAt: Date.now(), pinnedAt: 0 });
     CALS.current = id;
     saveCals();
     return id;
+  }
+  function togglePin(id) {
+    const c = CALS.list.find((x) => x.id === id);
+    if (!c) return;
+    c.pinnedAt = c.pinnedAt ? 0 : Date.now();
+    saveCals(); renderSidebar();
+    flash(c.pinnedAt ? `"${c.name}"을(를) 맨 위에 고정했어요.` : `"${c.name}" 고정을 풀었어요.`);
+  }
+  function toggleMain(id) {
+    const c = CALS.list.find((x) => x.id === id);
+    if (!c) return;
+    CALS.main = CALS.main === id ? '' : id;
+    saveCals(); renderSidebar();
+    flash(CALS.main ? `"${c.name}"을(를) 메인 일정표로 정했어요. 앱을 열면 이 일정표가 먼저 보여요.` : '메인 일정표를 풀었어요. 앱을 열면 마지막에 보던 일정표가 보여요.');
   }
   function renameCalendar(id, name) {
     const n = cleanCalName(name), c = CALS.list.find((x) => x.id === id);
@@ -600,7 +622,17 @@
     document.title = !IS_ARTIFACT && cur.name !== '우리 일정' ? `${cur.name} · 우리 일정` : '우리 일정';
     const box = $('calList');
     box.innerHTML = '';
-    calsByNewest().forEach((c) => {
+    // 고정한 일정표(고정한 순서) → 나머지(최근 것부터). 각 칸에서 메인이 맨 위.
+    const mainFirst = (arr) => [...arr.filter((c) => c.id === CALS.main), ...arr.filter((c) => c.id !== CALS.main)];
+    const pinned = mainFirst(CALS.list.filter((c) => c.pinnedAt).sort((a, b) => a.pinnedAt - b.pinnedAt));
+    const others = mainFirst(calsByNewest().filter((c) => !c.pinnedAt));
+    const label = (t) => { const l = document.createElement('div'); l.className = 'sblabel'; l.textContent = t; box.appendChild(l); };
+    const rows = [];
+    if (pinned.length) { rows.push('고정됨', ...pinned); if (others.length) rows.push('일정표'); }
+    else rows.push('일정표');
+    rows.push(...others);
+    rows.forEach((c) => {
+      if (typeof c === 'string') { label(c); return; }
       const it = document.createElement('div');
       it.className = 'calitem' + (c.id === CALS.current ? ' on' : '');
       it.dataset.id = c.id;
@@ -610,6 +642,16 @@
       nm.className = 'calname';
       nm.textContent = c.name;
       it.appendChild(nm);
+      if (c.id === CALS.main) {
+        const t = document.createElement('span');
+        t.className = 'caltag main'; t.textContent = '메인'; t.title = '앱을 열면 먼저 보이는 일정표';
+        it.appendChild(t);
+      }
+      if (c.pinnedAt) {
+        const pin = document.createElement('span');
+        pin.className = 'calpin'; pin.innerHTML = PIN_SVG; pin.title = '고정됨';
+        it.appendChild(pin);
+      }
       if (c.room && CLOUD_READY) {
         const t = document.createElement('span');
         t.className = 'caltag'; t.textContent = '함께'; t.title = `방 ${fmtRoom(c.room)}에서 함께 쓰는 일정표`;
@@ -644,7 +686,13 @@
       if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = c.room ? '정말 삭제 (방에서 나가요)' : '정말 삭제'; return; }
       closeCalMenu(); deleteCalendar(id);
     });
-    m.append(rn, del);
+    const mainBtn = document.createElement('button');
+    mainBtn.textContent = CALS.main === id ? '메인 지정 풀기' : '메인으로 지정';
+    mainBtn.addEventListener('click', (e) => { e.stopPropagation(); closeCalMenu(); toggleMain(id); });
+    const pinBtn = document.createElement('button');
+    pinBtn.textContent = c.pinnedAt ? '고정 풀기' : '맨 위에 고정';
+    pinBtn.addEventListener('click', (e) => { e.stopPropagation(); closeCalMenu(); togglePin(id); });
+    m.append(mainBtn, pinBtn, rn, del);
     m.addEventListener('click', (e) => e.stopPropagation());
     item.appendChild(m);
   }
@@ -687,6 +735,7 @@
     const wasCurrent = id === CALS.current;
     try { localStorage.removeItem(dataKey(id)); localStorage.removeItem(prefKey(id)); } catch (e) {}
     CALS.list = CALS.list.filter((c) => c.id !== id);
+    if (CALS.main === id) CALS.main = '';
     if (!CALS.list.length) addCalendar('새 일정표');
     else if (wasCurrent) CALS.current = calsByNewest()[0].id;
     saveCals();
@@ -2000,6 +2049,7 @@
       $('importText').placeholder = '받은 일정 코드(또는 링크, JSON)를 여기에 붙여 넣으세요';
     }
     loadCals();
+    if (CALS.main) { CALS.current = CALS.main; saveCals(); }   // 앱을 열면 메인 일정표부터
     try { if (localStorage.getItem(LS_SIDE) === 'collapsed') $('app').classList.add('collapsed'); } catch (e) {}
     await openCalendar();
     if (!checkRoomLink()) checkIncomingLink();
