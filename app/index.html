@@ -117,7 +117,10 @@
   .lbl span,.mlbl span{overflow:hidden;text-overflow:ellipsis}
   /* 누구 일정인지: 이름 첫 글자 동그라미 */
   .ini{flex:none;display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 2px;border-radius:8px;border:1.2px solid;font-size:10px;font-weight:700;line-height:1;color:var(--ink);font-style:normal;letter-spacing:-.5px}
-  .ini.more{background:#fff;border-color:var(--ink);font-weight:500}
+  .many .ini + .ini{margin-left:-6px}
+  /* 3명 이상: 이름 동그라미 한 줄, 일정 이름은 아래 줄 */
+  .lbl.many{flex-wrap:wrap;row-gap:1px;border-radius:8px;padding:2px 7px 2px 3px}
+  .lbl.many span{flex-basis:100%;padding-left:1px}
   .ini + .ini{margin-left:-4px}
   .mlbl .ini{min-width:14px;height:14px;font-size:9px}
 
@@ -500,16 +503,10 @@
     TAGS = {};
     list.forEach((p) => { TAGS[p.id] = count[first(p)] > 1 ? Array.from(p.name).slice(0, 2).join('') : first(p); });
   }
-  // 이름 첫 글자 동그라미 (3명 이상이면 2명까지 + "+N")
+  // 이름 첫 글자 동그라미: 모든 사람을 다 보여 주고, 3명 이상이면 조금 더 겹쳐서 자리를 아껴요
   function appendInitials(parent, people) {
-    const shown = people.length > 2 ? people.slice(0, 1) : people;
-    shown.forEach((p) => parent.appendChild(initialEl(p)));
-    if (people.length > shown.length) {
-      const m = document.createElement('i');
-      m.className = 'ini more';
-      m.textContent = `+${people.length - shown.length}`;
-      parent.appendChild(m);
-    }
+    people.forEach((p) => parent.appendChild(initialEl(p)));
+    if (people.length >= 3) parent.classList.add('many');
   }
   function initialEl(p) {
     const c = COLORS[p.color];
@@ -744,13 +741,13 @@
           }
         });
       });
-      const stack = {};   // 같은 칸에서 시작하는 이름표는 아래로 쌓기
+      const stack = {};   // 같은 칸에서 시작하는 이름표는 아래로 쌓기 (두 줄 이름표는 더 아래로)
       tags.forEach((t) => {
-        const k = stack[t.start] || 0;
-        stack[t.start] = k + 1;
+        const y = stack[t.start] || 0;
+        stack[t.start] = y + (t.people.length >= 3 ? 38 : 20);
         const lb = document.createElement('div');
         lb.className = 'lbl';
-        lb.style.top = `calc(var(--rowH) * ${t.start} + ${5 + k * 20}px)`;
+        lb.style.top = `calc(var(--rowH) * ${t.start} + ${5 + y}px)`;
         appendInitials(lb, t.people);
         const tx = document.createElement('span');
         tx.textContent = t.label;
