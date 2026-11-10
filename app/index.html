@@ -399,7 +399,14 @@
   const LS_ROOM = 'uri-iljeong:room:v1';
   // 함께 쓰기(실시간 방)에 쓰는 Firebase 설정.
   // Firebase 콘솔 → 프로젝트 설정 → 내 앱 → "SDK 설정 및 구성"의 firebaseConfig 값을 넣어요. 비워 두면(null) 함께 쓰기 버튼이 숨겨져요.
-  const FIREBASE_CONFIG = null;
+  const FIREBASE_CONFIG = {
+    apiKey: 'AIzaSyBl-kgClCMjuY-hdQ6oYTPegSL-5iLycYU',
+    authDomain: 'uri-iljeong.firebaseapp.com',
+    projectId: 'uri-iljeong',
+    storageBucket: 'uri-iljeong.firebasestorage.app',
+    messagingSenderId: '870648780757',
+    appId: '1:870648780757:web:e56b6976509169c36fcf5c',
+  };
   const FIREBASE_VER = '13.2.0';
   const WEB_APP_URL = 'https://jaety-g.github.io/uri_iljeong/app/';   // 초대 링크에 쓰는 웹 버전 주소
   // 안드로이드 앱(Capacitor) 안에서 열렸는지
