@@ -1952,12 +1952,26 @@
       renderGrid(); renderPaintbar(); renderFoot();
     }, () => { state.statusNote = '일정을 받아오지 못했어요. 새로고침해 주세요.'; renderFoot(); });
   }
+  // 예전 첫 화면 예시(재원·재민·원식)에서 고치지 않은 일정(저장 시각 1)과,
+  // 그 일정밖에 없던 예시 사람만 지워요. 직접 칠하거나 고친 건 그대로 둬요.
+  function removeUntouchedSample(data) {
+    const SAMPLE = { jaewon: '재원', jaemin: '재민', wonsik: '원식' };
+    const busy = data.busy && typeof data.busy === 'object' ? data.busy : {};
+    for (const [k, b] of Object.entries(busy)) if (b && SAMPLE[b.pid] && Number(b.updatedAt) === 1) delete busy[k];
+    for (const [id, name] of Object.entries(SAMPLE)) {
+      const p = data.people[id];
+      if (p && p.name === name && Number(p.createdAt) <= 3 && !Object.values(busy).some((b) => b && b.pid === id)) delete data.people[id];
+    }
+    data.busy = busy;
+  }
   function startLocal() {
     state.mode = 'local';
     let data = null;
     try { data = JSON.parse(localStorage.getItem(dataKey()) || 'null'); } catch (e) { localOK = false; }
-    // 예시 일정은 첫 일정표를 처음 열 때만. 새로 만든 일정표는 빈 상태로 시작해요.
-    if (!data || typeof data.people !== 'object' || data.people === null) data = CALS.current === 'main' ? sampleData(thisWeekKey()) : { people: {}, busy: {} };
+    // 처음엔 빈 일정표로 시작해요 (예시 일정 없음). window.__uriSeedSample은 시험할 때만 써요.
+    if (!data || typeof data.people !== 'object' || data.people === null) data = window.__uriSeedSample && CALS.current === 'main' ? sampleData(thisWeekKey()) : { people: {}, busy: {} };
+    // 웹 버전: 예전에 들어와서 받아 둔 예시 일정 중 아무도 손대지 않은 것만 지워요
+    if (IS_WEB && !window.__uriSeedSample) removeUntouchedSample(data);
     state.people = {};
     for (const [id, p] of Object.entries(data.people)) {
       if (p && cleanName(p.name)) state.people[id] = { name: cleanName(p.name), color: clampColor(p.color), createdAt: Number(p.createdAt) || 0 };
