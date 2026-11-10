@@ -1,40 +1,71 @@
 rules_version = '2';
 
 // 우리 일정 — 함께 쓰기 저장소 규칙
-// 방 하나 = rooms/{방 코드 12글자} 아래의 people(사람), busy(주간 일정) 문서.
-// 방 코드를 아는 사람만 그 방을 읽고 쓸 수 있어요. 방 목록 자체는 아무도 볼 수 없어요.
+// 방 하나 = rooms/{방 코드 12글자} 아래의
+//   meta/info      방 이름·만든 사람
+//   people/{uid}   사람 (문서 id = 그 사람 기기의 익명 로그인 uid)
+//   busy/{주_uid}  주간 일정 / 루틴
+// 방 코드를 아는 사람만 읽을 수 있고, 각자 자기 사람·자기 일정만 만들고 고칠 수 있어요.
+// (Firebase 콘솔 → Authentication → 로그인 방법에서 "익명"을 켜 두어야 해요)
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function validRoom(room) {
       return room.matches('^[A-Z2-9]{12}$');
     }
+    function signedIn() {
+      return request.auth != null;
+    }
+    function validColor(c) {
+      return (c is int && c >= 0 && c <= 4)
+          || (c is string && c.matches('^#[0-9A-Fa-f]{6}$'));
+    }
+    function validRoomName(d) {
+      return d.keys().hasOnly(['name', 'owner', 'createdAt'])
+          && d.name is string && d.name.size() > 0 && d.name.size() <= 20
+          && d.owner is string;
+    }
+
+    match /rooms/{room}/meta/info {
+      allow read: if validRoom(room) && signedIn();
+      // 만든 사람만 방 이름을 정하고 바꿔요
+      allow create: if validRoom(room) && signedIn()
+        && validRoomName(request.resource.data)
+        && request.resource.data.owner == request.auth.uid;
+      allow update: if validRoom(room) && signedIn()
+        && resource.data.owner == request.auth.uid
+        && validRoomName(request.resource.data)
+        && request.resource.data.owner == resource.data.owner;
+    }
 
     match /rooms/{room}/people/{pid} {
-      allow read, delete: if validRoom(room);
-      allow create, update: if validRoom(room)
-        && request.resource.data.keys().hasOnly(['name', 'color', 'createdAt'])
+      allow read: if validRoom(room) && signedIn();
+      allow create, update: if validRoom(room) && signedIn()
+        && pid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['name', 'color', 'createdAt', 'num'])
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 10
-        // 색: 기본 색 번호 0~4 또는 직접 고른 색 '#RRGGBB'
-        && ((request.resource.data.color is int
-             && request.resource.data.color >= 0
-             && request.resource.data.color <= 4)
-            || (request.resource.data.color is string
-             && request.resource.data.color.matches('^#[0-9A-Fa-f]{6}$')));
+        && validColor(request.resource.data.color)
+        && request.resource.data.num is int
+        && request.resource.data.num >= 1
+        && request.resource.data.num <= 5;
+      allow delete: if validRoom(room) && signedIn() && pid == request.auth.uid;
     }
 
     match /rooms/{room}/busy/{id} {
-      allow read, delete: if validRoom(room);
-      allow create, update: if validRoom(room)
-        && request.resource.data.keys().hasOnly(['week', 'pid', 'cells', 'labels', 'updatedAt'])
+      allow read: if validRoom(room) && signedIn();
+      allow create, update: if validRoom(room) && signedIn()
+        && request.resource.data.pid == request.auth.uid
         && request.resource.data.week is string
-        && request.resource.data.pid is string
+        && request.resource.data.week.matches('^([0-9]{4}-[0-9]{2}-[0-9]{2}|RW|RM[1-5])$')
+        && id == request.resource.data.week + '_' + request.auth.uid
+        && request.resource.data.keys().hasOnly(['week', 'pid', 'cells', 'labels', 'updatedAt'])
         && request.resource.data.cells is list
         && request.resource.data.cells.size() <= 168
         && request.resource.data.labels is map
         && request.resource.data.labels.size() <= 168;
+      allow delete: if validRoom(room) && signedIn() && resource.data.pid == request.auth.uid;
     }
   }
 }

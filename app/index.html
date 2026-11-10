@@ -220,6 +220,9 @@
   .modal .sub{color:var(--muted);font-size:13px;margin:0 0 16px}
   .prow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
   .prow .sbtn{padding:0 10px}
+  #addRow[hidden]{display:none}
+  .prow .metag{flex:none;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;border:1.2px solid var(--ink);background:#fff}
+  .prow .note{white-space:nowrap;margin:0}
   .dot{width:18px;height:18px;border-radius:50%;flex:none;border:1.5px solid}
   .dot.pick{width:26px;height:26px;padding:0;cursor:pointer}
   .dot.pick:hover{outline:2px solid var(--ink);outline-offset:2px}
@@ -364,7 +367,7 @@
     <p class="sub">최대 5명까지 추가할 수 있어요. 이름을 고치면 바로 저장돼요. 색 동그라미를 누르면 색을 바꿀 수 있어요. "일정 비우기"는 사람은 남기고 그 사람의 모든 일정만 지워요.</p>
     <div id="peopleList"></div>
     <hr class="divider">
-    <div class="prow">
+    <div class="prow" id="addRow">
       <span class="dot" id="newDot"></span>
       <input class="tin" id="newName" maxlength="10" placeholder="새 이름">
       <button class="sbtn primary" id="addBtn">추가</button>
@@ -401,12 +404,16 @@
     <div id="roomOut">
       <p class="sub">방을 만들면 같은 방에 들어온 사람끼리 일정이 실시간으로 맞춰져요. 컴퓨터·휴대폰 어디서든 같은 방 코드로 들어오면 돼요.</p>
       <strong style="font-size:14px">새 방 만들기</strong>
-      <p class="note" id="createNote">지금 보고 있는 일정표의 사람과 일정이 새 방으로 올라가요.</p>
+      <p class="note" id="createNote"></p>
+      <div class="row2">
+        <input class="tin" id="roomNameIn" maxlength="20" placeholder="방 이름 (모두에게 보여요)" style="flex:1 1 180px">
+        <input class="tin" id="myNameIn" maxlength="10" placeholder="내 이름 (비우면 1번)" style="flex:1 1 140px">
+      </div>
       <div class="row2"><button class="sbtn primary" id="createRoom">새 방 만들기</button></div>
       <hr class="divider">
       <strong style="font-size:14px">방 코드로 들어가기</strong>
       <div class="row2"><input class="tin" id="joinCode" placeholder="예: ABCD-EFGH-JKLM" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1"><button class="sbtn primary" id="joinRoom">들어가기</button></div>
-      <p class="note">들어가면 왼쪽 목록에 새 일정표로 추가돼요. 지금 보던 일정표는 그대로예요.</p>
+      <p class="note">들어가면 왼쪽 목록에 새 일정표로 추가되고, 나는 다음 번호(2번, 3번…)가 돼요. 다른 사람 일정은 그 사람만 고칠 수 있어요.</p>
     </div>
     <div id="roomIn" hidden>
       <p class="sub">이 방에 들어온 사람끼리 일정이 실시간으로 맞춰지고 있어요.</p>
@@ -597,6 +604,9 @@
     readOnly: false,
     saving: 0,
     room: '',                 // 함께 쓰는 방 코드 (Firebase)
+    myUid: '',                // 방 안에서 나(익명 로그인 uid = 내 사람 id)
+    roomOwner: '',            // 방을 만든 사람 uid (방 이름을 바꿀 수 있음)
+    roomCreatedAt: 0,
     statusNote: '',
     peopleLoaded: false,
   };
@@ -611,7 +621,7 @@
   const PIN_SVG = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 3.5h5l-.8 4.5 2.8 2.5v1.5h-9V10.5l2.8-2.5z"/><path d="M10 12v4.5"/></svg>';
   const DOTS_SVG = '<svg viewBox="0 0 20 20" fill="currentColor"><circle cx="4.5" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/></svg>';
   let CALS = { list: [], current: 'main', main: 'main' };
-  let openToken = 0, unsubPeople = null, artifactDb;
+  let openToken = 0, unsubPeople = null, unsubMeta = null, artifactDb;
   const cleanCalName = (s) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, 20);
   const curCal = () => CALS.list.find((c) => c.id === CALS.current) || CALS.list[0];
   const dataKey = (id = CALS.current) => (id === 'main' ? LS_DATA : `${LS_DATA}:${id}`);
@@ -668,7 +678,14 @@
   }
   function renameCalendar(id, name) {
     const n = cleanCalName(name), c = CALS.list.find((x) => x.id === id);
-    if (c && n && n !== c.name) { c.name = n; saveCals(); }
+    if (!c || !n || n === c.name) return;
+    if (c.room && CLOUD_READY) {
+      // 방 이름은 모두에게 똑같이 보여요. 방을 만든 사람만, 그 방을 열어 둔 상태에서 바꿀 수 있어요.
+      if (id !== CALS.current || !db || state.room !== c.room) { flash('방 이름은 그 방을 열고 바꿔 주세요.'); return; }
+      if (!state.roomOwner || state.roomOwner !== state.myUid) { flash('방 이름은 방을 만든 사람만 바꿀 수 있어요.'); return; }
+      db.doc('meta/info').set({ name: n, owner: state.roomOwner, createdAt: state.roomCreatedAt || Date.now() }).catch(onWriteError);
+    }
+    c.name = n; saveCals();
   }
   const isNarrow = () => window.matchMedia('(max-width: 900px)').matches;
   const closeDrawer = () => $('app').classList.remove('drawer');
@@ -830,10 +847,12 @@
   }
 
   /* ---------- 데이터 도우미 ---------- */
+  // 함께 쓰는 방에서는 내 사람(내 uid)만 고칠 수 있어요
+  const canEditPerson = (pid) => !state.room || (!!state.myUid && pid === state.myUid);
   function peopleList() {
     return Object.entries(state.people)
       .map(([id, p]) => ({ id, ...p }))
-      .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0) || a.id.localeCompare(b.id));
+      .sort((a, b) => (a.num || 99) - (b.num || 99) || (a.createdAt || 0) - (b.createdAt || 0) || a.id.localeCompare(b.id));
   }
   const hoursList = () => Array.from({ length: state.hours.end - state.hours.start }, (_, i) => state.hours.start + i);
   function tableDates() {
@@ -1085,6 +1104,9 @@
       const op = document.createElement('option'); op.value = p.id; op.textContent = p.name; sel.appendChild(op);
     });
     sel.value = state.people[state.me] ? state.me : '';
+    // 방에서는 내가 누구인지 정해져 있어요
+    sel.disabled = !!state.room;
+    sel.title = state.room ? '함께 쓰는 방에서는 내 일정만 칠할 수 있어요' : '';
   }
 
   // 칠하기 막대: 지금 칠할 일정 이름 + 최근 이름
@@ -1266,6 +1288,7 @@
     else if (!peopleList().length) h.textContent = '+ 버튼을 눌러 함께 볼 사람을 추가해 보세요.';
     else if (state.routine && state.view === 'month') h.textContent = '날짜 없이 매달 반복되는 루틴이에요(1~5주차). 주차나 칸을 누르면 그 주차 표로 들어가 칠할 수 있어요. 매주 반복되는 시간표는 "주간"에 있어요.';
     else if (state.view === 'month') h.textContent = '날짜마다 색 막대(왼쪽이 이른 시간)와 일정 이름이 보여요. 색이 겹쳐 진한 곳은 여러 명이 바쁜 시간이에요. 날짜를 누르면 그 주를 자세히 보고 칠할 수 있어요.';
+    else if (state.room && !state.people[state.myUid] && state.view !== 'month') h.textContent = '이 방은 5명이 가득 차서 보기만 할 수 있어요.';
     else if (me && !state.readOnly) h.textContent = state.label
       ? `${me.name}의 "${state.label}" 일정을 칠하는 중이에요. 칸을 누르거나 끌어서 칠하고, 같은 이름으로 칠한 칸을 다시 누르면 지워져요.`
       : `${me.name}의 바쁜 시간을 칠하는 중이에요. 위 "일정 이름"을 적고 칠하면 칸에 이름이 같이 보여요. 칠한 칸을 다시 누르면 지워져요.`;
@@ -1290,7 +1313,7 @@
     const me = state.people[state.me];
     $('copyLastWeek').hidden = state.routine || !(me && !state.readOnly && state.mode !== 'pending' && state.view === 'week' && cellsOf(state.me, state.week).size === 0);
     // 루틴(매주)이 비어 있으면, 날짜 달력에서 보던 주를 통째로 옮겨 올 수 있게
-    const routineEmpty = state.routine && state.view === 'week' && state.rweek === 'RW' && peopleList().every((p) => cellsOf(p.id, 'RW').size === 0);
+    const routineEmpty = state.routine && state.view === 'week' && state.rweek === 'RW' && peopleList().filter((p) => canEditPerson(p.id)).every((p) => cellsOf(p.id, 'RW').size === 0) && peopleList().some((p) => canEditPerson(p.id));
     $('weekToRoutine').hidden = !(routineEmpty && peopleList().length && !state.readOnly && state.mode !== 'pending');
     $('shareLink').hidden = state.mode === 'db';   // 공유 저장소에서는 이미 모두 같은 일정을 봐요
     $('roomBtn').hidden = !CLOUD_READY || IS_ARTIFACT || state.mode === 'pending';
@@ -1377,7 +1400,9 @@
     const cell = e.target.closest('.cell');
     if (!cell || e.button > 0) return;
     if (state.mode === 'pending') return;
+    if (state.room && !state.people[state.myUid]) { flash('이 방은 5명이 가득 차서 보기만 할 수 있어요.'); return; }
     if (!state.people[state.me]) { flash('먼저 오른쪽 위 "나는"에서 내 이름을 골라 주세요. 그다음 칸을 눌러 칠할 수 있어요.'); return; }
+    if (!canEditPerson(state.me)) { flash('다른 사람의 일정은 그 사람만 고칠 수 있어요.'); return; }
     if (state.readOnly) { flash('보기 전용이라 칠할 수 없어요.'); return; }
     e.preventDefault();
     if (state.hidden.has(state.me)) { state.hidden.delete(state.me); savePrefs(); renderChips(); }
@@ -1439,7 +1464,7 @@
     } else rows = Object.values(state.busy).filter((b) => b.week === src);
     let n = 0;
     rows.forEach((b) => {
-      if (!state.people[b.pid] || !Array.isArray(b.cells) || !b.cells.length) return;
+      if (!state.people[b.pid] || !canEditPerson(b.pid) || !Array.isArray(b.cells) || !b.cells.length) return;
       const cells = b.cells.filter(validCell).sort();
       saveCells('RW', b.pid, cells, cleanLabels(b.labels, cells)); n++;
     });
@@ -1560,14 +1585,17 @@
       const c = colorOf(p.color);
       const row = document.createElement('div'); row.className = 'prow';
       const dot = document.createElement('button'); dot.className = 'dot pick'; dot.style.background = c.fill; dot.style.borderColor = c.line;
-      dot.title = `${p.name} 색 바꾸기`; dot.setAttribute('aria-label', `${p.name} 색 바꾸기`); dot.disabled = state.readOnly;
+      const editable = canEditPerson(p.id) && !state.readOnly;
+      dot.title = editable ? `${p.name} 색 바꾸기` : `${p.name}의 색은 본인만 바꿀 수 있어요`; dot.setAttribute('aria-label', `${p.name} 색 바꾸기`); dot.disabled = !editable;
       dot.addEventListener('click', () => { swatchFor = swatchFor === p.id ? '' : p.id; renderPeopleModal(); });
       const inp = document.createElement('input'); inp.className = 'tin'; inp.maxLength = 10; inp.value = p.name; inp.setAttribute('aria-label', `${p.name} 이름`);
+      inp.readOnly = !editable;
+      if (state.room && p.id === state.myUid) inp.title = '내 이름이에요. 바꾸면 방의 모두에게 보여요.';
       const commit = () => {
         const n = cleanName(inp.value);
         if (!n) { inp.value = state.people[p.id] ? state.people[p.id].name : p.name; return; }
         if (state.people[p.id] && n !== state.people[p.id].name) {
-          if (state.readOnly) { inp.value = state.people[p.id].name; return; }
+          if (!editable) { inp.value = state.people[p.id].name; return; }
           savePerson(p.id, { ...state.people[p.id], name: n }); renderAll();
         }
       };
@@ -1589,22 +1617,30 @@
         if (!clr.dataset.armed) { clr.dataset.armed = '1'; clr.textContent = '정말 비우기'; clr.classList.add('danger'); setTimeout(() => { if (clr.isConnected) { delete clr.dataset.armed; clr.textContent = '일정 비우기'; clr.classList.remove('danger'); } }, 3000); return; }
         clearSchedules(p.id);
       });
-      row.append(dot, inp, clr, del); box.appendChild(row);
+      if (state.room) {
+        // 방: 내 줄에는 "나" 표시와 일정 비우기만, 다른 사람 줄에는 아무 버튼도 없음
+        if (p.id === state.myUid) { const me = document.createElement('span'); me.className = 'metag'; me.textContent = '나'; row.append(dot, inp, me, clr); }
+        else { const lock = document.createElement('span'); lock.className = 'note'; lock.textContent = '본인만 수정'; row.append(dot, inp, lock); }
+        box.appendChild(row);
+      } else row.append(dot, inp, clr, del);
+      if (!state.room) box.appendChild(row);
       if (swatchFor === p.id && !state.readOnly) box.appendChild(swatchPanel(p));
     });
     const full = list.length >= MAX;
+    $('addRow').hidden = !!state.room;
     const nc = colorOf(freeColor());
     $('newDot').style.background = full ? '#fff' : nc.fill;
     $('newDot').style.borderColor = full ? '#CFC7B5' : nc.line;
     $('newName').disabled = full || state.readOnly;
     $('addBtn').disabled = full || state.readOnly;
-    $('addNote').textContent = state.readOnly ? '보기 전용이라 바꿀 수 없어요.' : full ? '최대 5명까지 함께 볼 수 있어요. 새로 넣으려면 한 명을 삭제해 주세요.' : '';
+    $('addNote').textContent = state.room ? '함께 쓰는 방에서는 친구가 방 코드로 들어오면 2번, 3번…으로 자동으로 생겨요. 각자 자기 이름·색·일정만 바꿀 수 있어요.'
+      : state.readOnly ? '보기 전용이라 바꿀 수 없어요.' : full ? '최대 5명까지 함께 볼 수 있어요. 새로 넣으려면 한 명을 삭제해 주세요.' : '';
   }
   // 색 고르기 판: 파스텔 12가지 + 직접 고르기
   let swatchFor = '';
   function setPersonColor(pid, value) {
     const cur = state.people[pid];
-    if (!cur || state.readOnly) return;
+    if (!cur || state.readOnly || !canEditPerson(pid)) return;
     const color = cleanColor(value);
     swatchFor = '';
     if (color !== cur.color) { savePerson(pid, { ...cur, color }); renderAll(); }
@@ -1649,6 +1685,7 @@
   }
   function openPeople() { swatchFor = ''; renderPeopleModal(); openModal('peopleModal'); if (!$('newName').disabled && !peopleList().length) $('newName').focus(); }
   function addPerson() {
+    if (state.room) return;   // 방에서는 각자 들어와서 자기 사람이 생겨요
     const name = cleanName($('newName').value);
     if (!name || state.readOnly || peopleList().length >= MAX) return;
     const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -1665,6 +1702,7 @@
   // 지우는 대신 "빈 일정"으로 덮어써서, 친구에게 보내는 코드·링크에도 비운 상태가 전해지고
   // 예전 코드를 다시 받아도 되살아나지 않아요(더 최근에 고친 쪽이 남으니까요).
   async function clearSchedules(pid) {
+    if (!canEditPerson(pid)) return;
     const name = state.people[pid] ? state.people[pid].name : '';
     const weeks = new Set(Object.values(state.busy).filter((b) => b.pid === pid && b.cells && b.cells.length).map((b) => b.week));
     if (state.mode === 'db') {
@@ -1679,6 +1717,7 @@
   }
 
   async function deletePerson(id) {
+    if (!canEditPerson(id) || state.room) return;
     savePerson(id, null);
     if (state.me === id) state.me = '';
     state.hidden.delete(id); savePrefs();
@@ -1729,6 +1768,7 @@
   $('importBtn').addEventListener('click', async () => {
     const msg = $('shareMsg');
     if (state.readOnly) { msg.textContent = '보기 전용이라 불러올 수 없어요.'; return; }
+    if (state.room) { msg.textContent = '함께 쓰는 방에서는 각자 자기 일정만 고칠 수 있어서 붙여넣기를 쓸 수 없어요. 방이 아닌 일정표에서 붙여 넣어 주세요.'; return; }
     let data;
     const raw = $('importText').value.trim();
     const lm = raw.match(/#s=([A-Za-z0-9_-]+)/);
@@ -1918,9 +1958,13 @@
       const p = {};
       snap.docs.forEach((d) => {
         const v = d.data();
-        if (v && typeof v.name === 'string' && cleanName(v.name)) p[d.id] = { name: cleanName(v.name), color: clampColor(v.color), createdAt: Number(v.createdAt) || 0 };
+        if (v && typeof v.name === 'string' && cleanName(v.name)) {
+          p[d.id] = { name: cleanName(v.name), color: clampColor(v.color), createdAt: Number(v.createdAt) || 0 };
+          if (Number.isInteger(v.num)) p[d.id].num = v.num;
+        }
       });
       state.people = p;
+      if (state.room) state.me = state.myUid && p[state.myUid] ? state.myUid : '';   // 방에서는 언제나 "나" = 내 사람
       if (!snap.metadata.fromCache) { state.peopleLoaded = true; clearTimeout(loadTimer); if (state.statusNote.startsWith('공유 저장소')) state.statusNote = ''; }
       renderAll();
     }, (err) => {
@@ -2001,7 +2045,16 @@
     const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VER}/`;
     const appMod = await import(base + 'firebase-app.js');
     const fs = await import(base + 'firebase-firestore.js');
+    const authMod = await import(base + 'firebase-auth.js');
     const app = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(FIREBASE_CONFIG);
+    // 기기마다 자동으로 익명 로그인 → 이 uid가 방 안에서 "나"예요 (내 사람·일정만 고칠 수 있게)
+    const auth = authMod.getAuth(app);
+    if (auth.authStateReady) await auth.authStateReady();
+    if (!auth.currentUser) {
+      try { await authMod.signInAnonymously(auth); }
+      catch (e) { throw { code: e && e.code === 'auth/operation-not-allowed' ? 'auth_disabled' : 'unavailable', message: String((e && e.message) || e) }; }
+    }
+    const uid = auth.currentUser.uid;
     let fdb;
     try { fdb = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) }); }
     catch (e) { fdb = fs.getFirestore(app); }
@@ -2025,6 +2078,7 @@
       onSnapshot: (next, err) => fs.onSnapshot(q, { includeMetadataChanges: true }, (s) => next(querySnap(s)), (e) => err && err(mapErr(e))),
     });
     return {
+      uid,
       doc: docRef,
       collection: (path) => ({ ...wrapQuery(fs.collection(fdb, `${root}/${path}`)), doc: (id) => docRef(`${path}/${id}`) }),
     };
@@ -2032,45 +2086,20 @@
   const cloudConnector = window.__uriCloudConnector || connectCloud;   // (테스트용으로 바꿔 끼울 수 있어요)
   const CLOUD_READY = !!(FIREBASE_CONFIG || window.__uriCloudConnector);
 
-  // 이 기기에 저장된 일정을 방으로 올리기 (방에 이미 있으면 더 최근에 고친 쪽이 남아요)
-  async function uploadLocal(cdb) {
-    let local = { people: {}, busy: {} };
-    try { local = JSON.parse(localStorage.getItem(dataKey()) || 'null') || local; } catch (e) {}
-    const [ps, bs] = await Promise.all([cdb.collection('people').get(), cdb.collection('busy').get()]);
-    const roomPeople = new Map(ps.docs.map((d) => [d.id, d.data()]));
-    const roomBusy = new Map(bs.docs.map((d) => [d.id, d.data()]));
-    const usedColors = new Set([...roomPeople.values()].map((p) => p && p.color));
-    let added = 0, wrote = 0, skipped = 0;
-    for (const [id, p] of Object.entries(local.people || {})) {
-      if (roomPeople.has(id) || !p || !cleanName(p.name)) continue;
-      if (roomPeople.size >= MAX) { skipped++; continue; }
-      let color = clampColor(p.color);
-      if (usedColors.has(color)) { const f = [0, 1, 2, 3, 4].find((c) => !usedColors.has(c)); color = f === undefined ? 0 : f; }
-      usedColors.add(color);
-      const body = { name: cleanName(p.name), color, createdAt: Number(p.createdAt) || Date.now() };
-      await cdb.doc(`people/${id}`).set(body);
-      roomPeople.set(id, body); added++;
-    }
-    for (const b of Object.values(local.busy || {})) {
-      if (!b || !roomPeople.has(b.pid) || !isWeekKey(b.week) || !Array.isArray(b.cells)) continue;
-      const id = `${b.week}_${b.pid}`;
-      const cur = roomBusy.get(id);
-      if (cur && (Number(cur.updatedAt) || 0) >= (Number(b.updatedAt) || 0)) continue;
-      const cells = b.cells.filter(validCell);
-      if (!cur && !cells.length) continue;
-      await cdb.doc(`busy/${id}`).set({ week: b.week, pid: b.pid, cells, labels: cleanLabels(b.labels, cells), updatedAt: Number(b.updatedAt) || Date.now() });
-      wrote++;
-    }
-    return { added, wrote, skipped };
-  }
-
   function renderRoomModal() {
     const inRoom = !!state.room;
     $('roomOut').hidden = inRoom;
     $('roomIn').hidden = !inRoom;
     $('roomMsg').textContent = '';
     if (inRoom) $('roomCode').textContent = fmtRoom(state.room);
-    $('createNote').textContent = `지금 보고 있는 일정표 "${curCal().name}"의 사람과 일정이 새 방으로 올라가요.`;
+    const meP = !state.room ? state.people[state.me] : null;
+    if (!inRoom) {
+      $('roomNameIn').value = state.room ? '' : curCal().name;
+      $('myNameIn').value = meP ? meP.name : '';
+    }
+    $('createNote').textContent = meP
+      ? `새 일정표로 방을 만들어요. 나는 1번이 되고, "${meP.name}"의 일정이 내 일정으로 올라가요. 지금 일정표는 그대로 남아요.`
+      : '새 일정표로 방을 만들어요. 나는 1번이 돼요. ("나는"에서 내 이름을 골라 두면 내 일정도 같이 올라가요.) 지금 일정표는 그대로 남아요.';
   }
   function openRoom(prefill) {
     renderRoomModal();
@@ -2080,26 +2109,37 @@
   const roomBusyUI = (on) => { ['createRoom', 'joinRoom', 'leaveRoom'].forEach((id) => { $(id).disabled = on; }); };
   const roomErrMsg = (e) => (e && e.code === 'permission_denied'
     ? '함께 쓰기 저장소에 들어가지 못했어요. Firebase 규칙 설정을 확인해 주세요.'
-    : '연결하지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.');
+    : e && e.code === 'auth_disabled'
+      ? 'Firebase에서 익명 로그인이 꺼져 있어요. Authentication → 로그인 방법 → 익명을 켜 주세요.'
+      : '연결하지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.');
   $('roomBtn').addEventListener('click', () => openRoom());
-  // 새 방: 지금 일정표를 방에 연결
+  // 새 방: 새 일정표로 방을 만들고 나는 1번 (지금 일정표는 그대로)
   $('createRoom').addEventListener('click', async () => {
     const msg = $('roomMsg');
-    const cal = curCal();
+    const roomName = cleanCalName($('roomNameIn').value) || cleanCalName(curCal().name) || '함께 쓰는 일정';
+    const myName = cleanName($('myNameIn').value) || '1번';
+    const meP = !state.room ? state.people[state.me] : null;   // 지금 일정표에서 "나는"으로 고른 사람
+    const myRows = meP ? Object.values(state.busy).filter((b) => b.pid === state.me && Array.isArray(b.cells) && b.cells.length) : [];
     roomBusyUI(true);
-    msg.textContent = '방을 만들고 이 일정표의 일정을 올리는 중이에요…';
+    msg.textContent = '방을 만드는 중이에요…';
     try {
       const room = newRoomCode();
       const cdb = await cloudConnector(room);
-      const r = await uploadLocal(cdb);
-      cal.room = room; saveCals();
+      const uid = cdb.uid, now = Date.now();
+      await cdb.doc('meta/info').set({ name: roomName, owner: uid, createdAt: now });
+      await cdb.doc(`people/${uid}`).set({ name: myName, color: meP ? cleanColor(meP.color) : 0, createdAt: now, num: 1 });
+      for (const b of myRows) {
+        const cells = b.cells.filter(validCell).sort();
+        await cdb.doc(`busy/${b.week}_${uid}`).set({ week: b.week, pid: uid, cells, labels: cleanLabels(b.labels, cells), updatedAt: now });
+      }
+      addCalendar(roomName, room);
       closeModal('roomModal'); clearHash();
-      if (CALS.current === cal.id) await openCalendar();
-      flash(`방을 만들었어요. 사람 ${r.added}명, 주간 일정 ${r.wrote}개를 올렸어요. "함께 쓰는 방"에서 친구를 초대해 보세요.`);
+      await openCalendar();
+      flash(`"${roomName}" 방을 만들었어요. 나는 1번이에요${myRows.length ? ` (내 일정 ${myRows.length}주를 올렸어요)` : ''}. "함께 쓰는 방"에서 친구를 초대해 보세요.`);
     } catch (e) { msg.textContent = roomErrMsg(e); }
     finally { roomBusyUI(false); }
   });
-  // 방 들어가기: 새 일정표로 추가 (지금 일정표는 그대로)
+  // 방 들어가기: 새 일정표로 추가하고, 나는 비어 있는 다음 번호(2번, 3번…)
   $('joinRoom').addEventListener('click', async () => {
     const msg = $('roomMsg');
     const room = normRoom($('joinCode').value);
@@ -2115,14 +2155,26 @@
     msg.textContent = '방에 들어가는 중이에요…';
     try {
       const cdb = await cloudConnector(room);
+      const uid = cdb.uid;
+      const meta = await cdb.doc('meta/info').get();
       const ps = await cdb.collection('people').get();
-      const names = ps.docs.map((d) => d.data()).filter((p) => p && cleanName(p.name))
-        .sort((a, b) => (Number(a.createdAt) || 0) - (Number(b.createdAt) || 0)).map((p) => cleanName(p.name));
-      const name = names.length ? names.slice(0, 3).join('·') + (names.length > 3 ? ' 외' : '') : '함께 쓰는 일정';
-      addCalendar(name, room);
+      const roomName = (meta.exists && cleanCalName((meta.data() || {}).name)) || '함께 쓰는 일정';
+      let note;
+      if (ps.docs.some((d) => d.id === uid)) note = `다시 들어왔어요. "${roomName}" 일정표로 추가했어요.`;
+      else if (ps.size >= MAX) note = `"${roomName}" 방은 5명이 가득 차서 보기만 할 수 있어요.`;
+      else {
+        const used = new Set(ps.docs.map((d) => (d.data() || {}).num).filter(Number.isInteger));
+        let num = 1; while (used.has(num) && num < MAX) num++;
+        if (used.has(num)) num = ps.size + 1;
+        const usedColors = new Set(ps.docs.map((d) => String(cleanColor((d.data() || {}).color))));
+        const color = [0, 1, 2, 3, 4, ...EXTRA_COLORS].find((c) => !usedColors.has(String(cleanColor(c)))) ?? 0;
+        await cdb.doc(`people/${uid}`).set({ name: `${num}번`, color: cleanColor(color), createdAt: Date.now(), num });
+        note = `"${roomName}" 방에 들어왔어요. 나는 ${num}번이에요. 사람 관리(+)에서 내 이름을 바꿀 수 있어요.`;
+      }
+      addCalendar(roomName, room);
       closeModal('roomModal'); clearHash();
       await openCalendar();
-      flash(ps.empty ? '아직 아무도 없는 방이에요. + 버튼으로 사람을 추가해 보세요.' : `방에 들어왔어요. 왼쪽 목록에 "${curCal().name}" 일정표로 추가했어요.`);
+      flash(note);
     } catch (e) { msg.textContent = roomErrMsg(e); }
     finally { roomBusyUI(false); }
   });
@@ -2175,16 +2227,30 @@
     return true;
   }
 
+  // 방 정보(이름·만든 사람)를 실시간으로 받아 일정표 이름을 맞춰요
+  function subscribeMeta(calId) {
+    const tok = openToken;
+    unsubMeta = db.doc('meta/info').onSnapshot((s) => {
+      if (tok !== openToken || !s.exists) return;
+      const v = s.data() || {};
+      state.roomOwner = typeof v.owner === 'string' ? v.owner : '';
+      state.roomCreatedAt = Number(v.createdAt) || 0;
+      const n = cleanCalName(v.name), c = CALS.list.find((x) => x.id === calId);
+      if (c && n && c.name !== n) { c.name = n; saveCals(); renderSidebar(); }
+    }, () => {});
+  }
+
   // 일정표 하나를 열기: 화면과 연결을 모두 새로 시작해요
   async function openCalendar() {
     const tok = ++openToken;
     if (unsubPeople) { unsubPeople(); unsubPeople = null; }
     if (unsubBusy) { unsubBusy(); unsubBusy = null; }
+    if (unsubMeta) { unsubMeta(); unsubMeta = null; }
     busySig = ''; clearTimeout(loadTimer); clearTimeout(flashTimer); flashTimer = null;
     drag = null; db = null; tableSig = '';
     document.querySelectorAll('.modal-bg.open').forEach((m) => m.classList.remove('open'));
     Object.assign(state, {
-      mode: 'pending', people: {}, busy: {}, room: '', readOnly: false, saving: 0, statusNote: '', peopleLoaded: false,
+      mode: 'pending', people: {}, busy: {}, room: '', myUid: '', roomOwner: '', roomCreatedAt: 0, readOnly: false, saving: 0, statusNote: '', peopleLoaded: false,
       view: 'week', week: thisWeekKey(), month: monthKeyOf(new Date()), routine: false, rweek: 'RW',
       range: { start: thisWeekKey(), end: dayKey(addDays(mondayOf(new Date()), 13)) },
       hours: { start: 9, end: 21 }, label: '', recent: [], hidden: new Set(), me: '', showFree: false,
@@ -2203,9 +2269,9 @@
       try {
         const cdb = await cloudConnector(cal.room);
         if (tok !== openToken) return;
-        db = cdb; state.room = cal.room; state.mode = 'db';
+        db = cdb; state.room = cal.room; state.mode = 'db'; state.myUid = cdb.uid || ''; state.me = state.myUid;
         loadTimer = setTimeout(() => { state.statusNote = '함께 쓰는 방에 아직 연결되지 않았어요. 인터넷 연결을 확인해 주세요.'; renderFoot(); }, 10000);
-        subscribePeople(); subscribeBusy();
+        subscribePeople(); subscribeBusy(); subscribeMeta(cal.id);
       } catch (e) {
         if (tok !== openToken) return;
         // 방에 연결하지 못하면 이 일정표의 기기 일정을 보여 주되, 나중에 섞이지 않게 고치지는 못하게 해요
