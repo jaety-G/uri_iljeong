@@ -1,0 +1,4 @@
+# 리눅스 빌드 서버에서 실행되는 파일은 줄바꿈을 LF로 고정
+android/gradlew text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf

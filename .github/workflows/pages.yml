@@ -1,0 +1,38 @@
+# main 브랜치가 바뀌면 다운로드 페이지(site/)와 웹 버전(app/)을 GitHub Pages에 올려요.
+# 처음 한 번: 저장소 Settings → Pages → Source를 "GitHub Actions"로 바꿔 주세요.
+name: 다운로드 페이지 올리기
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 올릴 파일 모으기
+        run: |
+          mkdir _site
+          cp site/index.html _site/index.html
+          cp -r app _site/app
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

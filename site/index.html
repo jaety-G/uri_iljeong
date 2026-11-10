@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리 일정 내려받기</title>
+<meta name="description" content="최대 5명이 주간 일정을 겹쳐 보고 모두 비어 있는 시간을 찾는 앱">
+<link rel="icon" type="image/png" href="app/icons/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FAF6EA;--ink:#2B2B2B;--muted:#6F695F;--line:#E8E2D3}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR','Malgun Gothic',system-ui,sans-serif;font-size:15px;line-height:1.7}
+  .wrap{max-width:720px;margin:0 auto;padding:56px 24px 64px}
+  .head{display:flex;align-items:center;gap:18px}
+  .head img{width:72px;height:72px}
+  h1{font-family:'Gowun Dodum',sans-serif;font-weight:400;font-size:40px;margin:0;line-height:1.2}
+  .lead{margin:6px 0 0;color:var(--muted)}
+  .card{background:#fff;border:1.5px solid var(--ink);border-radius:16px;padding:26px 26px 22px;margin-top:34px}
+  .card + .card{margin-top:18px}
+  .card h2{font-family:'Gowun Dodum',sans-serif;font-weight:400;font-size:22px;margin:0 0 4px}
+  .ver{color:var(--muted);font-size:13px;margin:0 0 18px;min-height:1.4em}
+  .dl{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 24px;border-radius:12px;background:var(--ink);color:#fff;
+      text-decoration:none;font-weight:700;font-size:16px;border:1.5px solid var(--ink)}
+  .dl svg{width:18px;height:18px}
+  .sec{display:inline-flex;align-items:center;height:52px;padding:0 20px;border-radius:12px;border:1.5px solid var(--ink);color:var(--ink);
+       text-decoration:none;font-weight:700;margin-left:8px;background:#fff}
+  .btns{display:flex;flex-wrap:wrap;gap:10px 0}
+  ol{margin:18px 0 0;padding-left:22px}
+  li{margin:4px 0}
+  .tip{margin-top:16px;padding:12px 14px;border:1px dashed #CFC7B5;border-radius:10px;font-size:14px;color:var(--muted)}
+  .chips{display:flex;gap:8px;margin-top:22px}
+  .chips span{width:44px;height:22px;border-radius:999px;border:1.5px solid}
+  footer{margin-top:28px;font-size:13px;color:var(--muted)}
+  footer a{color:var(--ink)}
+  @media (max-width:560px){ .wrap{padding:36px 16px 48px} h1{font-size:32px} .sec{margin-left:0} .btns{flex-direction:column;align-items:flex-start;gap:10px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <img src="app/icons/icon-192.png" alt="">
+    <div>
+      <h1>우리 일정</h1>
+      <p class="lead">컴퓨터와 휴대폰에서 쓰는 일정 겹쳐보기 앱. 최대 5명이 각자의 주간 일정을 겹쳐 보고, 모두 비어 있는 시간을 한눈에 찾아요.</p>
+    </div>
+  </div>
+  <div class="chips" aria-hidden="true">
+    <span style="background:#F2A385;border-color:#D2693F"></span>
+    <span style="background:#93CFC3;border-color:#3F9583"></span>
+    <span style="background:#C9E37A;border-color:#82A32B"></span>
+    <span style="background:#C4B3E6;border-color:#7D63B5"></span>
+    <span style="background:#9EC5EC;border-color:#4A85C0"></span>
+  </div>
+
+  <div class="card">
+    <h2>Windows용 내려받기</h2>
+    <p class="ver" id="ver">Windows 10, 11</p>
+    <div class="btns">
+      <a class="dl" id="dl" href="#">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v10M5.5 8.5 10 13l4.5-4.5M4 16.5h12"/></svg>
+        설치 파일 내려받기
+      </a>
+      <a class="sec" href="app/">설치 없이 웹에서 쓰기</a>
+    </div>
+    <ol>
+      <li>내려받은 <strong>uri-iljeong-setup.exe</strong>를 두 번 눌러 실행해요.</li>
+      <li>"Windows의 PC 보호" 창이 뜨면 <strong>추가 정보 → 실행</strong>을 눌러요.
+        (개인이 만든 앱이라 처음엔 이 안내가 떠요.)</li>
+      <li>바탕화면과 시작 메뉴에 생긴 <strong>우리 일정</strong>을 열면 끝이에요.</li>
+    </ol>
+    <div class="tip">새 버전이 나오면 앱이 알아서 내려받아 두었다가, 다음에 켤 때 바뀌어요.
+      일정은 각 컴퓨터에 저장되고, 친구와는 앱 아래 "일정 코드 보내기"로 맞춰요.</div>
+  </div>
+
+  <div class="card" id="androidCard">
+    <h2>안드로이드용 내려받기</h2>
+    <p class="ver" id="verA">Android 7 이상</p>
+    <div class="btns">
+      <a class="dl" id="dlA" href="#">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v10M5.5 8.5 10 13l4.5-4.5M4 16.5h12"/></svg>
+        APK 내려받기
+      </a>
+    </div>
+    <ol>
+      <li>휴대폰의 Chrome에서 이 페이지를 열고 <strong>APK 내려받기</strong>를 눌러요.</li>
+      <li>다 받아지면 알림이나 "내 파일 → 다운로드"에서 <strong>uri-iljeong.apk</strong>를 눌러요.</li>
+      <li>"출처를 알 수 없는 앱" 안내가 뜨면 <strong>설정 → 이 출처 허용</strong>을 켜고 돌아와 <strong>설치</strong>를 눌러요.</li>
+      <li>"Play 프로텍트" 안내가 뜨면 <strong>무시하고 설치</strong>(또는 세부정보 → 설치)를 눌러요.</li>
+    </ol>
+    <div class="tip">새 버전은 이 페이지에서 다시 내려받아 설치하면 일정은 그대로 두고 앱만 바뀌어요.
+      카카오톡 안에서 열었다면 오른쪽 위 메뉴의 "다른 브라우저로 열기"를 눌러 주세요.</div>
+  </div>
+
+  <div class="card">
+    <h2>아이폰·아이패드</h2>
+    <p class="ver">설치 파일 없이 웹 버전을 홈 화면에 추가해서 써요.</p>
+    <div class="btns"><a class="sec" style="margin-left:0" href="app/">웹 버전 열기</a></div>
+    <ol>
+      <li>Safari로 <strong>웹 버전 열기</strong>를 눌러요.</li>
+      <li>공유 버튼 → <strong>홈 화면에 추가</strong>를 눌러요.</li>
+    </ol>
+  </div>
+
+  <footer>
+    <a id="rel" href="#">모든 버전 보기</a>
+  </footer>
+</div>
+<script>
+  (function () {
+    if (/android/i.test(navigator.userAgent)) { var a = document.getElementById('androidCard'); var first = document.querySelector('.card'); if (a && first && a !== first) first.parentNode.insertBefore(a, first); }
+    var host = location.hostname, seg = location.pathname.split('/').filter(Boolean);
+    var m = host.match(/^([a-z0-9-]+)\.github\.io$/i);
+    if (!m) { document.getElementById('ver').textContent = 'GitHub Pages에 올리면 내려받기 버튼이 연결돼요.'; return; }
+    var owner = m[1], repo = seg[0] || (owner + '.github.io');
+    var base = 'https://github.com/' + owner + '/' + repo + '/releases';
+    document.getElementById('dl').href = base + '/latest/download/uri-iljeong-setup.exe';
+    document.getElementById('dlA').href = base + '/latest/download/uri-iljeong.apk';
+    document.getElementById('rel').href = base;
+    fetch('https://api.github.com/repos/' + owner + '/' + repo + '/releases/latest')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.tag_name) return;
+        var d = new Date(j.published_at);
+        var tail = ' · ' + j.tag_name + ' · ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 업데이트';
+        document.getElementById('ver').textContent = 'Windows 10, 11' + tail;
+        document.getElementById('verA').textContent = 'Android 7 이상' + tail;
+      })
+      .catch(function () {});
+  })();
+</script>
+</body>
+</html>

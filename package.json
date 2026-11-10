@@ -1,0 +1,71 @@
+{
+  "name": "uri-iljeong",
+  "version": "1.0.0",
+  "description": "최대 5명이 주간 일정을 겹쳐 보고 모두 비어 있는 시간을 찾는 앱",
+  "main": "main.js",
+  "author": "우리 일정",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never",
+    "android:sync": "cap sync android"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/share": "^8.0.3",
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "app.uri-iljeong",
+    "productName": "우리 일정",
+    "executableName": "uri-iljeong",
+    "copyright": "우리 일정",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "package.json",
+      "app/**/*",
+      "build/icon.png"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "uri-iljeong-setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "우리 일정",
+      "uninstallDisplayName": "우리 일정",
+      "installerLanguages": [
+        "ko_KR"
+      ],
+      "language": "1042",
+      "deleteAppDataOnUninstall": false
+    },
+    "electronLanguages": [
+      "ko",
+      "en-US"
+    ]
+  }
+}
