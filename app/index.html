@@ -117,10 +117,9 @@
   .lbl span,.mlbl span{overflow:hidden;text-overflow:ellipsis}
   /* 누구 일정인지: 이름 첫 글자 동그라미 */
   .ini{flex:none;display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 2px;border-radius:8px;border:1.2px solid;font-size:10px;font-weight:700;line-height:1;color:var(--ink);font-style:normal;letter-spacing:-.5px}
-  .many .ini + .ini{margin-left:-6px}
-  /* 3명 이상: 이름 동그라미 한 줄, 일정 이름은 아래 줄 */
-  .lbl.many{flex-wrap:wrap;row-gap:1px;border-radius:8px;padding:2px 7px 2px 3px}
-  .lbl.many span{flex-basis:100%;padding-left:1px}
+  .many .ini{width:16px;padding:0}
+  .many .ini + .ini{margin-left:-5px}
+  .mlbl.many .ini{width:14px}
   .ini + .ini{margin-left:-4px}
   .mlbl .ini{min-width:14px;height:14px;font-size:9px}
 
@@ -493,26 +492,37 @@
   }
   // 켜진 사람이 많을수록 블록을 옅게: 5명이 다 겹쳐도 검게 뭉개지지 않도록
   const blockAlpha = (n) => (n <= 2 ? 0.86 : n === 3 ? 0.72 : n === 4 ? 0.62 : 0.55);
-  // 이름표에 쓸 짧은 이름: 첫 글자, 첫 글자가 겹치는 사람끼리는 두 글자 (재원·재민 → 재원·재민, 원식 → 원)
-  let TAGS = {};
+  // 이름표에 쓸 짧은 이름
+  // SHORT(한 글자, 3명 이상 겹칠 때): 먼저 추가한 사람부터 첫 글자 → 끝 글자 → 가운데 글자 순으로
+  //   아직 아무도 안 쓴 글자를 골라요. (재원→재, 재민→민, 원식→원, 민규→규, 승환→승)
+  // TAGS(2명 이하): 한 글자가 첫 글자면 그대로, 아니면 두 글자. 그래서 한 글자는 언제나 같은 사람이에요.
+  //   (재원→재, 재민→재민, 원식→원, 민규→민규, 승환→승)
+  let TAGS = {}, SHORT = {};
   function refreshTags() {
     const list = peopleList();
-    const first = (p) => Array.from(p.name)[0] || '?';
-    const count = {};
-    list.forEach((p) => { count[first(p)] = (count[first(p)] || 0) + 1; });
-    TAGS = {};
-    list.forEach((p) => { TAGS[p.id] = count[first(p)] > 1 ? Array.from(p.name).slice(0, 2).join('') : first(p); });
+    SHORT = {}; TAGS = {};
+    const used = new Set();
+    list.forEach((p) => {
+      const ch = Array.from(p.name);
+      const order = [ch[0], ch[ch.length - 1], ...ch.slice(1, -1)].filter(Boolean);
+      const pick = order.find((c) => !used.has(c)) || ch[0] || '?';
+      used.add(pick);
+      SHORT[p.id] = pick;
+      TAGS[p.id] = pick === ch[0] ? pick : ch.slice(0, 2).join('');
+    });
   }
-  // 이름 첫 글자 동그라미: 모든 사람을 다 보여 주고, 3명 이상이면 조금 더 겹쳐서 자리를 아껴요
+  // 이름 동그라미: 모든 사람을 다 보여 줘요.
+  // 3명 이상이면 한 글자로 줄이고 조금 겹쳐서, 일정 이름까지 한 줄에 들어가게 해요(구분은 색으로).
   function appendInitials(parent, people) {
-    people.forEach((p) => parent.appendChild(initialEl(p)));
-    if (people.length >= 3) parent.classList.add('many');
+    const many = people.length >= 3;
+    people.forEach((p) => parent.appendChild(initialEl(p, many)));
+    if (many) parent.classList.add('many');
   }
-  function initialEl(p) {
+  function initialEl(p, short = false) {
     const c = COLORS[p.color];
     const el = document.createElement('i');
     el.className = 'ini';
-    el.textContent = TAGS[p.id] || Array.from(p.name)[0] || '';
+    el.textContent = short ? (SHORT[p.id] || Array.from(p.name)[0] || '') : (TAGS[p.id] || Array.from(p.name)[0] || '');
     el.style.background = c.fill; el.style.borderColor = c.line;
     el.title = p.name;
     return el;
@@ -741,10 +751,10 @@
           }
         });
       });
-      const stack = {};   // 같은 칸에서 시작하는 이름표는 아래로 쌓기 (두 줄 이름표는 더 아래로)
+      const stack = {};   // 같은 칸에서 시작하는 이름표는 아래로 쌓기
       tags.forEach((t) => {
         const y = stack[t.start] || 0;
-        stack[t.start] = y + (t.people.length >= 3 ? 38 : 20);
+        stack[t.start] = y + 20;
         const lb = document.createElement('div');
         lb.className = 'lbl';
         lb.style.top = `calc(var(--rowH) * ${t.start} + ${5 + y}px)`;
