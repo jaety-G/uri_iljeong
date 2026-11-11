@@ -376,9 +376,21 @@
     <p>같이 비는 시간, 한눈에</p>
     <button class="sbtn primary splashgo" id="splashLogin">구글로 시작하기</button>
     <button class="linkbtn splashskip" id="splashSkip">로그인 없이 쓸게요</button>
-    <small>로그인하면 휴대폰·컴퓨터 어디서나 같은 일정표를 써요.</small>
+    <small id="splashNote">로그인하면 휴대폰·컴퓨터 어디서나 같은 일정표를 써요.</small>
   </div>
 </div>
+<script>
+  // 로그인 안 한 웹이면 화면을 그리기 전에 바로 시작 화면을 보여 줘요
+  (function () {
+    try {
+      if (location.protocol !== 'https:' || window.Capacitor || window.claude || location.hash) return;
+      var landing = /[?&]login=1/.test(location.search);
+      if (localStorage.getItem('uri-iljeong:acct:v1')) return;
+      if (!landing && (sessionStorage.getItem('uri-iljeong:splash-skip') || localStorage.getItem('uri-iljeong:login-pending'))) return;
+      document.getElementById('splash').hidden = false;
+    } catch (e) {}
+  })();
+</script>
 <div class="app" id="app">
 <aside class="sidebar" id="sidebar" aria-label="일정표 목록">
   <div class="sbhead">
@@ -2468,9 +2480,15 @@
      그 기기도 같은 사람이 되고, 일정표 목록(users/{uid}/meta/cals)과 내 일정표(users/{uid}/cals/{id}/…)가 그대로 보여요. */
   const LS_ACCT = 'uri-iljeong:acct:v1';
   const LS_LOGIN_PENDING = 'uri-iljeong:login-pending';
+  const UA = navigator.userAgent || '';
+  const IS_ANDROID = /Android/i.test(UA);
+  const IS_IOS = /iPhone|iPad|iPod/i.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const LOGIN_LANDING = /[?&]login=1/.test(location.search);   // 홈 화면 앱에서 넘어와 로그인하는 화면
   const IS_STANDALONE = (() => { try { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; } catch (e) { return false; } })();
   // 카카오톡·인스타그램·네이버 앱 안 브라우저는 구글이 로그인을 막아요
   const INAPP = (() => { const ua = navigator.userAgent || ''; return /KAKAOTALK/i.test(ua) ? 'kakao' : /Instagram|FBAN|FBAV|NAVER\(inapp|Line\/|DaumApps|everytimeApp|; wv\)/i.test(ua) ? 'other' : ''; })();
+  // 휴대폰 홈 화면 앱은 구글 로그인 창을 못 띄워요 → 브라우저에서 로그인하고 돌아와요
+  const MOBILE_STANDALONE = (IS_ANDROID || IS_IOS) && (() => { try { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; } catch (e) { return false; } })();
   const ACCOUNT_OK = CLOUD_READY && !IS_ARTIFACT && (IS_WEB || !!window.__uriAccountImpl);   // 웹 버전에서만 (앱은 구글 창을 띄울 수 없어요)
   let ACCOUNT = null, acctUnsub = null, acctSig = '', acctTimer = null, acctBusy = false;
   const authErr = (e) => {
@@ -2667,22 +2685,36 @@
   async function doLogin() {
     if (acctBusy) return;
     if (INAPP) { inAppNotice(); return; }
+    if (MOBILE_STANDALONE) { handoffLogin(); return; }
     acctBusy = true; renderAccount('로그인하는 중…');
     let r;
-    try {
-      if (IS_STANDALONE) localStorage.setItem(LS_LOGIN_PENDING, String(Date.now()));
-      r = await accountImpl.login(IS_STANDALONE);
-      if (r.kind === 'redirect') { renderAccount('구글로 이동하는 중…'); return; }
-    } catch (e) {
+    try { r = await accountImpl.login(false); }
+    catch (e) {
       const er = e && e.code ? e : authErr(e);
-      // 팝업이 막히면 구글 화면으로 이동하는 방식으로 다시
-      if (er.code === 'popup_blocked' || er.code === 'auth/operation-not-supported-in-this-environment') {
-        try { localStorage.setItem(LS_LOGIN_PENDING, String(Date.now())); r = await accountImpl.login(true); if (r.kind === 'redirect') { renderAccount('구글로 이동하는 중…'); return; } }
-        catch (e2) { localStorage.removeItem(LS_LOGIN_PENDING); acctBusy = false; renderAccount(); flash(loginErrMsg(e2 && e2.code ? e2 : authErr(e2))); return; }
-      } else { try { localStorage.removeItem(LS_LOGIN_PENDING); } catch (e2) {} acctBusy = false; renderAccount(); if (er.code !== 'cancel') flash(loginErrMsg(er)); return; }
+      acctBusy = false; renderAccount();
+      if (er.code !== 'cancel') flash(loginErrMsg(er));
+      return;
     }
     await finishLogin(r);
   }
+  // 홈 화면 앱 → 브라우저에서 로그인. 안드로이드는 홈 화면 앱과 브라우저가 저장 공간을 같이 써서, 돌아오면 그대로 로그인돼 있어요.
+  function handoffLogin() {
+    // 홈 화면 앱 범위(app/) 밖의 소개 페이지로 열어야 브라우저에 그대로 남아요 → 소개 페이지가 app/?login=1로 넘겨줘요
+    const basePath = location.pathname.replace(/app\/(index\.html)?$/, '');
+    const url = location.origin + basePath + '?login=1';
+    if (IS_IOS) {
+      flash('아이폰 홈 화면 앱에서는 구글 로그인을 할 수 없어요. Safari에서 웹 버전을 열어 로그인하고 Safari에서 써 주세요. (아이폰은 홈 화면 앱과 Safari의 저장 공간이 따로예요)');
+      return;
+    }
+    const pkg = /SamsungBrowser/i.test(UA) ? 'com.sec.android.app.sbrowser' : 'com.android.chrome';
+    flash('브라우저에서 로그인 창을 열게요. 로그인을 마치고 이 앱으로 돌아오면 그대로 로그인돼 있어요.');
+    setTimeout(() => { location.href = `intent://${location.host}${basePath}?login=1#Intent;scheme=https;package=${pkg};S.browser_fallback_url=${encodeURIComponent(url)};end`; }, 400);
+  }
+  // 브라우저에서 로그인하고 돌아오면 다시 열어서 로그인 상태로
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !ACCOUNT_OK || ACCOUNT || acctBusy) return;
+    try { if (localStorage.getItem(LS_ACCT)) location.reload(); } catch (e) {}
+  });
   // 구글 화면에서 돌아왔을 때 이어서 로그인 마무리
   async function resumeLogin() {
     let pending = 0;
@@ -2693,6 +2725,8 @@
     try { r = await accountImpl.resume(); }
     catch (e) { acctBusy = false; renderAccount(); const er = e && e.code ? e : authErr(e); if (er.code !== 'cancel') flash(loginErrMsg(er)); return; }
     if (!r) {
+      try { sessionStorage.setItem('uri-iljeong:splash-skip', '1'); } catch (e) {}
+      $('splash').hidden = true;
       acctBusy = false; renderAccount();
       flash(IS_STANDALONE && /iPhone|iPad/i.test(navigator.userAgent)
         ? '로그인을 마치지 못했어요. 아이폰 홈 화면 앱에서는 구글 로그인이 잘 안 될 수 있어요. Safari에서 웹 버전을 열어 로그인해 주세요.'
@@ -2737,7 +2771,10 @@
       const merged = await mergeRoomSelves();
       await subscribeCals();
       await openCalendar();
-      flash(`${info.name || info.email || '구글 계정'}(으)로 로그인했어요. 같은 구글 계정으로 다른 기기에서 로그인하면 일정표가 그대로 보여요.${merged ? ` 방에서 따로 들어가 있던 나 ${merged}명을 하나로 합쳤어요.` : ''}`);
+      if (LOGIN_LANDING) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+      flash(LOGIN_LANDING
+        ? '로그인했어요! 이제 홈 화면의 "우리 일정" 앱으로 돌아가면 그대로 로그인돼 있어요.'
+        : `${info.name || info.email || '구글 계정'}(으)로 로그인했어요. 같은 구글 계정으로 다른 기기에서 로그인하면 일정표가 그대로 보여요.${merged ? ` 방에서 따로 들어가 있던 나 ${merged}명을 하나로 합쳤어요.` : ''}`);
     } catch (e) {
       const er = e && e.code ? e : authErr(e);
       if (er.code !== 'cancel') flash(loginErrMsg(er));
@@ -2787,10 +2824,13 @@
   // 시작 화면: 로그인 안 한 웹에서 열면 잠깐 보여요 ("로그인 없이 쓸게요"를 누르면 이 창을 닫을 때까지 다시 안 떠요)
   const SS_SPLASH = 'uri-iljeong:splash-skip';
   function maybeShowSplash() {
-    if (!ACCOUNT_OK || ACCOUNT || !(IS_WEB || window.__uriShowSplash)) return;
-    if (location.hash) return;   // 초대 링크·받은 일정 링크로 열었으면 바로 그 화면으로
-    try { if (sessionStorage.getItem(SS_SPLASH)) return; } catch (e) {}
-    $('splash').hidden = false;
+    const el = $('splash');
+    const ok = ACCOUNT_OK && !ACCOUNT && (IS_WEB || window.__uriShowSplash) && !location.hash;
+    let skip = false;
+    try { skip = !!sessionStorage.getItem(SS_SPLASH); } catch (e) {}
+    if (!ok || (skip && !LOGIN_LANDING)) { el.hidden = true; if (LOGIN_LANDING && ACCOUNT) flash('이미 로그인돼 있어요. 홈 화면의 "우리 일정" 앱으로 돌아가 주세요.'); return; }
+    if (LOGIN_LANDING) $('splashNote').textContent = '홈 화면 앱에서 넘어왔어요. 여기서 로그인하고 앱으로 돌아가면 그대로 로그인돼 있어요.';
+    el.hidden = false;
     warmLogin();
     setTimeout(() => { try { $('splashLogin').focus({ preventScroll: true }); } catch (e) {} }, 50);
   }

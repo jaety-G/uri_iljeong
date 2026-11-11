@@ -112,6 +112,10 @@
   </footer>
 </div>
 <script>
+  // 홈 화면 앱에서 로그인하러 넘어왔으면 브라우저에서 웹 버전 로그인 화면으로
+  if (/[?&]login=1/.test(location.search)) location.replace('app/?login=1');
+</script>
+<script>
   // 설치 파일은 GitHub 릴리스에 실제로 올라가 있을 때만 보여 줘요 (없으면 웹 버전만)
   (function () {
     var host = location.hostname, seg = location.pathname.split('/').filter(Boolean);
