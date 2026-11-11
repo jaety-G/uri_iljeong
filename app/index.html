@@ -201,7 +201,7 @@
 
   .metip{margin:-6px 2px 12px;font-size:13px;color:var(--muted)}
   .metip[hidden]{display:none}
-  .chip{touch-action:manipulation;transition:transform .08s ease-out}
+  .chip{touch-action:manipulation;transition:transform .08s ease-out;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .chip:active{transform:scale(.94)}
 
   /* 첫 시작 */
@@ -524,7 +524,7 @@
     </div>
   </div>
 
-  <p class="metip" id="meTip" hidden>이름을 <b>두 번</b> 누르면 그 사람 일정을 칠할 수 있어요.</p>
+  <p class="metip" id="meTip" hidden>이름을 <b>꾹</b> 누르면 그 사람 일정을 칠할 수 있어요.</p>
 
   <div class="startcard" id="startCard" hidden>
     <strong>처음 오셨네요. 내 이름부터 적어 주세요.</strong>
@@ -1369,7 +1369,8 @@
   // 토요일 파랑, 일요일·공휴일 빨강
   const dayTone = (d, date) => (d === 6 || holidayOf(date) ? 'sun' : d === 5 ? 'sat' : '');
 
-  let chipTap = null;
+  let chipPress = null;
+  let chipFiredAt = 0;   // 꾹 누르기가 된 시각 (손을 뗄 때 따라오는 클릭은 무시)
   function renderChips() {
     const box = $('chips');
     box.innerHTML = '';
@@ -1382,20 +1383,32 @@
       b.style.setProperty('--fill', c.fill);
       b.style.setProperty('--lineC', c.line);
       b.setAttribute('aria-pressed', on);
-      b.title = `한 번: ${on ? '숨기기' : '보이기'} · 두 번: ${p.id === state.me ? '칠하기 멈추기' : '이 사람 일정 칠하기'}`;
+      b.title = `누르기: ${on ? '숨기기' : '보이기'} · 꾹 누르기: ${p.id === state.me ? '칠하기 멈추기' : '이 사람 일정 칠하기'}`;
       b.append(p.name);
       if (p.id === state.me) {
         const t = document.createElement('span'); t.className = 'metag'; t.textContent = '나'; b.appendChild(t);
       }
-      // 한 번 = 보이기/숨기기 (0.2초 안에 한 번 더 누르면 깜빡임 없이 칠할 사람으로)
+      // 한 번 = 바로 보이기/숨기기, 꾹 누르기 = 이 사람 일정 칠하기
+      b.addEventListener('pointerdown', (ev) => {
+        if (ev.button > 0) return;
+        chipFiredAt = 0;   // 새로 누르기 시작
+        clearTimeout(chipPress && chipPress.timer);
+        chipPress = { id: p.id, x: ev.clientX, y: ev.clientY, fired: false, timer: setTimeout(() => {
+          chipPress.fired = true; chipFiredAt = Date.now();
+          try { navigator.vibrate && navigator.vibrate(12); } catch (er) {}
+          pickMe(p);
+        }, 450) };
+      });
+      b.addEventListener('pointermove', (ev) => {
+        if (chipPress && !chipPress.fired && Math.hypot(ev.clientX - chipPress.x, ev.clientY - chipPress.y) > 10) { clearTimeout(chipPress.timer); chipPress = null; }
+      });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => b.addEventListener(t, () => { if (chipPress && !chipPress.fired) clearTimeout(chipPress.timer); }));
+      b.addEventListener('contextmenu', (ev) => ev.preventDefault());
       b.addEventListener('click', () => {
-        if (chipTap && chipTap.id === p.id) { clearTimeout(chipTap.timer); chipTap = null; pickMe(p); return; }
-        if (chipTap) { clearTimeout(chipTap.timer); chipTap.run(); }
-        const run = () => {
-          if (state.hidden.has(p.id)) state.hidden.delete(p.id); else state.hidden.add(p.id);
-          savePrefs(); renderChips(); renderGrid(); renderHint();
-        };
-        chipTap = { id: p.id, run, timer: setTimeout(() => { chipTap = null; run(); }, 200) };
+        if (Date.now() - chipFiredAt < 900) { chipFiredAt = 0; chipPress = null; return; }   // 꾹 누른 뒤 손을 뗀 거예요
+        chipPress = null;
+        if (state.hidden.has(p.id)) state.hidden.delete(p.id); else state.hidden.add(p.id);
+        savePrefs(); renderChips(); renderGrid(); renderHint();
       });
       box.appendChild(b);
     });
@@ -1823,7 +1836,7 @@
     if (state.mode === 'pending') return false;
     if (state.legacyRoom) { flash(LEGACY_NOTE); return false; }
     if (state.room && !state.people[state.myUid]) { flash('이 방에 아직 들어오지 않아서 보기만 할 수 있어요. "함께 쓰기"에서 방 코드로 들어가 주세요.'); return false; }
-    if (!state.people[state.me]) { flash('먼저 위에서 내 이름을 두 번 눌러 주세요. 그다음 칸을 눌러 칠할 수 있어요.'); return false; }
+    if (!state.people[state.me]) { flash('먼저 위에서 내 이름을 꾹 눌러 주세요. 그다음 칸을 눌러 칠할 수 있어요.'); return false; }
     if (!canEditPerson(state.me)) { flash('다른 사람의 일정은 그 사람만 고칠 수 있어요.'); return false; }
     if (state.readOnly) { flash('보기 전용이라 칠할 수 없어요.'); return false; }
     return true;
@@ -2007,7 +2020,7 @@
     state.showFree = !state.showFree; savePrefs(); renderGrid();
     if (state.showFree && !peopleList().some((p) => !state.hidden.has(p.id))) flash('켜진 사람이 없어요. 이름 칩을 눌러 사람을 켜 주세요.');
   });
-  // 이름 알약을 두 번 누르면 그 사람 일정을 칠해요 (다시 두 번 누르면 그만)
+  // 이름 알약을 꾹 누르면 그 사람 일정을 칠해요 (다시 꾹 누르면 그만)
   function pickMe(p) {
     if (state.room) {
       flash(p.id === state.myUid ? '함께 쓰는 방에서는 언제나 내 일정을 칠해요.' : '다른 사람의 일정은 그 사람만 고칠 수 있어요.');
@@ -2019,7 +2032,7 @@
     state.me = p.id;
     state.hidden.delete(p.id);
     savePrefs(); renderAll();
-    flash(`${p.name} 일정을 칠해요. 칸을 누르면 칠해지고, 이름을 다시 두 번 누르면 멈춰요.`);
+    flash(`${p.name} 일정을 칠해요. 칸을 누르면 칠해지고, 이름을 다시 꾹 누르면 멈춰요.`);
   }
   $('copyLastWeek').addEventListener('click', async () => {
     const me = state.me; if (!state.people[me]) return;
