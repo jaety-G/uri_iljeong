@@ -2,9 +2,11 @@ rules_version = '2';
 
 // 우리 일정 — 함께 쓰기 저장소 규칙
 // 방 하나 = rooms/{방 코드 12글자} 아래의
-//   meta/info      방 이름·만든 사람
-//   people/{uid}   사람 (문서 id = 그 사람 기기의 익명 로그인 uid)
-//   busy/{주_uid}  주간 일정 / 루틴
+//   meta/info      방 이름·방장(사람 id)
+//   people/{pid}   사람 (문서 id = 처음 들어온 기기의 익명 로그인 uid, devices = 연결한 다른 기기 uid)
+//   slots/{1~5}    번호 자리 (한 번호는 한 사람만, 그래서 최대 5명)
+//   links/{코드}   다른 기기 연결 코드 (10분짜리)
+//   busy/{주_pid}  주간 일정 / 루틴
 // 방 코드를 아는 사람만 읽을 수 있고, 각자 자기 사람·자기 일정만 만들고 고칠 수 있어요.
 // (Firebase 콘솔 → Authentication → 로그인 방법에서 "익명"을 켜 두어야 해요)
 service cloud.firestore {
@@ -20,52 +22,101 @@ service cloud.firestore {
       return (c is int && c >= 0 && c <= 4)
           || (c is string && c.matches('^#[0-9A-Fa-f]{6}$'));
     }
+    function personDoc(room, pid) {
+      return /databases/$(database)/documents/rooms/$(room)/people/$(pid);
+    }
+    // 이 기기가 그 사람(pid)인가: 처음 기기이거나, 연결한 기기 목록에 있거나
+    function ownsData(data, pid) {
+      return pid == request.auth.uid || request.auth.uid in data.get('devices', []);
+    }
+    function isMember(room, pid) {
+      return pid == request.auth.uid
+        || (exists(personDoc(room, pid)) && ownsData(get(personDoc(room, pid)).data, pid));
+    }
     function validRoomName(d) {
       return d.keys().hasOnly(['name', 'owner', 'createdAt'])
           && d.name is string && d.name.size() > 0 && d.name.size() <= 20
           && d.owner is string;
     }
+    function validPerson(d) {
+      return d.keys().hasOnly(['name', 'color', 'createdAt', 'num', 'devices', 'via'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 10
+        && validColor(d.color)
+        && d.num is int && d.num >= 1 && d.num <= 5
+        && (!('devices' in d) || (d.devices is list && d.devices.size() <= 5));
+    }
+    // 다른 기기 연결: 유효한 연결 코드를 가진 기기가 자기 uid 하나만 목록 끝에 더해요
+    function linkJoin(room, pid) {
+      let d = request.resource.data;
+      let link = get(/databases/$(database)/documents/rooms/$(room)/links/$(d.via));
+      return d.diff(resource.data).affectedKeys().hasOnly(['devices', 'via'])
+        && d.devices == resource.data.get('devices', []).concat([request.auth.uid])
+        && link.data.pid == pid
+        && link.data.exp > request.time.toMillis();
+    }
 
     match /rooms/{room}/meta/info {
       allow read: if validRoom(room) && signedIn();
-      // 만든 사람만 방 이름을 정하고 바꿔요
+      // 만든 사람만 방 이름을 정하고 바꿔요. 방장이 나갈 때는 남은 사람에게 넘겨요.
       allow create: if validRoom(room) && signedIn()
         && validRoomName(request.resource.data)
         && request.resource.data.owner == request.auth.uid;
       allow update: if validRoom(room) && signedIn()
-        && resource.data.owner == request.auth.uid
+        && isMember(room, resource.data.owner)
         && validRoomName(request.resource.data)
-        && request.resource.data.owner == resource.data.owner;
+        && (request.resource.data.owner == resource.data.owner
+            || exists(personDoc(room, request.resource.data.owner)));
+    }
+
+    match /rooms/{room}/slots/{num} {
+      allow read: if validRoom(room) && signedIn();
+      // 이미 있는 번호는 덮어쓸 수 없어요 (create만 허용)
+      allow create: if validRoom(room) && signedIn()
+        && num in ['1', '2', '3', '4', '5']
+        && request.resource.data.keys().hasOnly(['pid'])
+        && request.resource.data.pid == request.auth.uid;
+      allow delete: if validRoom(room) && signedIn() && isMember(room, resource.data.pid);
+    }
+
+    match /rooms/{room}/links/{code} {
+      // 코드를 아는 기기만 하나씩 열어 볼 수 있어요 (목록 보기는 안 돼요)
+      allow get: if validRoom(room) && signedIn();
+      allow create: if validRoom(room) && signedIn()
+        && code.matches('^[A-Z2-9]{8}$')
+        && request.resource.data.keys().hasOnly(['pid', 'exp'])
+        && request.resource.data.exp is int
+        && request.resource.data.exp <= request.time.toMillis() + 900000
+        && isMember(room, request.resource.data.pid);
+      allow delete: if validRoom(room) && signedIn() && isMember(room, resource.data.pid);
     }
 
     match /rooms/{room}/people/{pid} {
       allow read: if validRoom(room) && signedIn();
-      allow create, update: if validRoom(room) && signedIn()
+      allow create: if validRoom(room) && signedIn()
         && pid == request.auth.uid
-        && request.resource.data.keys().hasOnly(['name', 'color', 'createdAt', 'num'])
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.name.size() <= 10
-        && validColor(request.resource.data.color)
-        && request.resource.data.num is int
-        && request.resource.data.num >= 1
-        && request.resource.data.num <= 5;
-      allow delete: if validRoom(room) && signedIn() && pid == request.auth.uid;
+        && validPerson(request.resource.data)
+        && get(/databases/$(database)/documents/rooms/$(room)/slots/$(string(request.resource.data.num))).data.pid == pid;
+      allow update: if validRoom(room) && signedIn()
+        && validPerson(request.resource.data)
+        && request.resource.data.num == resource.data.num
+        && (ownsData(resource.data, pid) || linkJoin(room, pid));
+      allow delete: if validRoom(room) && signedIn() && ownsData(resource.data, pid);
     }
 
     match /rooms/{room}/busy/{id} {
       allow read: if validRoom(room) && signedIn();
       allow create, update: if validRoom(room) && signedIn()
-        && request.resource.data.pid == request.auth.uid
+        && request.resource.data.pid is string
+        && isMember(room, request.resource.data.pid)
         && request.resource.data.week is string
         && request.resource.data.week.matches('^([0-9]{4}-[0-9]{2}-[0-9]{2}|RW|RM[1-5])$')
-        && id == request.resource.data.week + '_' + request.auth.uid
+        && id == request.resource.data.week + '_' + request.resource.data.pid
         && request.resource.data.keys().hasOnly(['week', 'pid', 'cells', 'labels', 'updatedAt'])
         && request.resource.data.cells is list
         && request.resource.data.cells.size() <= 168
         && request.resource.data.labels is map
         && request.resource.data.labels.size() <= 168;
-      allow delete: if validRoom(room) && signedIn() && resource.data.pid == request.auth.uid;
+      allow delete: if validRoom(room) && signedIn() && isMember(room, resource.data.pid);
     }
   }
 }

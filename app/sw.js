@@ -1,6 +1,6 @@
 // 우리 일정 — 오프라인 실행용 서비스 워커
 // 앱 파일을 바꿔 올릴 때는 아래 버전 숫자를 하나 올려 주세요.
-const VERSION = 'uri-iljeong-v2';
+const VERSION = 'uri-iljeong-v3';
 const SHELL = [
   './',
   './index.html',

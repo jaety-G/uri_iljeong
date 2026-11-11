@@ -1,6 +1,6 @@
 {
   "name": "uri-iljeong",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "최대 5명이 주간 일정을 겹쳐 보고 모두 비어 있는 시간을 찾는 앱",
   "main": "main.js",
   "author": "우리 일정",
