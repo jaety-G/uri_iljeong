@@ -288,9 +288,12 @@
   .mmore{font-size:11px;color:var(--muted)}
 
   /* 아래 */
-  .hint{margin:18px 2px 0;color:#6B655B;font-size:14px;line-height:1.6;min-height:1.6em}
+  .hint{margin:14px 2px 0;color:#6B655B;font-size:14px;line-height:1.6}
+  .hint:empty{display:none}
+  #status{margin-right:auto}
+  #status:empty{display:none}
   .hint.flash{color:var(--accent);font-weight:500}
-  .foot{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;margin:10px 2px 0;font-size:13px;color:var(--muted);flex-wrap:wrap}
+  .foot{display:flex;justify-content:flex-end;align-items:center;gap:10px 16px;margin:10px 2px 0;font-size:13px;color:var(--muted);flex-wrap:wrap}
   .foot .acts{display:flex;gap:14px;flex-wrap:wrap}
   .linkbtn{border:none;background:none;padding:2px 0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-size:13px}
   .linkbtn[hidden]{display:none}
@@ -426,7 +429,6 @@
       <div class="acctlinks"><button class="linkbtn" id="pwBtn">아이디 만들기</button><button class="linkbtn" id="logoutBtn">로그아웃</button></div>
     </div>
   </div>
-  <div class="sbfoot">일정표마다 사람과 일정이 따로 저장돼요. "메인" 일정표는 앱을 열면 먼저 보여요.</div>
 </aside>
 <div class="scrim" id="scrim"></div>
 <main class="mainarea">
@@ -1613,6 +1615,8 @@
     if (flashTimer) return;
     const h = $('hint');
     h.classList.remove('flash');
+    h.textContent = '';   // 평소에는 아무 글도 안 보여요 (알림만 잠깐)
+    return;
     const me = state.people[state.me];
     if (state.mode === 'pending') h.textContent = '일정을 불러오는 중이에요…';
     else if (!peopleList().length) h.textContent = !$('startCard').hidden ? '위 칸에 내 이름을 적으면 바로 시작할 수 있어요.' : '+ 버튼을 눌러 함께 볼 사람을 추가해 보세요.';
@@ -1646,8 +1650,7 @@
       : ACCOUNT_OK ? '이 기기에만 저장돼요 · 로그인하면 다른 기기에서도 그대로, 친구와는 "함께 쓰기"로'
       : CLOUD_READY && !IS_ARTIFACT ? '이 기기에만 저장돼요 · 친구와 같이 쓰려면 "함께 쓰기"를 눌러 보세요'
       : '이 기기에 저장돼요 · "링크로 한 번 보내기"로 친구와 맞춰 보세요';
-    if (state.statusNote) s = state.statusNote;
-    $('status').textContent = s;
+    $('status').textContent = state.statusNote || '';   // 평소 저장 상태 글은 안 보여요 (문제가 있을 때만)
     const me = state.people[state.me];
     $('copyLastWeek').hidden = state.routine || !(me && !state.readOnly && state.mode !== 'pending' && state.view === 'week' && cellsOf(state.me, state.week).size === 0);
     // 루틴(매주)이 비어 있으면, 날짜 달력에서 보던 주를 통째로 옮겨 올 수 있게
