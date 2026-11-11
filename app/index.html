@@ -110,7 +110,7 @@
   .thisweek[hidden]{display:none}
   .headright{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap}
   .seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;background:#fff}
-  .seg button{border:none;background:transparent;padding:7px 15px;font-size:14px;font-weight:700}
+  .seg button{border:none;background:transparent;padding:7px 15px;font-size:14px;font-weight:700;white-space:nowrap}
   .seg button + button{border-left:1.5px solid var(--ink)}
   .seg button.on{background:var(--ink);color:#fff}
   .seg button[hidden]{display:none}
@@ -171,6 +171,12 @@
   /* 시작 화면 (로그인) */
   .splash{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:24px;background:var(--bg);animation:splashIn .22s ease-out}
   .splash[hidden]{display:none}
+  .splash{overflow:hidden;overscroll-behavior:none;touch-action:none}
+  .splash input, .splash button{touch-action:manipulation}
+  html:has(#splash:not([hidden])), html:has(#splash:not([hidden])) body{overflow:hidden;overscroll-behavior:none;height:100%}
+  /* 스크롤 막대 숨기기 (스크롤은 그대로) */
+  *{scrollbar-width:none}
+  *::-webkit-scrollbar{display:none;width:0;height:0}
   .splash.out{animation:splashOut .18s ease-in forwards}
   .splashbox{width:min(320px,100%);display:flex;flex-direction:column;align-items:center;text-align:center}
   .splashmark{width:132px;height:92px;margin-bottom:10px;overflow:visible}
@@ -239,7 +245,7 @@
   .pblabel{font-size:13px;color:var(--muted)}
   .paintbar .pbinput{flex:0 1 200px;min-width:120px;height:36px}
   .pbwho{flex:none}
-  .recent{display:flex;gap:6px;flex:1 1 0;min-width:0;overflow-x:auto;scrollbar-width:thin;padding:2px 0}
+  .recent{display:flex;gap:6px;flex:1 1 0;min-width:0;overflow-x:auto;padding:2px 0}
   .rchip{flex:none}
   .rchip{height:28px;padding:0 11px;border-radius:999px;border:1.2px solid var(--ink);background:#fff;font-size:13px;white-space:nowrap}
   .rchip.on{background:#FFF0B3;font-weight:700}
@@ -372,7 +378,7 @@
   .sbtn{height:40px;border:1.5px solid var(--ink);border-radius:10px;background:#fff;padding:0 14px;font-weight:700;font-size:14px;white-space:nowrap}
   .sbtn.primary{background:var(--ink);color:#fff}
   .sbtn.danger{border-color:var(--accent);color:var(--accent)}
-  .sbtn:disabled{opacity:.4;cursor:default}
+  .sbtn:disabled{opacity:.4;cursor:default;pointer-events:none}
   .note{font-size:13px;color:var(--muted);margin:4px 0 0}
   .divider{border:none;border-top:1px dashed #CFC7B5;margin:16px 0}
   .mfoot{display:flex;justify-content:flex-end;margin-top:14px}
@@ -400,7 +406,7 @@
     h1{font-size:25px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .weeknav{grid-column:2;grid-row:1;gap:0}
     .weeklabel{font-size:14px;min-width:0}
-    .seg{grid-column:1;grid-row:2;justify-self:start}
+    .seg{grid-column:1 / -1;grid-row:2;justify-self:start}   /* 주 이동 칸 폭에 눌려 글씨가 세로로 서지 않게 두 칸을 다 씀 */
     .tools{grid-column:2;grid-row:2;justify-self:end}
     header:has(#rangeBox:not([hidden])) .weeknav{grid-column:1 / -1;grid-row:3;justify-self:start}
     .navbtn{width:44px;height:44px}
@@ -2133,9 +2139,9 @@
       });
       // 이 사람의 일정만 모두 비우기 (사람은 그대로)
       const clr = document.createElement('button'); clr.className = 'sbtn'; clr.textContent = '일정 비우기';
-      const hasAny = Object.values(state.busy).some((b) => b.pid === p.id && b.cells && b.cells.length);
-      clr.disabled = state.readOnly || (!hasAny && state.mode !== 'db');
-      clr.title = hasAny || state.mode === 'db' ? `${p.name}의 모든 주 일정을 지워요` : '비울 일정이 없어요';
+      const hasAny = hasSchedules(p.id);
+      clr.disabled = state.readOnly || !hasAny;
+      clr.title = hasAny ? `${p.name}의 모든 주 일정을 지워요` : '비울 일정이 없어요';
       clr.addEventListener('click', () => {
         if (state.readOnly) return;
         if (!clr.dataset.armed) { clr.dataset.armed = '1'; clr.textContent = '정말 비우기'; clr.classList.add('danger'); setTimeout(() => { if (clr.isConnected) { delete clr.dataset.armed; clr.textContent = '일정 비우기'; clr.classList.remove('danger'); } }, 3000); return; }
@@ -2221,7 +2227,7 @@
     wrap.appendChild(note);
     return wrap;
   }
-  function openPeople() { swatchFor = ''; rowMenuFor = ''; renderPeopleModal(); openModal('peopleModal'); if (!$('newName').disabled && !peopleList().length) $('newName').focus(); }
+  function openPeople() { swatchFor = ''; rowMenuFor = ''; renderPeopleModal(); refreshDbSched(); openModal('peopleModal'); if (!$('newName').disabled && !peopleList().length) $('newName').focus(); }
   // 사람 하나 더하기. 처음 더하는 사람은 바로 "나"가 돼서 칠할 수 있어요.
   function newPersonId(name) {
     const first = !peopleList().length;
@@ -2257,6 +2263,26 @@
   // 한 사람의 일정을 모든 주에서 비우기.
   // 지우는 대신 "빈 일정"으로 덮어써서, 친구에게 보내는 코드·링크에도 비운 상태가 전해지고
   // 예전 코드를 다시 받아도 되살아나지 않아요(더 최근에 고친 쪽이 남으니까요).
+  // 이 사람에게 비울 일정이 있는지: 지금 불러온 주 + (서버 일정표면) 서버의 다른 주
+  let dbSched = {};
+  function hasSchedules(pid) {
+    if (Object.values(state.busy).some((b) => b.pid === pid && b.cells && b.cells.length)) return true;
+    return state.mode === 'db' && !!dbSched[pid];
+  }
+  async function refreshDbSched() {
+    if (state.mode !== 'db' || !db) { dbSched = {}; return; }
+    const store = db, next = {};
+    await Promise.all(peopleList().map(async (p) => {
+      try {
+        const snap = await store.collection('busy').where('pid', '==', p.id).get();
+        next[p.id] = snap.docs.some((d) => { const v = d.data(); return v && isWeekKey(v.week) && Array.isArray(v.cells) && v.cells.length; });
+      } catch (e) { next[p.id] = true; }   // 확인을 못 하면 눌러 볼 수 있게 둠
+    }));
+    if (store !== db) return;
+    dbSched = next;
+    if ($('peopleModal').classList.contains('open')) renderPeopleModal();
+  }
+
   async function clearSchedules(pid) {
     if (!canEditPerson(pid)) return;
     const name = state.people[pid] ? state.people[pid].name : '';
@@ -2268,6 +2294,7 @@
       } catch (e) { flash('일정을 다 불러오지 못해서 지금 보이는 주만 비웠어요.'); }
     }
     weeks.forEach((wk) => saveCells(wk, pid, [], {}));
+    dbSched[pid] = false;
     renderPeopleModal(); renderAll();
     flash(weeks.size ? `${name}의 일정을 모두 비웠어요. (${weeks.size}주)` : `${name}의 비울 일정이 없어요.`);
   }
@@ -3193,6 +3220,7 @@
   $('splashLogin').addEventListener('click', () => emailSubmit(false, SPLASH_UI));
   $('splashNew').addEventListener('click', () => emailSubmit(true, SPLASH_UI));
   $('splashId').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); $('splashPw').focus(); } });
+  $('splash').addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });   // 로그인 화면은 밀어도 움직이지 않게
   $('splashSkip').addEventListener('click', () => { try { sessionStorage.setItem(SS_SPLASH, '1'); } catch (e) {} hideSplash(); });
   $('loginBtn').addEventListener('click', doLogin);
   $('startLogin').addEventListener('click', doLogin);
