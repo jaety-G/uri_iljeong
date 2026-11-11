@@ -4,7 +4,7 @@ rules_version = '2';
 // 방 하나 = rooms/{방 코드 12글자} 아래의
 //   meta/info      방 이름·방장(사람 id)
 //   people/{pid}   사람 (문서 id = 처음 들어온 기기의 익명 로그인 uid, devices = 연결한 다른 기기 uid)
-//   slots/{1~5}    번호 자리 (한 번호는 한 사람만, 그래서 최대 5명)
+//   slots/{1~999}  번호 자리 (한 번호는 한 사람만 — 인원 제한은 없어요)
 //   links/{코드}   다른 기기 연결 코드 (10분짜리)
 //   busy/{주_pid}  주간 일정 / 루틴
 // 방 코드를 아는 사람만 읽을 수 있고, 각자 자기 사람·자기 일정만 만들고 고칠 수 있어요.
@@ -43,7 +43,7 @@ service cloud.firestore {
       return d.keys().hasOnly(['name', 'color', 'createdAt', 'num', 'devices', 'via'])
         && d.name is string && d.name.size() > 0 && d.name.size() <= 10
         && validColor(d.color)
-        && d.num is int && d.num >= 1 && d.num <= 5
+        && d.num is int && d.num >= 1 && d.num <= 999
         && (!('devices' in d) || (d.devices is list && d.devices.size() <= 5));
     }
     // 다른 기기 연결: 유효한 연결 코드를 가진 기기가 자기 uid 하나만 목록 끝에 더해요
@@ -73,7 +73,7 @@ service cloud.firestore {
       allow read: if validRoom(room) && signedIn();
       // 이미 있는 번호는 덮어쓸 수 없어요 (create만 허용)
       allow create: if validRoom(room) && signedIn()
-        && num in ['1', '2', '3', '4', '5']
+        && num.matches('^[1-9][0-9]{0,2}$')
         && request.resource.data.keys().hasOnly(['pid'])
         && request.resource.data.pid == request.auth.uid;
       allow delete: if validRoom(room) && signedIn() && isMember(room, resource.data.pid);

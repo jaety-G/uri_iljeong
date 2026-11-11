@@ -6,7 +6,7 @@
 <title>우리 일정</title>
 <meta name="theme-color" content="#FAF6EA">
 <meta name="color-scheme" content="light">
-<meta name="description" content="최대 5명이 일정을 겹쳐 보고 모두 비어 있는 시간을 찾는 앱">
+<meta name="description" content="여러 명이 일정을 겹쳐 보고 모두 비어 있는 시간을 찾는 앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -89,6 +89,7 @@
     .app.drawer .sidebar{transform:none}
     .scrim{position:fixed;inset:0;z-index:55;background:rgba(43,43,43,.28)}
     .app.drawer .scrim{display:block}
+    .app.sliding .sidebar{transition:none}
     .menubtn{display:grid}
   }
 
@@ -192,7 +193,9 @@
   .day + .day{border-left:1px solid var(--ink)}
   .cell{height:var(--rowH);border-top:1px solid var(--line)}
   .day .cell:last-child{border-bottom:1px solid var(--line)}
-  .painting .cell{cursor:crosshair;touch-action:none}
+  .painting .cell{cursor:crosshair;touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .touchpaint .cell{touch-action:none}
+  .touchpaint{outline:2px dashed var(--accent);outline-offset:-2px}
   .cell.free{background:#FFFAE3 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath d='M-1 1 L1 -1 M0 10 L10 0 M9 11 L11 9' stroke='%23F2D26E' stroke-width='1.3'/%3E%3C/svg%3E")}
   .blk{position:absolute;left:4px;right:4px;border-radius:9px;mix-blend-mode:multiply;opacity:.86;pointer-events:none}
   .painting .blk.mine{box-shadow:inset 0 0 0 1.5px var(--lineC)}
@@ -204,7 +207,7 @@
   .ini{flex:none;display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 2px;border-radius:8px;border:1.2px solid;font-size:10px;font-weight:700;line-height:1;color:var(--ink);font-style:normal;letter-spacing:-.5px}
   .many .ini{width:16px;padding:0}
   .many .ini + .ini{margin-left:-5px}
-  .mlbl.many .ini{width:14px}
+  .mlbl.many .ini,.mev.many .ini{width:14px}
   .ini + .ini{margin-left:-4px}
   .mlbl .ini{min-width:14px;height:14px;font-size:9px}
 
@@ -223,11 +226,28 @@
   .mday.other{opacity:.42}
   .mnum{font-size:13px;font-weight:700}
   .mday.today .mnum{color:var(--accent)}
-  .mbar{position:relative;height:12px;flex:none;border:1px solid #D9D2C0;border-radius:4px;background:#fff;overflow:hidden;isolation:isolate}
-  .mseg{position:absolute;top:0;bottom:0;mix-blend-mode:multiply;opacity:.9}
-  .mfree{position:absolute;top:0;bottom:0;background:#FFFAE3 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Cpath d='M-1 1 L1 -1 M0 6 L6 0 M5 7 L7 5' stroke='%23F2D26E' stroke-width='1.2'/%3E%3C/svg%3E")}
-  .mlbl{display:flex;align-items:center;gap:4px;font-size:11.5px;line-height:16px;white-space:nowrap;overflow:hidden;min-width:0}
-  .mlbl em{font-style:normal;color:var(--muted);flex:none}
+  .mev{display:flex;align-items:center;gap:4px;min-width:0;padding:2px 6px 2px 4px;border-left:3px solid var(--ink);border-radius:5px;font-size:12px;line-height:17px;white-space:nowrap;overflow:hidden}
+  .mev.multi{background:#F4F1E8}
+  .mev .ini{min-width:15px;height:15px;font-size:9.5px}
+  .mev em{font-style:normal;font-weight:700;flex:none;font-variant-numeric:tabular-nums}
+  .mev span{overflow:hidden;text-overflow:ellipsis}
+  .mfree{margin-top:auto;padding:2px 6px;border-radius:5px;font-size:11.5px;line-height:16px;background:#FFF0B3;color:#5E5130;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mdots{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+  .mdots i{width:9px;height:9px;border-radius:50%;border:1.5px solid}
+  .mdots b{font-size:10px;font-weight:700;line-height:9px}
+  .mfreebar{margin-top:auto;height:4px;border-radius:2px;background:#F2D26E}
+  .mday.picked{box-shadow:inset 0 0 0 2px var(--ink);background:#FFFDF6}
+  .mdetail{margin:10px 4px 2px;padding:12px 12px 10px;border-top:1.5px solid var(--ink)}
+  .mdetail[hidden]{display:none}
+  .mdhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .mdhead strong{font-family:'Gowun Dodum',sans-serif;font-weight:400;font-size:18px}
+  .mdhead .sbtn{height:34px;font-size:13px}
+  .mdrow{display:flex;align-items:baseline;gap:8px;padding:8px 10px;margin-bottom:6px;border-left:4px solid var(--ink);border-radius:8px;font-size:14px}
+  .mdrow em{font-style:normal;font-weight:700;flex:none;font-variant-numeric:tabular-nums}
+  .mdrow span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mdrow small{flex:none;font-size:12px;color:#4A4A4A}
+  .mdfree{margin-top:8px;padding:8px 10px;border-radius:8px;background:#FFF0B3;font-size:13.5px}
+  .mdempty{margin:0;color:var(--muted);font-size:14px}
   .mmore{font-size:11px;color:var(--muted)}
 
   /* 아래 */
@@ -308,10 +328,8 @@
     .mgrid{min-width:0}
     .mgrid.routine{grid-template-columns:38px repeat(7,minmax(0,1fr))}
     .mhead{font-size:13px;padding:10px 0 8px}
-    .mday{min-height:84px;padding:5px 3px 6px;gap:4px}
-    .mbar{height:10px}
-    .mlbl{gap:2px}
-    .mlbl em,.mlbl span{display:none}
+    .mday{padding:6px 4px 6px}
+    .mday{min-height:58px;gap:5px}
     .mweek{font-size:11px}
   }
 </style>
@@ -412,6 +430,7 @@
   </div>
   <div class="card" id="monthCard" hidden>
     <div class="mscroll"><div class="mgrid" id="mgrid"></div></div>
+    <div class="mdetail" id="mdetail" hidden></div>
   </div>
 
   <p class="hint" id="hint"></p>
@@ -434,7 +453,7 @@
 <div class="modal-bg" id="peopleModal" role="dialog" aria-modal="true" aria-labelledby="peopleTitle">
   <div class="modal">
     <h2 id="peopleTitle">함께 보는 사람</h2>
-    <p class="sub">최대 5명까지 추가할 수 있어요. 이름을 고치면 바로 저장돼요. 색 동그라미를 누르면 색을 바꿀 수 있어요. "일정 비우기"는 사람은 남기고 그 사람의 모든 일정만 지워요.</p>
+    <p class="sub">사람은 몇 명이든 추가할 수 있어요. 이름을 고치면 바로 저장돼요. 색 동그라미를 누르면 색을 바꿀 수 있어요. "일정 비우기"는 사람은 남기고 그 사람의 모든 일정만 지워요.</p>
     <div id="peopleList"></div>
     <hr class="divider">
     <div class="prow" id="addRow">
@@ -605,7 +624,7 @@
     return typeof v === 'number' ? COLORS[v] : { fill: v, line: darkTone(v) };
   }
   const DAYS = ['월','화','수','목','금','토','일'];
-  const MAX = 5;
+  const MAX = 999;   // 사람 수 제한 없음 (방 번호 자리도 1~999번)
   const MAX_RANGE = 31;   // 기간 보기 최대 일수
   const LS_DATA = 'uri-iljeong:data:v1';
   const LS_PREF = 'uri-iljeong:pref:v1';
@@ -983,13 +1002,23 @@
     const b = entry(pid, wk);
     return b && b.labels && typeof b.labels === 'object' ? b.labels : {};
   }
-  function freeColor() {
-    const used = new Set(Object.values(state.people).map((p) => p.color));
-    for (let i = 0; i < COLORS.length; i++) if (!used.has(i)) return i;
+  // 아직 안 쓴 색: 기본 5색 → 파스텔 7색 → 그다음부터는 겹치지 않는 파스텔을 새로 만들어요
+  function hslHex(h, sat, lig) {
+    const k = (n) => (n + h / 30) % 12, a = sat * Math.min(lig, 1 - lig);
+    const f = (n) => Math.round(255 * (lig - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)))).toString(16).padStart(2, '0');
+    return ('#' + f(0) + f(8) + f(4)).toUpperCase();
+  }
+  const BASE_PALETTE = [0, 1, 2, 3, 4, ...EXTRA_COLORS];
+  const paletteAt = (i) => (i < BASE_PALETTE.length ? cleanColor(BASE_PALETTE[i]) : hslHex(((i - BASE_PALETTE.length) * 137.508 + 20) % 360, 0.55 + (i % 3) * 0.08, 0.78 + (i % 2) * 0.04));
+  function nextColor(usedSet, prefer = 0) {
+    for (let i = prefer; i < prefer + 400; i++) { const c = paletteAt(i); if (!usedSet.has(String(c))) return c; }
     return 0;
   }
-  // 켜진 사람이 많을수록 블록을 옅게: 5명이 다 겹쳐도 검게 뭉개지지 않도록
-  const blockAlpha = (n) => (n <= 2 ? 0.86 : n === 3 ? 0.72 : n === 4 ? 0.62 : 0.55);
+  function freeColor() {
+    return nextColor(new Set(Object.values(state.people).map((p) => String(cleanColor(p.color)))));
+  }
+  // 켜진 사람이 많을수록 블록을 옅게: 여러 명이 다 겹쳐도 검게 뭉개지지 않도록
+  const blockAlpha = (n) => (n <= 2 ? 0.86 : n === 3 ? 0.72 : n === 4 ? 0.62 : Math.max(0.45, 0.55 - (n - 5) * 0.015));
   // 이름표에 쓸 짧은 이름
   // SHORT(한 글자, 3명 이상 겹칠 때): 먼저 추가한 사람부터 첫 글자 → 끝 글자 → 가운데 글자 순으로
   //   아직 아무도 안 쓴 글자를 골라요. (재원→재, 재민→민, 원식→원, 민규→규, 승환→승)
@@ -1187,7 +1216,7 @@
     const add = document.createElement('button');
     add.className = 'addchip';
     add.setAttribute('aria-label', '사람 추가·이름 수정');
-    add.title = list.length >= MAX ? '이름 수정·삭제 (최대 5명)' : '사람 추가·이름 수정';
+    add.title = '사람 추가·이름 수정';
     add.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>';
     add.addEventListener('click', openPeople);
     box.appendChild(add);
@@ -1293,6 +1322,35 @@
   }
 
   // 월간: 날짜마다 겹친 색 막대 + 일정 이름
+  // 하루치 정리: 같은 시간·같은 이름의 일정은 한 줄로 묶고, 모두 빈 시간 구간도 구해요
+  function dayInfo(visible, wk, d, hours) {
+    const groups = new Map();
+    const busyAt = new Set();
+    visible.forEach((p) => {
+      const set = cellsOf(p.id, wk), labs = labelsOf(p.id, wk);
+      runsOf(set, labs, d, hours).forEach((r) => {
+        for (let i = r.start; i < r.end; i++) busyAt.add(i);
+        const k = `${r.start}|${r.end}|${r.label}`;
+        if (!groups.has(k)) groups.set(k, { start: r.start, end: r.end, label: r.label, people: [] });
+        groups.get(k).people.push(p);
+      });
+    });
+    const events = [...groups.values()].sort((x, y) => x.start - y.start || x.end - y.end);
+    const free = [];
+    if (visible.length) {
+      let st = -1;
+      for (let i = 0; i <= hours.length; i++) {
+        const f = i < hours.length && !busyAt.has(i);
+        if (f && st < 0) st = i;
+        if (!f && st >= 0) { free.push({ start: st, end: i }); st = -1; }
+      }
+    }
+    return { events, free, all: !busyAt.size };
+  }
+  const hourRange = (hours, a, b) => `${hours[a]}–${hours[b - 1] + 1}시`;
+  const shortRange = (hours, a, b) => `${hours[a]}–${hours[b - 1] + 1}`;
+  let monthPick = '';
+  const IS_TOUCH = (() => { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })();   // 휴대폰에서 고른 날짜
   function renderMonth() {
     const box = $('mgrid');
     box.innerHTML = '';
@@ -1301,79 +1359,118 @@
     if (rt) { const h = document.createElement('div'); h.className = 'mhead'; box.appendChild(h); }
     DAYS.forEach((d) => { const h = document.createElement('div'); h.className = 'mhead'; h.textContent = d; box.appendChild(h); });
     const visible = peopleList().filter((p) => !state.hidden.has(p.id));
-    const hours = hoursList(), n = hours.length;
+    const hours = hoursList();
     const m = Number(state.month.split('-')[1]);
     const t = dayKey(new Date());
+    const narrow = window.matchMedia('(max-width:640px)').matches;
     // 날짜 달력: 이번 달 날짜들 / 루틴: 1~5주차 × 월~일 (날짜 없음)
     const slots = rt
       ? ROUTINE_MONTH.flatMap((wk, wi) => DAYS.map((_, d) => ({ wk, d, date: null, wi })))
       : monthDates().map((date) => ({ wk: weekOf(date), d: dayIdx(date), date }));
-    slots.forEach(({ wk, d, date, wi }) => {
+    const keyOf = (x) => (x.date ? dayKey(x.date) : `${x.wk}:${x.d}`);
+    if (narrow && !slots.some((x) => keyOf(x) === monthPick)) {
+      const today = slots.find((x) => x.date && dayKey(x.date) === t && x.date.getMonth() + 1 === m);
+      monthPick = today ? keyOf(today) : '';
+    }
+    let picked = null;
+    slots.forEach((x) => {
+      const { wk, d, date, wi } = x;
       if (rt && d === 0) {
         const rh = document.createElement('button');
-        rh.className = 'mweek'; rh.textContent = `${wi + 1}주차`; rh.title = `매달 ${wi + 1}주차 표 열기`;
+        rh.className = 'mweek'; rh.textContent = narrow ? `${wi + 1}` : `${wi + 1}주차`; rh.title = `매달 ${wi + 1}주차 표 열기`;
         rh.addEventListener('click', () => { state.rweek = wk; setView('week'); });
         box.appendChild(rh);
       }
+      const info = dayInfo(visible, wk, d, hours);
+      const k = keyOf(x);
       const cell = document.createElement('button');
-      cell.className = 'mday' + (d === 0 ? ' c0' : '') + (date && date.getMonth() + 1 !== m ? ' other' : '') + (date && dayKey(date) === t ? ' today' : '');
+      cell.className = 'mday' + (d === 0 ? ' c0' : '') + (date && date.getMonth() + 1 !== m ? ' other' : '') + (date && dayKey(date) === t ? ' today' : '') + (narrow && k === monthPick ? ' picked' : '');
       const num = document.createElement('div');
       num.className = 'mnum';
       num.textContent = date ? date.getDate() : '';   // 루틴은 날짜 없음
-      const bar = document.createElement('div');
-      bar.className = 'mbar';
-      const per = visible.map((p) => ({ p, set: cellsOf(p.id, wk), labs: labelsOf(p.id, wk) }));
-      if (state.showFree && visible.length) {
-        let s = -1;
-        for (let i = 0; i <= n; i++) {
-          const free = i < n && !per.some(({ set }) => set.has(`${d}-${hours[i]}`));
-          if (free && s < 0) s = i;
-          if (!free && s >= 0) {
-            const f = document.createElement('div');
-            f.className = 'mfree';
-            f.style.left = `${(s / n) * 100}%`; f.style.width = `${((i - s) / n) * 100}%`;
-            bar.appendChild(f); s = -1;
-          }
+      cell.appendChild(num);
+      if (narrow) {
+        // 휴대폰: 바쁜 사람 색 점만, 자세한 건 아래에
+        const who = [...new Map(info.events.flatMap((e) => e.people).map((p) => [p.id, p])).values()];
+        if (who.length) {
+          const dots = document.createElement('div');
+          dots.className = 'mdots';
+          who.slice(0, 4).forEach((p) => { const c = colorOf(p.color); const dt = document.createElement('i'); dt.style.background = c.fill; dt.style.borderColor = c.line; dots.appendChild(dt); });
+          if (who.length > 4) { const more = document.createElement('b'); more.textContent = `+${who.length - 4}`; dots.appendChild(more); }
+          cell.appendChild(dots);
+        }
+        if (state.showFree && visible.length && info.free.length && !info.all) { const f = document.createElement('div'); f.className = 'mfreebar'; cell.appendChild(f); }
+      } else {
+        info.events.slice(0, 3).forEach((e) => {
+          const row = document.createElement('div');
+          row.className = 'mev';
+          if (e.people.length === 1) { const c = colorOf(e.people[0].color); row.style.background = c.fill; row.style.borderLeftColor = c.line; }
+          else row.classList.add('multi');
+          appendInitials(row, e.people);
+          const tm = document.createElement('em'); tm.textContent = shortRange(hours, e.start, e.end);
+          const tx = document.createElement('span'); tx.textContent = e.label || (e.people.length === 1 ? '' : '함께');
+          row.append(tm, tx);
+          row.title = `${hourRange(hours, e.start, e.end)} ${e.label || ''} · ${e.people.map((p) => p.name).join(', ')}`;
+          cell.appendChild(row);
+        });
+        if (info.events.length > 3) { const more = document.createElement('div'); more.className = 'mmore'; more.textContent = `+${info.events.length - 3}개 더`; cell.appendChild(more); }
+        if (state.showFree && visible.length && info.free.length && !info.all) {   // 일정 없는 날은 그 자체로 빈 날이라 따로 안 적어요
+          const f = document.createElement('div');
+          f.className = 'mfree';
+          f.textContent = '빈 ' + info.free.map((r) => shortRange(hours, r.start, r.end)).join(' · ');
+          cell.appendChild(f);
         }
       }
-      const items = [];
-      per.forEach(({ p, set, labs }) => {
-        const c = colorOf(p.color);
-        runsOf(set, labs, d, hours).forEach((r) => {
-          const seg = document.createElement('div');
-          seg.className = 'mseg';
-          seg.style.background = c.fill;
-          seg.style.opacity = blockAlpha(visible.length);
-          seg.style.left = `${(r.start / n) * 100}%`; seg.style.width = `${((r.end - r.start) / n) * 100}%`;
-          bar.appendChild(seg);
-          items.push({ start: r.start, hour: hours[r.start], text: r.label, p });
-        });
+      const busyNames = [...new Set(info.events.flatMap((e) => e.people.map((p) => p.name)))];
+      cell.title = (date ? `${date.getMonth() + 1}/${date.getDate()}(${DAYS[d]})` : `매달 ${wi + 1}주차 ${DAYS[d]}요일`) + (busyNames.length ? ` · ${busyNames.join(', ')} 일정 있음` : ' · 일정 없음');
+      cell.addEventListener('click', () => {
+        if (narrow) { monthPick = k; renderMonth(); return; }
+        if (rt) state.rweek = wk; else state.week = wk;
+        setView('week');
       });
-      cell.append(num, bar);
-      const groups = new Map();
-      items.filter((x) => x.text).forEach((x) => {
-        const k = x.start + '|' + x.text;
-        if (!groups.has(k)) groups.set(k, { start: x.start, hour: x.hour, text: x.text, people: [] });
-        groups.get(k).people.push(x.p);
-      });
-      const named = [...groups.values()].sort((a, b) => a.start - b.start);
-      named.slice(0, 3).forEach((x) => {
-        const row = document.createElement('div');
-        row.className = 'mlbl';
-        appendInitials(row, x.people);
-        const tm = document.createElement('em');
-        tm.textContent = `${x.hour}시`;
-        const tx = document.createElement('span');
-        tx.textContent = x.text;
-        row.append(tm, tx);
-        cell.appendChild(row);
-      });
-      if (named.length > 3) { const more = document.createElement('div'); more.className = 'mmore'; more.textContent = `+${named.length - 3}개 더`; cell.appendChild(more); }
-      const busyNames = [...new Set(items.map((x) => x.p.name))];
-      cell.title = (date ? `${date.getMonth() + 1}/${date.getDate()}(${DAYS[d]})` : `매달 ${wi + 1}주차 ${DAYS[d]}요일`) + (busyNames.length ? ` · ${busyNames.join(', ')} 일정 있음` : ' · 일정 없음') + (date ? ' · 누르면 이 주를 자세히 봐요' : ' · 누르면 이 주차를 자세히 봐요');
-      cell.addEventListener('click', () => { if (rt) state.rweek = wk; else state.week = wk; setView('week'); });
+      if (narrow && k === monthPick) picked = { x, info };
       box.appendChild(cell);
     });
+    renderMonthDetail(picked, visible, hours);
+  }
+  // 휴대폰: 고른 날짜의 일정과 모두 빈 시간을 표 아래에 크게
+  function renderMonthDetail(picked, visible, hours) {
+    const el = $('mdetail');
+    if (!picked) { el.hidden = true; el.innerHTML = ''; return; }
+    el.hidden = false; el.innerHTML = '';
+    const { x, info } = picked;
+    const head = document.createElement('div');
+    head.className = 'mdhead';
+    const ttl = document.createElement('strong');
+    ttl.textContent = x.date ? `${x.date.getMonth() + 1}월 ${x.date.getDate()}일 ${DAYS[x.d]}요일` : `매달 ${x.wi + 1}주차 ${DAYS[x.d]}요일`;
+    const go = document.createElement('button');
+    go.className = 'sbtn'; go.textContent = x.date ? '이 주 칠하기' : '이 주차 칠하기';
+    go.addEventListener('click', () => { if (state.routine) state.rweek = x.wk; else state.week = x.wk; setView('week'); });
+    head.append(ttl, go);
+    el.appendChild(head);
+    if (!info.events.length) {
+      const p = document.createElement('p'); p.className = 'mdempty';
+      p.textContent = visible.length ? '이날은 아무 일정이 없어요. 모두 비어 있어요.' : '켜진 사람이 없어요.';
+      el.appendChild(p);
+    }
+    info.events.forEach((e) => {
+      const row = document.createElement('div');
+      row.className = 'mdrow';
+      const c = colorOf(e.people[0].color);
+      row.style.borderLeftColor = e.people.length === 1 ? c.line : 'var(--ink)';
+      row.style.background = e.people.length === 1 ? c.fill : '#F4F1E8';
+      const tm = document.createElement('em'); tm.textContent = hourRange(hours, e.start, e.end);
+      const tx = document.createElement('span'); tx.textContent = e.label || '바쁨';
+      const who = document.createElement('small'); who.textContent = e.people.map((p) => p.name).join(', ');
+      row.append(tm, tx, who);
+      el.appendChild(row);
+    });
+    if (visible.length && info.events.length) {
+      const f = document.createElement('div');
+      f.className = 'mdfree';
+      f.textContent = info.free.length ? '모두 빈 시간 · ' + info.free.map((r) => hourRange(hours, r.start, r.end)).join(', ') : '모두 빈 시간이 없어요';
+      el.appendChild(f);
+    }
   }
 
   function renderHint() {
@@ -1384,9 +1481,12 @@
     if (state.mode === 'pending') h.textContent = '일정을 불러오는 중이에요…';
     else if (!peopleList().length) h.textContent = !$('startCard').hidden ? '위 칸에 내 이름을 적으면 바로 시작할 수 있어요.' : '+ 버튼을 눌러 함께 볼 사람을 추가해 보세요.';
     else if (state.routine && state.view === 'month') h.textContent = '날짜 없이 매달 반복되는 루틴이에요(1~5주차). 주차나 칸을 누르면 그 주차 표로 들어가 칠할 수 있어요. 매주 반복되는 시간표는 "주간"에 있어요.';
-    else if (state.view === 'month') h.textContent = '날짜마다 색 막대(왼쪽이 이른 시간)와 일정 이름이 보여요. 색이 겹쳐 진한 곳은 여러 명이 바쁜 시간이에요. 날짜를 누르면 그 주를 자세히 보고 칠할 수 있어요.';
+    else if (state.view === 'month') h.textContent = window.matchMedia('(max-width:640px)').matches
+      ? '색 점은 그날 일정이 있는 사람이에요. 날짜를 누르면 아래에 누가 언제 바쁜지와 모두 빈 시간이 보여요.'
+      : '날짜마다 누가 몇 시에 무슨 일정인지 보여요. "모두 빈 시간 표시"를 켜면 다 같이 빈 시간도 보여요. 날짜를 누르면 그 주로 가서 칠할 수 있어요.';
     else if (state.legacyRoom) h.textContent = LEGACY_NOTE;
-    else if (state.room && !state.people[state.myUid] && state.view !== 'month') h.textContent = '이 방은 5명이 가득 차서 보기만 할 수 있어요.';
+    else if (state.room && !state.people[state.myUid] && state.view !== 'month') h.textContent = '이 방에 아직 들어오지 않아서 보기만 할 수 있어요. "함께 쓰기"에서 방 코드로 들어가 주세요.';
+    else if (me && !state.readOnly && IS_TOUCH) h.textContent = `${me.name}${state.label ? `의 "${state.label}"` : '의 바쁜 시간'}을 칠해요. 칸을 톡 누르면 한 칸, 길게 누른 채 끌면 여러 칸이 칠해져요. 그냥 밀면 화면이 움직여요.`;
     else if (me && !state.readOnly) h.textContent = state.label
       ? `${me.name}의 "${state.label}" 일정을 칠하는 중이에요. 칸을 누르거나 끌어서 칠하고, 같은 이름으로 칠한 칸을 다시 누르면 지워져요.`
       : `${me.name}의 바쁜 시간을 칠하는 중이에요. 위 "일정 이름"을 적고 칠하면 칸에 이름이 같이 보여요. 칠한 칸을 다시 누르면 지워져요.`;
@@ -1503,16 +1603,17 @@
     else { s.delete(key); delete l[key]; }
     drag.last = wk + '|' + key;
   }
-  tbody.addEventListener('pointerdown', (e) => {
-    const cell = e.target.closest('.cell');
-    if (!cell || e.button > 0) return;
-    if (state.mode === 'pending') return;
-    if (state.legacyRoom) { flash(LEGACY_NOTE); return; }
-    if (state.room && !state.people[state.myUid]) { flash('이 방은 5명이 가득 차서 보기만 할 수 있어요.'); return; }
-    if (!state.people[state.me]) { flash('먼저 오른쪽 위 "나는"에서 내 이름을 골라 주세요. 그다음 칸을 눌러 칠할 수 있어요.'); return; }
-    if (!canEditPerson(state.me)) { flash('다른 사람의 일정은 그 사람만 고칠 수 있어요.'); return; }
-    if (state.readOnly) { flash('보기 전용이라 칠할 수 없어요.'); return; }
-    e.preventDefault();
+  // 지금 칠할 수 있는지 (안 되면 이유를 알려 줘요)
+  function canPaint() {
+    if (state.mode === 'pending') return false;
+    if (state.legacyRoom) { flash(LEGACY_NOTE); return false; }
+    if (state.room && !state.people[state.myUid]) { flash('이 방에 아직 들어오지 않아서 보기만 할 수 있어요. "함께 쓰기"에서 방 코드로 들어가 주세요.'); return false; }
+    if (!state.people[state.me]) { flash('먼저 오른쪽 위 "나는"에서 내 이름을 골라 주세요. 그다음 칸을 눌러 칠할 수 있어요.'); return false; }
+    if (!canEditPerson(state.me)) { flash('다른 사람의 일정은 그 사람만 고칠 수 있어요.'); return false; }
+    if (state.readOnly) { flash('보기 전용이라 칠할 수 없어요.'); return false; }
+    return true;
+  }
+  function startDrag(cell, pointerId) {
     if (state.hidden.has(state.me)) { state.hidden.delete(state.me); savePrefs(); renderChips(); }
     const key = cell.dataset.key, wk = cell.dataset.wk;
     drag = { pid: state.me, label: state.label, mode: 'paint', sets: new Map(), labels: new Map(), before: new Map(), last: null };
@@ -1521,10 +1622,40 @@
     // 같은 이름으로 칠한 칸을 누르면 지우기, 다른 이름이면 그 이름으로 바꿔 칠하기
     drag.mode = s.has(key) && (l[key] || '') === drag.label ? 'erase' : 'paint';
     applyCell(wk, key);
-    try { tbody.setPointerCapture(e.pointerId); } catch (err) {}
+    if (pointerId != null) { try { tbody.setPointerCapture(pointerId); } catch (err) {} }
     renderGrid();
+  }
+  // 휴대폰(터치): 톡 누르면 한 칸, 길게 누른 채 끌면 여러 칸, 그냥 밀면 화면이 움직여요
+  let touchWait = null;
+  const LONG_PRESS = 350;
+  function cancelTouchWait() { if (touchWait) { clearTimeout(touchWait.timer); touchWait = null; } }
+  tbody.addEventListener('pointerdown', (e) => {
+    const cell = e.target.closest('.cell');
+    if (!cell || e.button > 0) return;
+    if (e.pointerType === 'touch') {
+      cancelTouchWait();
+      touchWait = { id: e.pointerId, x: e.clientX, y: e.clientY, cell, timer: setTimeout(() => {
+        const w = touchWait; touchWait = null;
+        if (!w || !canPaint()) return;
+        startDrag(w.cell, w.id);
+        drag.touch = true;
+        tbody.classList.add('touchpaint');
+        try { navigator.vibrate && navigator.vibrate(12); } catch (err) {}
+      }, LONG_PRESS) };
+      return;   // 기본 동작(스크롤)은 그대로
+    }
+    if (!canPaint()) return;
+    e.preventDefault();
+    startDrag(cell, e.pointerId);
   });
+  // 칠하는 중에는 화면이 움직이지 않게
+  tbody.addEventListener('touchmove', (e) => { if (drag && drag.touch) e.preventDefault(); }, { passive: false });
+  tbody.addEventListener('contextmenu', (e) => { if (e.target.closest('.cell')) e.preventDefault(); });
   tbody.addEventListener('pointermove', (e) => {
+    if (touchWait && e.pointerId === touchWait.id) {
+      if (Math.hypot(e.clientX - touchWait.x, e.clientY - touchWait.y) > 10) cancelTouchWait();   // 미는 중 = 스크롤
+      return;
+    }
     if (!drag) return;
     const el = document.elementFromPoint(e.clientX, e.clientY);
     const cell = el && el.closest && el.closest('.cell');
@@ -1533,6 +1664,7 @@
     renderGrid();
   });
   function endDrag() {
+    tbody.classList.remove('touchpaint');
     if (!drag) return;
     const d = drag; drag = null;
     for (const [wk, s] of d.sets) {
@@ -1542,10 +1674,20 @@
     if (d.mode === 'paint' && d.label) { state.recent = [d.label, ...state.recent.filter((x) => x !== d.label)].slice(0, 8); savePrefs(); }
     renderGrid(); renderPaintbar(); renderFoot();
   }
-  tbody.addEventListener('pointerup', endDrag);
-  tbody.addEventListener('pointercancel', endDrag);
+  tbody.addEventListener('pointerup', (e) => {
+    // 길게 누르기 전에 뗐으면: 톡 = 한 칸 칠하기/지우기
+    if (touchWait && e.pointerId === touchWait.id) {
+      const w = touchWait; cancelTouchWait();
+      if (canPaint()) { startDrag(w.cell, null); endDrag(); }
+      return;
+    }
+    endDrag();
+  });
+  tbody.addEventListener('pointercancel', () => { cancelTouchWait(); endDrag(); });
   tbody.addEventListener('lostpointercapture', endDrag);
 
+  // 화면 폭이 휴대폰↔컴퓨터로 바뀌면 월간을 다시 그려요
+  try { window.matchMedia('(max-width:640px)').addEventListener('change', () => { if (state.view === 'month') { renderMonth(); renderHint(); } }); } catch (e) {}
   /* ---------- 상단 조작 ---------- */
   function onViewChange() {
     if (state.view !== 'month') buildTable();
@@ -1734,7 +1876,7 @@
       if (!state.room) box.appendChild(row);
       if (swatchFor === p.id && !state.readOnly) box.appendChild(swatchPanel(p));
     });
-    const full = list.length >= MAX;
+    const full = false;   // 사람 수 제한 없음
     $('addRow').hidden = !!state.room;
     const nc = colorOf(freeColor());
     $('newDot').style.background = full ? '#fff' : nc.fill;
@@ -1742,7 +1884,7 @@
     $('newName').disabled = full || state.readOnly;
     $('addBtn').disabled = full || state.readOnly;
     $('addNote').textContent = state.room ? '함께 쓰는 방에서는 친구가 방 코드로 들어오면 2번, 3번…으로 자동으로 생겨요. 각자 자기 이름·색·일정만 바꿀 수 있어요.'
-      : state.readOnly ? '보기 전용이라 바꿀 수 없어요.' : full ? '최대 5명까지 함께 볼 수 있어요. 새로 넣으려면 한 명을 삭제해 주세요.' : '';
+      : state.readOnly ? '보기 전용이라 바꿀 수 없어요.' : '';
   }
   // 색 고르기 판: 파스텔 12가지 + 직접 고르기
   let swatchFor = '';
@@ -1813,7 +1955,7 @@
   function addPerson() {
     if (state.room) return;   // 방에서는 각자 들어와서 자기 사람이 생겨요
     const name = cleanName($('newName').value);
-    if (!name || state.readOnly || peopleList().length >= MAX) return;
+    if (!name || state.readOnly) return;
     const id = newPersonId(name);
     $('newName').value = '';
     renderPeopleModal(); renderAll();
@@ -1909,7 +2051,7 @@
     msg.textContent = mergeMessage(r);
   });
   function mergeMessage({ added, updated, skipped }) {
-    return `합쳤어요. 새 사람 ${added}명, 바뀐 주간 일정 ${updated}개` + (skipped ? ` · 5명이 넘어 ${skipped}명은 빠졌어요.` : '.');
+    return `합쳤어요. 새 사람 ${added}명, 바뀐 주간 일정 ${updated}개.`;
   }
   async function mergeData(data) {
     let added = 0, skipped = 0, updated = 0;
@@ -1919,9 +2061,8 @@
       const name = cleanName(p.name); if (!name) continue;
       const cur = state.people[p.id];
       if (cur) { if (cur.name !== name) savePerson(p.id, { ...cur, name }); known.add(p.id); continue; }
-      if (peopleList().length >= MAX) { skipped++; continue; }
       let color = clampColor(p.color);
-      if (Object.values(state.people).some((x) => x.color === color)) color = freeColor();
+      if (Object.values(state.people).some((x) => String(cleanColor(x.color)) === String(cleanColor(color)))) color = freeColor();
       savePerson(p.id, { name, color, createdAt: Number(p.createdAt) || Date.now() });
       known.add(p.id); added++;
     }
@@ -2382,7 +2523,7 @@
       if (havePeople.has(pid)) continue;
       // 합치다가 색이 겹치면 안 쓰는 색으로 바꿔요
       let color = cleanColor(p.color);
-      if (usedColors.has(String(color))) color = cleanColor([0, 1, 2, 3, 4, ...EXTRA_COLORS].find((c) => !usedColors.has(String(cleanColor(c)))) ?? color);
+      if (usedColors.has(String(color))) color = nextColor(usedColors);
       usedColors.add(String(color));
       await st.doc(`people/${pid}`).set({ name: cleanName(p.name), color, createdAt: Number(p.createdAt) || Date.now() });
     }
@@ -2635,7 +2776,7 @@
     if (c === 'permission_denied') return '방에 들어가지 못했어요. 코드를 확인하고 다시 해 주세요.';
     return '연결하지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.';
   };
-  // 빈 번호 자리(1~5)를 하나 잡아요. 이미 있는 자리는 서버가 덮어쓰지 못하게 막아서, 같은 번호가 둘 생기지 않아요.
+  // 빈 번호 자리(1~999)를 하나 잡아요. 이미 있는 자리는 서버가 덮어쓰지 못하게 막아서, 같은 번호가 둘 생기지 않아요.
   async function claimSlot(cdb, ps) {
     const uid = cdb.uid;
     const used = new Set(ps.docs.map((d) => (d.data() || {}).num).filter(Number.isInteger));
@@ -2648,10 +2789,11 @@
       });
     } catch (e) { /* 자리 목록을 못 읽어도 하나씩 시도해요 */ }
     if (mineSlot) return mineSlot;
+    let fails = 0;
     for (let n = 1; n <= MAX; n++) {
       if (used.has(n)) continue;
       try { await cdb.doc(`slots/${n}`).set({ pid: uid }); return n; }
-      catch (e) { if (e && e.code === 'permission_denied') continue; throw e; }
+      catch (e) { if (e && e.code === 'permission_denied' && ++fails < 12) continue; if (e && e.code === 'permission_denied') return 0; throw e; }
     }
     return 0;
   }
@@ -2766,12 +2908,12 @@
         const ps = await cdb.collection('people').get();
         if (ps.docs.some((d) => d.id === uid || ((d.data() || {}).devices || []).includes(uid))) note = `다시 들어왔어요. "${roomName}" 일정표로 추가했어요.`;
         else {
-          const num = ps.size >= MAX ? 0 : await claimSlot(cdb, ps);
-          if (!num) note = `"${roomName}" 방은 5명이 가득 차서 보기만 할 수 있어요.`;
+          const num = await claimSlot(cdb, ps);
+          if (!num) note = `"${roomName}" 방에 자리를 잡지 못해서 보기만 할 수 있어요. 잠시 뒤 다시 들어가 주세요.`;
           else {
-            const usedColors = new Set(ps.docs.map((d) => String(cleanColor((d.data() || {}).color))));
-            const color = [0, 1, 2, 3, 4, ...EXTRA_COLORS].find((c) => !usedColors.has(String(cleanColor(c)))) ?? 0;
-            await cdb.doc(`people/${uid}`).set({ name: `${num}번`, color: cleanColor(color), createdAt: Date.now(), num });
+            // 번호마다 다른 색부터 (동시에 들어와도 색이 겹치지 않게)
+            const color = nextColor(new Set(ps.docs.map((d) => String(cleanColor((d.data() || {}).color)))), num - 1);
+            await cdb.doc(`people/${uid}`).set({ name: `${num}번`, color, createdAt: Date.now(), num });
             note = `"${roomName}" 방에 들어왔어요. 나는 ${num}번이에요. 사람 관리(+)에서 내 이름을 바꿀 수 있어요.`;
           }
         }
@@ -2973,6 +3115,58 @@
   $('scrim').addEventListener('click', closeDrawer);
   document.addEventListener('click', closeCalMenu);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeCalMenu(); closeDrawer(); } });
+
+  // 메뉴바를 손가락으로 밀어서 열고 닫기 (휴대폰: 왼쪽 끝에서 오른쪽으로 밀면 열리고, 왼쪽으로 밀면 닫혀요)
+  (() => {
+    const app = $('app'), side = document.querySelector('.sidebar'), scrim = $('scrim');
+    let sw = null;   // { mode:'open'|'close', x0, y0, dir:null|'h'|'v', w, dx, t0 }
+    const EDGE = 28;
+    const isOpen = () => (isNarrow() ? app.classList.contains('drawer') : !app.classList.contains('collapsed'));
+    const setOpen = (open) => {
+      if (isNarrow()) app.classList.toggle('drawer', open);
+      else { app.classList.toggle('collapsed', !open); try { localStorage.setItem(LS_SIDE, open ? 'open' : 'collapsed'); } catch (e) {} }
+    };
+    document.addEventListener('touchstart', (e) => {
+      if (IS_ARTIFACT || e.touches.length !== 1 || (drag && drag.touch)) { sw = null; return; }
+      const t = e.touches[0];
+      const open = isOpen();
+      if (!open && t.clientX <= EDGE) sw = { mode: 'open' };
+      else if (open && isNarrow() && (side.contains(e.target) || e.target === scrim)) sw = { mode: 'close' };
+      else if (open && !isNarrow() && side.contains(e.target)) sw = { mode: 'close' };
+      else { sw = null; return; }
+      if (e.target.closest && e.target.closest('input, textarea, select, .calmenu')) { sw = null; return; }
+      Object.assign(sw, { x0: t.clientX, y0: t.clientY, dir: null, w: side.getBoundingClientRect().width || 252, dx: 0, t0: Date.now() });
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (!sw) return;
+      const t = e.touches[0], dx = t.clientX - sw.x0, dy = t.clientY - sw.y0;
+      if (!sw.dir) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        sw.dir = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'h' : 'v';
+        if (sw.dir === 'v' || (sw.mode === 'open' && dx < 0) || (sw.mode === 'close' && dx > 0)) { sw = null; return; }
+        app.classList.add('sliding');
+        if (!isNarrow() && sw.mode === 'open') app.classList.remove('collapsed');   // 컴퓨터: 일단 보이게 하고 따라 움직여요
+      }
+      if (e.cancelable) e.preventDefault();
+      sw.dx = dx;
+      const off = sw.mode === 'open' ? Math.min(0, -sw.w + dx) : Math.min(0, dx);
+      side.style.transform = `translateX(${off}px)`;
+      if (isNarrow()) { scrim.style.display = 'block'; scrim.style.opacity = String(Math.max(0, Math.min(1, 1 + off / sw.w))); }
+    }, { passive: false });
+    const finish = () => {
+      if (!sw) return;
+      const s0 = sw; sw = null;
+      if (!s0.dir) return;
+      const fast = Math.abs(s0.dx) / Math.max(1, Date.now() - s0.t0) > 0.5;
+      const far = Math.abs(s0.dx) > s0.w / 3;
+      const open = s0.mode === 'open' ? (far || fast) : !(far || fast);
+      side.style.transform = ''; scrim.style.display = ''; scrim.style.opacity = '';
+      app.classList.remove('sliding');
+      setOpen(open);
+    };
+    document.addEventListener('touchend', finish);
+    document.addEventListener('touchcancel', finish);
+  })();
 
   // 안드로이드 앱: GitHub에 새 버전이 올라오면 위에 알려 줘요 (Windows 앱은 스스로 업데이트해요)
   const DOWNLOAD_URL = WEB_APP_URL.replace(/app\/?$/, '');
