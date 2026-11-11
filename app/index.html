@@ -156,8 +156,13 @@
   .sm2{animation:smR .55s cubic-bezier(.2,.8,.3,1.2) .06s both}
   .sm3,.smface{animation:smT .55s cubic-bezier(.2,.8,.3,1.2) .12s both}
   .splashbox h2{font-family:'Gowun Dodum',sans-serif;font-weight:400;font-size:34px;margin:0;letter-spacing:-.5px}
-  .splashbox p{margin:4px 0 26px;color:var(--muted);font-size:15px}
+  .splashbox p{margin:4px 0 22px;color:var(--muted);font-size:15px}
+  .splashform{width:100%;display:flex;flex-direction:column;gap:8px}
+  .splash .splashform input.tin{width:100%;height:46px;min-height:46px;padding:0 14px;font-size:16px;border-radius:12px;background:#fff;box-sizing:border-box}
+  .splashmsg{min-height:18px;font-size:13px;color:var(--sun);text-align:left;line-height:1.4}
+  .splashmsg:empty{min-height:0}
   .splashgo{width:100%;height:48px;font-size:15.5px;border-radius:12px}
+  .splashnew{width:100%;height:44px;border-radius:12px}
   .splashskip{margin-top:14px;font-size:14px}
   .splashbox small{margin-top:22px;color:var(--muted);font-size:12px;line-height:1.5}
   @keyframes splashIn{from{opacity:0}to{opacity:1}}
@@ -379,9 +384,15 @@
     </svg>
     <h2 id="splashTitle">우리 일정</h2>
     <p>같이 비는 시간, 한눈에</p>
-    <button class="sbtn primary splashgo" id="splashLogin">로그인 · 아이디 만들기</button>
+    <form class="splashform" id="splashForm" autocomplete="on" onsubmit="return false">
+      <input class="tin" id="splashId" type="text" placeholder="아이디" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
+      <input class="tin" id="splashPw" type="password" placeholder="비밀번호" autocomplete="current-password">
+      <div class="splashmsg" id="splashMsg" role="status"></div>
+      <button class="sbtn primary splashgo" id="splashLogin" type="submit">로그인</button>
+      <button class="sbtn splashnew" id="splashNew" type="button">새 아이디 만들기</button>
+    </form>
     <button class="linkbtn splashskip" id="splashSkip">로그인 없이 쓸게요</button>
-    <small id="splashNote">아이디 하나로 휴대폰·컴퓨터 어디서나 같은 일정표를 써요.</small>
+    <small id="splashNote">아이디는 영문 소문자·숫자 3~20글자, 비밀번호는 6글자 이상이에요. 비밀번호를 잊으면 찾을 수 없으니 꼭 기억해 두세요.</small>
   </div>
 </div>
 <script>
@@ -2822,21 +2833,21 @@
     openModal('emailModal');
     setTimeout(() => { try { $('emailIn').focus(); } catch (e) {} }, 50);
   }
-  async function emailSubmit(create) {
-    const id = cleanId($('emailIn').value), pw = $('pwIn').value;
-    const msg = $('emailMsg');
+  async function emailSubmit(create, ui = { id: 'emailIn', pw: 'pwIn', msg: 'emailMsg', btns: ['emailGo', 'emailNew'], modal: 'emailModal' }) {
+    const id = cleanId($(ui.id).value), pw = $(ui.pw).value;
+    const msg = $(ui.msg);
     if (!validId(id)) { msg.textContent = emailErrMsg({ code: 'bad_email' }); return; }
     const email = idEmail(id);
     if (pw.length < 6) { msg.textContent = emailErrMsg({ code: 'weak' }); return; }
     if (acctBusy) return;
-    ['emailGo', 'emailNew'].forEach((id) => { $(id).disabled = true; });
+    ui.btns.forEach((b) => { $(b).disabled = true; });
     msg.textContent = create ? '아이디를 만드는 중…' : '로그인하는 중…';
     let r;
     try { r = await accountImpl.loginEmail(email, pw, create); }
-    catch (e) { msg.textContent = emailErrMsg(e && e.code ? e : emailErr(e)); ['emailGo', 'emailNew'].forEach((id) => { $(id).disabled = false; }); return; }
-    ['emailGo', 'emailNew'].forEach((id) => { $(id).disabled = false; });
-    $('pwIn').value = '';
-    closeModal('emailModal');
+    catch (e) { msg.textContent = emailErrMsg(e && e.code ? e : emailErr(e)); ui.btns.forEach((b) => { $(b).disabled = false; }); return; }
+    ui.btns.forEach((b) => { $(b).disabled = false; });
+    $(ui.pw).value = ''; msg.textContent = '';
+    if (ui.modal) closeModal(ui.modal); else hideSplash();
     await finishLogin(r);
   }
   $('emailGo').addEventListener('click', () => emailSubmit(false));
@@ -2996,7 +3007,7 @@
 
     el.hidden = false;
     warmLogin();
-    setTimeout(() => { try { $('splashLogin').focus({ preventScroll: true }); } catch (e) {} }, 50);
+    if (!IS_TOUCH) setTimeout(() => { try { $('splashId').focus({ preventScroll: true }); } catch (e) {} }, 50);   // 휴대폰은 자판이 바로 튀어나오지 않게
   }
   function hideSplash() {
     const el = $('splash');
@@ -3004,7 +3015,11 @@
     el.classList.add('out');
     setTimeout(() => { el.hidden = true; el.classList.remove('out'); }, 180);
   }
-  $('splashLogin').addEventListener('click', () => { hideSplash(); doLogin(); });
+  // 시작 화면에서 바로 로그인 / 새 아이디
+  const SPLASH_UI = { id: 'splashId', pw: 'splashPw', msg: 'splashMsg', btns: ['splashLogin', 'splashNew'], modal: '' };
+  $('splashLogin').addEventListener('click', () => emailSubmit(false, SPLASH_UI));
+  $('splashNew').addEventListener('click', () => emailSubmit(true, SPLASH_UI));
+  $('splashId').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); $('splashPw').focus(); } });
   $('splashSkip').addEventListener('click', () => { try { sessionStorage.setItem(SS_SPLASH, '1'); } catch (e) {} hideSplash(); });
   $('loginBtn').addEventListener('click', doLogin);
   $('startLogin').addEventListener('click', doLogin);
