@@ -8,7 +8,7 @@ rules_version = '2';
 //   links/{코드}   다른 기기 연결 코드 (10분짜리)
 //   busy/{주_pid}  주간 일정 / 루틴
 // 방 코드를 아는 사람만 읽을 수 있고, 각자 자기 사람·자기 일정만 만들고 고칠 수 있어요.
-// users/{uid} 아래는 구글로 로그인한 본인만 읽고 쓰는 "내 일정표" 저장소예요 (일정표 목록 meta/cals, 일정표별 cals/{id}/people·busy).
+// users/{uid} 아래는 구글(또는 이메일 비밀번호)로 로그인한 본인만 읽고 쓰는 "내 일정표" 저장소예요 (일정표 목록 meta/cals, 일정표별 cals/{id}/people·busy).
 // (Firebase 콘솔 → Authentication → 로그인 방법에서 "익명"을 켜 두어야 해요)
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -104,11 +104,12 @@ service cloud.firestore {
       allow delete: if validRoom(room) && signedIn() && ownsData(resource.data, pid);
     }
 
-    // 내 일정표 (구글 로그인한 본인만, 익명 로그인은 안 돼요)
+    // 내 일정표 (구글·이메일로 로그인한 본인만, 익명 로그인은 안 돼요)
     match /users/{uid}/{rest=**} {
       allow read, write: if signedIn()
         && request.auth.uid == uid
-        && 'google.com' in request.auth.token.firebase.identities;
+        && ('google.com' in request.auth.token.firebase.identities
+            || 'email' in request.auth.token.firebase.identities);
     }
 
     match /rooms/{room}/busy/{id} {

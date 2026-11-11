@@ -179,6 +179,10 @@
   .acctwho small{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .acct .linkbtn{margin-top:8px;font-size:12.5px}
   #startLogin{margin-top:10px;font-size:13px}
+  .acct .acctemail{display:block;margin:8px auto 0;font-size:12.5px}
+  .acctlinks{display:flex;gap:12px;flex-wrap:wrap}
+  .col2{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+  .col2 .tin{width:100%}
 
   /* 첫 시작 */
   .startcard{margin:-4px 0 14px;padding:14px 16px;border:1.5px solid var(--ink);border-radius:14px;background:#FFFDF6}
@@ -403,10 +407,11 @@
     <div id="acctOut">
       <p>로그인하면 다른 기기에서도 내 일정표가 그대로 보여요.</p>
       <button class="sbtn primary" id="loginBtn">구글로 로그인</button>
+      <button class="linkbtn acctemail" id="emailLoginBtn">이메일로 로그인</button>
     </div>
     <div id="acctIn" hidden>
       <div class="acctrow"><span class="acctdot" id="acctDot"></span><span class="acctwho"><b id="acctName"></b><small id="acctMail"></small></span></div>
-      <button class="linkbtn" id="logoutBtn">로그아웃</button>
+      <div class="acctlinks"><button class="linkbtn" id="pwBtn">다른 기기용 비밀번호</button><button class="linkbtn" id="logoutBtn">로그아웃</button></div>
     </div>
   </div>
   <div class="sbfoot">일정표마다 사람과 일정이 따로 저장돼요. "메인" 일정표는 앱을 열면 먼저 보여요.</div>
@@ -543,6 +548,31 @@
 </div>
 
 <!-- 함께 쓰기 -->
+<div class="modal-bg" id="emailModal" role="dialog" aria-modal="true" aria-labelledby="emailTitle">
+  <div class="modal">
+    <h2 id="emailTitle">이메일로 로그인</h2>
+    <p class="sub">구글 창이 안 뜨는 곳(아이폰 홈 화면 앱 등)에서 써요. 컴퓨터에서 구글로 로그인했다면, 컴퓨터 메뉴의 "다른 기기용 비밀번호"를 먼저 만들고 같은 이메일로 로그인하면 일정표가 그대로 보여요.</p>
+    <div class="col2">
+      <input class="tin" id="emailIn" type="email" placeholder="이메일" autocomplete="username" autocapitalize="off" spellcheck="false">
+      <input class="tin" id="pwIn" type="password" placeholder="비밀번호 (6글자 이상)" autocomplete="current-password">
+    </div>
+    <div class="row2"><button class="sbtn primary" id="emailGo">로그인</button><button class="linkbtn" id="emailNew">이 이메일로 새로 가입</button></div>
+    <div class="msg" id="emailMsg"></div>
+    <div class="mfoot"><button class="sbtn" data-close>닫기</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="pwModal" role="dialog" aria-modal="true" aria-labelledby="pwTitle">
+  <div class="modal">
+    <h2 id="pwTitle">다른 기기용 비밀번호</h2>
+    <p class="sub" id="pwSub"></p>
+    <div class="col2">
+      <input class="tin" id="pwSetIn" type="password" placeholder="새 비밀번호 (6글자 이상)" autocomplete="new-password">
+    </div>
+    <div class="row2"><button class="sbtn primary" id="pwSave">저장</button></div>
+    <div class="msg" id="pwMsg"></div>
+    <div class="mfoot"><button class="sbtn" data-close>닫기</button></div>
+  </div>
+</div>
 <div class="modal-bg" id="roomModal" role="dialog" aria-modal="true" aria-labelledby="roomTitle">
   <div class="modal">
     <h2 id="roomTitle">함께 쓰기</h2>
@@ -2507,9 +2537,37 @@
     network: '인터넷 연결을 확인하고 다시 해 주세요.',
   }[e && e.code] || '로그인하지 못했어요. 잠시 뒤 다시 해 주세요.');
   const googleProfile = (u) => {
-    const g = (u.providerData || []).find((x) => x && x.providerId === 'google.com') || {};
-    return { uid: u.uid, name: u.displayName || g.displayName || '', email: u.email || g.email || '' };
+    const pd = u.providerData || [];
+    const g = pd.find((x) => x && x.providerId === 'google.com') || {};
+    const pw = pd.find((x) => x && x.providerId === 'password') || {};
+    return { uid: u.uid, name: u.displayName || g.displayName || '', email: u.email || g.email || pw.email || '', hasPw: !!pw.providerId, hasGoogle: !!g.providerId };
   };
+  const emailErr = (e) => {
+    const c = (e && e.code) || '';
+    if (c === 'auth/invalid-credential' || c === 'auth/wrong-password' || c === 'auth/user-not-found' || c === 'auth/invalid-login-credentials') return { code: 'bad_pw' };
+    if (c === 'auth/email-already-in-use' || c === 'auth/credential-already-in-use' || c === 'auth/provider-already-linked') return { code: 'email_used' };
+    if (c === 'auth/weak-password') return { code: 'weak' };
+    if (c === 'auth/invalid-email' || c === 'auth/missing-email') return { code: 'bad_email' };
+    if (c === 'auth/too-many-requests') return { code: 'too_many' };
+    if (c === 'auth/operation-not-allowed') return { code: 'pw_not_enabled' };
+    if (c === 'auth/requires-recent-login') return { code: 'recent' };
+    return authErr(e);
+  };
+  const emailErrMsg = (e) => ({
+    bad_pw: '이메일이나 비밀번호가 맞지 않아요. 컴퓨터에서 구글로 로그인했다면 메뉴의 "다른 기기용 비밀번호"를 먼저 만들어 주세요.',
+    email_used: '이미 쓰고 있는 이메일이에요. 위의 "로그인"을 눌러 주세요. (구글로 쓰던 이메일이면 컴퓨터에서 "다른 기기용 비밀번호"를 먼저 만들어 주세요)',
+    weak: '비밀번호는 6글자 이상으로 해 주세요.',
+    bad_email: '이메일 주소를 다시 확인해 주세요.',
+    too_many: '여러 번 틀려서 잠시 막혔어요. 조금 뒤에 다시 해 주세요.',
+    pw_not_enabled: '이메일 로그인이 아직 켜지지 않았어요. (Firebase → Authentication → 로그인 방법 → 이메일/비밀번호)',
+    recent: '보안을 위해 다시 로그인한 뒤에 바꿀 수 있어요. 로그아웃 후 다시 로그인하고 해 주세요.',
+    network: '인터넷 연결을 확인하고 다시 해 주세요.',
+  }[e && e.code] || '잠시 뒤 다시 해 주세요.');
+  // 잠깐 쓰는 두 번째 연결 (이 기기 로그인은 그대로 둔 채 계정 uid만 확인)
+  function checkAuth(c) {
+    const app2 = c.appMod.getApps().find((x) => x.name === 'login-check') || c.appMod.initializeApp(FIREBASE_CONFIG, 'login-check');
+    try { return c.authMod.initializeAuth(app2, { persistence: c.authMod.inMemoryPersistence }); } catch (er) { return c.authMod.getAuth(app2); }
+  }
   // 이미 다른 기기에서 쓰던 구글 계정이면: 잠깐 쓰는 두 번째 연결로 그 계정 uid만 확인해요 (이 기기 로그인은 아직 그대로)
   async function accountExisting(c, e) {
     if (!(e && (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use'))) throw authErr(e);
@@ -2557,6 +2615,36 @@
         await c.auth.currentUser.getIdToken(true);
         return { kind: 'linked' };
       } catch (e) { return accountExisting(c, e); }
+    },
+    // 이메일+비밀번호: create면 이 기기 계정에 붙여 새로 가입, 아니면 있던 계정으로
+    async loginEmail(email, pw, create) {
+      const c = await fbCore();
+      await ensureSignedIn(c);
+      const cred = c.authMod.EmailAuthProvider.credential(email, pw);
+      const u = c.auth.currentUser;
+      if (create) {
+        if (!u.isAnonymous) throw { code: 'email_used' };
+        try { await c.authMod.linkWithCredential(u, cred); await c.auth.currentUser.getIdToken(true); return { kind: 'linked' }; }
+        catch (e) { throw emailErr(e); }
+      }
+      const a2 = checkAuth(c);
+      let r2;
+      try { r2 = await c.authMod.signInWithEmailAndPassword(a2, email, pw); } catch (e) { throw emailErr(e); }
+      const newUid = r2.user.uid;
+      await c.authMod.signOut(a2).catch(() => {});
+      return newUid === u.uid ? { kind: 'linked' } : { kind: 'existing', cred, newUid };
+    },
+    // 로그인한 계정에 "다른 기기용 비밀번호" 붙이기 / 바꾸기
+    async setPassword(pw) {
+      const c = await fbCore();
+      const u = c.auth.currentUser;
+      const info = googleProfile(u);
+      try {
+        if (info.hasPw) await c.authMod.updatePassword(u, pw);
+        else await c.authMod.linkWithCredential(u, c.authMod.EmailAuthProvider.credential(info.email, pw));
+        await c.auth.currentUser.getIdToken(true);
+      } catch (e) { throw emailErr(e); }
+      return googleProfile(c.auth.currentUser);
     },
     async switchTo(cred) { const c = await fbCore(); try { await c.authMod.signInWithCredential(c.auth, cred); } catch (e) { throw authErr(e); } },
     async logout() { const c = await fbCore(); await c.authMod.signOut(c.auth); await c.authMod.signInAnonymously(c.auth).catch(() => {}); },
@@ -2685,6 +2773,7 @@
   async function doLogin() {
     if (acctBusy) return;
     if (INAPP) { inAppNotice(); return; }
+    if (MOBILE_STANDALONE && IS_IOS) { openEmailLogin(); return; }   // 아이폰 홈 화면 앱: 이메일로
     if (MOBILE_STANDALONE) { handoffLogin(); return; }
     acctBusy = true; renderAccount('로그인하는 중…');
     let r;
@@ -2710,6 +2799,55 @@
     flash('브라우저에서 로그인 창을 열게요. 로그인을 마치고 이 앱으로 돌아오면 그대로 로그인돼 있어요.');
     setTimeout(() => { location.href = `intent://${location.host}${basePath}?login=1#Intent;scheme=https;package=${pkg};S.browser_fallback_url=${encodeURIComponent(url)};end`; }, 400);
   }
+  // 이메일 로그인 / 가입
+  function openEmailLogin() {
+    $('emailMsg').textContent = '';
+    if (ACCOUNT) return;
+    openModal('emailModal');
+    setTimeout(() => { try { $('emailIn').focus(); } catch (e) {} }, 50);
+  }
+  async function emailSubmit(create) {
+    const email = $('emailIn').value.trim(), pw = $('pwIn').value;
+    const msg = $('emailMsg');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = emailErrMsg({ code: 'bad_email' }); return; }
+    if (pw.length < 6) { msg.textContent = emailErrMsg({ code: 'weak' }); return; }
+    if (acctBusy) return;
+    ['emailGo', 'emailNew'].forEach((id) => { $(id).disabled = true; });
+    msg.textContent = create ? '가입하는 중…' : '로그인하는 중…';
+    let r;
+    try { r = await accountImpl.loginEmail(email, pw, create); }
+    catch (e) { msg.textContent = emailErrMsg(e && e.code ? e : emailErr(e)); ['emailGo', 'emailNew'].forEach((id) => { $(id).disabled = false; }); return; }
+    ['emailGo', 'emailNew'].forEach((id) => { $(id).disabled = false; });
+    $('pwIn').value = '';
+    closeModal('emailModal');
+    await finishLogin(r);
+  }
+  $('emailGo').addEventListener('click', () => emailSubmit(false));
+  $('emailNew').addEventListener('click', () => emailSubmit(true));
+  $('pwIn').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); emailSubmit(false); } });
+  $('emailLoginBtn').addEventListener('click', openEmailLogin);
+  // 다른 기기용 비밀번호
+  function openPwModal() {
+    if (!ACCOUNT) return;
+    $('pwMsg').textContent = ''; $('pwSetIn').value = '';
+    $('pwSub').textContent = `아이폰 홈 화면 앱처럼 구글 창이 안 뜨는 곳에서는 "이메일로 로그인"에 ${ACCOUNT.email || '이 계정 이메일'}과 이 비밀번호를 넣으면 같은 계정으로 들어와요.` + (ACCOUNT.hasPw ? ' 이미 만들어 둔 비밀번호가 있어요. 새로 저장하면 바뀌어요.' : '');
+    openModal('pwModal');
+    setTimeout(() => { try { $('pwSetIn').focus(); } catch (e) {} }, 50);
+  }
+  $('pwBtn').addEventListener('click', openPwModal);
+  $('pwSave').addEventListener('click', async () => {
+    const pw = $('pwSetIn').value, msg = $('pwMsg');
+    if (pw.length < 6) { msg.textContent = emailErrMsg({ code: 'weak' }); return; }
+    $('pwSave').disabled = true; msg.textContent = '저장하는 중…';
+    try {
+      const info = await accountImpl.setPassword(pw);
+      setAccount({ ...ACCOUNT, ...info });
+      $('pwSetIn').value = '';
+      msg.textContent = `저장했어요. 이제 다른 기기에서 "이메일로 로그인"에 ${ACCOUNT.email}과 이 비밀번호를 넣어 주세요.`;
+    } catch (e) { msg.textContent = emailErrMsg(e && e.code ? e : emailErr(e)); }
+    finally { $('pwSave').disabled = false; }
+  });
+  $('pwSetIn').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); $('pwSave').click(); } });
   // 브라우저에서 로그인하고 돌아오면 다시 열어서 로그인 상태로
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible' || !ACCOUNT_OK || ACCOUNT || acctBusy) return;
@@ -2774,7 +2912,7 @@
       if (LOGIN_LANDING) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
       flash(LOGIN_LANDING
         ? '로그인했어요! 이제 홈 화면의 "우리 일정" 앱으로 돌아가면 그대로 로그인돼 있어요.'
-        : `${info.name || info.email || '구글 계정'}(으)로 로그인했어요. 같은 구글 계정으로 다른 기기에서 로그인하면 일정표가 그대로 보여요.${merged ? ` 방에서 따로 들어가 있던 나 ${merged}명을 하나로 합쳤어요.` : ''}`);
+        : `${info.name || info.email || '구글 계정'}(으)로 로그인했어요. 같은 계정으로 다른 기기에서 로그인하면 일정표가 그대로 보여요.${merged ? ` 방에서 따로 들어가 있던 나 ${merged}명을 하나로 합쳤어요.` : ''}`);
     } catch (e) {
       const er = e && e.code ? e : authErr(e);
       if (er.code !== 'cancel') flash(loginErrMsg(er));
@@ -2812,6 +2950,8 @@
     $('startLogin').hidden = !!ACCOUNT;
     if (busyText) { $('loginBtn').textContent = busyText; $('logoutBtn').textContent = busyText; return; }
     $('loginBtn').textContent = '구글로 로그인'; $('logoutBtn').textContent = '로그아웃';
+    $('pwBtn').textContent = ACCOUNT && ACCOUNT.hasPw ? '비밀번호 바꾸기' : '다른 기기용 비밀번호';
+    $('loginBtn').hidden = MOBILE_STANDALONE && IS_IOS;   // 아이폰 홈 화면 앱은 구글 창이 안 떠요
     if (ACCOUNT) {
       $('acctName').textContent = ACCOUNT.name || ACCOUNT.email || '구글 계정';
       $('acctMail').textContent = ACCOUNT.name ? ACCOUNT.email : '';
@@ -2830,6 +2970,10 @@
     try { skip = !!sessionStorage.getItem(SS_SPLASH); } catch (e) {}
     if (!ok || (skip && !LOGIN_LANDING)) { el.hidden = true; if (LOGIN_LANDING && ACCOUNT) flash('이미 로그인돼 있어요. 홈 화면의 "우리 일정" 앱으로 돌아가 주세요.'); return; }
     if (LOGIN_LANDING) $('splashNote').textContent = '홈 화면 앱에서 넘어왔어요. 여기서 로그인하고 앱으로 돌아가면 그대로 로그인돼 있어요.';
+    if (MOBILE_STANDALONE && IS_IOS) {
+      $('splashLogin').textContent = '이메일로 로그인';
+      $('splashNote').textContent = '컴퓨터에서 구글로 로그인했다면, 메뉴의 "다른 기기용 비밀번호"를 만들고 같은 이메일로 로그인해 주세요.';
+    }
     el.hidden = false;
     warmLogin();
     setTimeout(() => { try { $('splashLogin').focus({ preventScroll: true }); } catch (e) {} }, 50);
