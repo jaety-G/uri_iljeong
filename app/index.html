@@ -118,7 +118,7 @@
   .pill.datetoggle.on{background:#FFF0B3}
   .navbtn[hidden]{display:none}
   .rangebox{display:inline-flex;align-items:center;gap:6px;font-weight:700}
-  .rangebox input{height:36px;border:1.5px solid var(--ink);border-radius:8px;background:#fff;padding:0 8px;font-size:14px;font-weight:500}
+
   .rangebox[hidden],.card[hidden],.paintbar[hidden],.weeklabel[hidden]{display:none}
 
   /* 칩 줄 */
@@ -134,9 +134,27 @@
         display:grid;place-items:center}
   .addchip svg{width:18px;height:18px}
   .tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .pill.optbtn{display:none;width:44px;padding:0;justify-content:center}
+  .tools{display:flex;gap:8px;align-items:center}
+  .pill.optbtn{width:40px;height:40px;padding:0;justify-content:center;border-radius:50%}
   .optbtn svg{width:18px;height:18px}
-  .optbtn.on{background:#FFF0B3}
+  .optbtn.on{background:#F0EADB}
+  .optwrap{position:relative}
+  .optmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:40;min-width:240px;padding:6px;border:1.5px solid var(--ink);border-radius:12px;background:#fff}
+  .optmenu[hidden]{display:none}
+  .optmenu hr{border:none;border-top:1px dashed #D8D1C0;margin:6px 4px}
+  .omrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;font-size:14px;font-weight:600}
+  .omrow select{border:1.5px solid var(--ink);border-radius:8px;background:#fff;height:32px;padding:0 4px;font-weight:700}
+  .omitem{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:10px;border:none;border-radius:8px;background:transparent;text-align:left;font-size:14px;font-weight:600;color:var(--ink)}
+  .omitem:hover{background:#F6F1E4}
+  .omitem[hidden]{display:none}
+  .omitem small{display:block;font-weight:400;font-size:12px;color:var(--muted);margin-top:1px}
+  .omsw{flex:none;width:34px;height:20px;border-radius:10px;border:1.5px solid var(--ink);background:#fff;position:relative}
+  .omsw::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--ink);transition:left .15s}
+  .omitem.on .omsw{background:#FFF0B3}
+  .omitem.on .omsw::after{left:16px}
+  .pill.freebtn{height:40px;border-radius:999px;padding:0 14px;font-size:13px}
+  .datebtn{position:relative;display:inline-flex;align-items:center;height:36px;padding:0 10px;border:1.5px solid var(--ink);border-radius:8px;background:#fff;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .datebtn input{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;padding:0;cursor:pointer}
   .pill{height:44px;border:1.5px solid var(--ink);border-radius:10px;background:#fff;padding:0 16px;font-weight:700;font-size:14px;
         display:inline-flex;align-items:center;gap:8px}
   .pill.on{background:#FFF0B3}
@@ -210,11 +228,12 @@
   .startcard p{margin:4px 0 0;font-size:13px;color:var(--muted);line-height:1.55}
 
   /* 칠하기 막대 */
-  .paintbar{display:flex;align-items:center;gap:8px 10px;margin:-4px 0 14px;padding:8px 12px;border:1.5px dashed #CFC7B5;border-radius:12px;background:#FFFDF6}
+  .paintbar{display:flex;align-items:center;gap:8px;margin:-4px 0 12px;flex-wrap:nowrap}
+  .pbwho b{display:none}
   .pbwho{display:inline-flex;align-items:center;gap:6px;font-size:14px}
   .pbwho .dot{width:14px;height:14px}
   .pblabel{font-size:13px;color:var(--muted)}
-  .paintbar .pbinput{flex:0 1 200px;min-width:120px;height:34px}
+  .paintbar .pbinput{flex:0 1 200px;min-width:120px;height:36px}
   .pbwho{flex:none}
   .recent{display:flex;gap:6px;flex:1 1 0;min-width:0;overflow-x:auto;scrollbar-width:thin;padding:2px 0}
   .rchip{flex:none}
@@ -224,6 +243,8 @@
   /* 표 */
   .card{background:#fff;border:1.5px solid var(--ink);border-radius:16px;padding:6px 8px 14px;isolation:isolate}
   .scroller{overflow:auto;-webkit-overflow-scrolling:touch;max-height:max(420px, calc(100vh - 96px));overscroll-behavior:contain}
+  .scroller.snap{scroll-snap-type:x mandatory;scroll-padding-left:30px}
+  .scroller.snap .day{scroll-snap-align:start}
   .table{min-width:560px}
   .thead{display:flex;height:52px;align-items:center;border-bottom:1.5px solid var(--ink);position:sticky;top:0;z-index:4;background:#fff}
   .tcol{width:var(--tcol);flex:none;align-self:stretch;position:sticky;left:0;z-index:5;background:#fff}
@@ -376,45 +397,36 @@
     .weeknav{grid-column:2;grid-row:1;gap:0}
     .weeklabel{font-size:14px;min-width:0}
     .seg{grid-column:1;grid-row:2;justify-self:start}
-    #routineToggle{grid-column:2;grid-row:2;justify-self:end}
+    .tools{grid-column:2;grid-row:2;justify-self:end}
     header:has(#rangeBox:not([hidden])) .weeknav{grid-column:1 / -1;grid-row:3;justify-self:start}
     .navbtn{width:44px;height:44px}
     .menubtn{width:44px;height:44px;margin-left:-8px}
     .toolbar{margin:16px 0 12px;gap:10px}
-    .toolbar{flex-wrap:nowrap;align-items:flex-start}
-    .toolbar .chips{flex:1 1 auto;min-width:0}
-    .tools{width:auto;flex:none;flex-wrap:nowrap}
-    .toolbar:has(.tools.open){flex-wrap:wrap}
-    .tools.open{width:100%;justify-content:flex-end}
-    .pill.optbtn{display:inline-flex;flex:none}
-    .tools .timepick,.tools #freeToggle{display:none}
-    .tools.open{flex-wrap:wrap}
-    .tools.open .timepick,.tools.open #freeToggle{display:inline-flex}
     .timepick{padding:0 4px 0 12px}
-    .paintbar{flex-wrap:wrap}
-    .recent{flex-basis:100%}
+    .paintbar .pbinput{flex:0 0 132px;min-width:0}
     :root{--rowH:42px;--tcol:46px}
     /* 휴대폰: 한 주를 가로 스크롤 없이 한 화면에 */
     .wrap{padding-left:calc(10px + env(safe-area-inset-left));padding-right:calc(10px + env(safe-area-inset-right))}
     .card{padding:4px 3px 10px}
-    .table.fit{min-width:0 !important;--tcol:30px}
-    .fit .thead{height:46px}
-    .fit .dhead{font-size:13px;line-height:1.2}
-    .fit .dhead small{display:block;margin:1px 0 0;font-size:11px}
-    .fit .dhead.today small{display:grid;width:fit-content;min-width:20px;height:20px;margin:1px auto 0;padding:0 4px}
+    .table.fit{min-width:0 !important}
+    .table.compact{--tcol:30px}
+    .compact .thead{height:46px}
+    .compact .dhead{font-size:13px;line-height:1.2}
+    .compact .dhead small{display:block;margin:1px 0 0;font-size:11px}
+    .compact .dhead.today small{display:grid;width:fit-content;min-width:20px;height:20px;margin:1px auto 0;padding:0 4px}
     .mday.today .mnum{min-width:21px;height:21px;padding:0 4px}
-    .fit .timecol span{right:4px;font-size:10px;letter-spacing:-.3px}
-    .fit .blk{left:2px;right:2px;border-radius:6px}
-    .fit .blk.lane{right:auto;left:calc(2px + (100% - 4px) * var(--l) / var(--n));width:calc((100% - 4px) / var(--n) - 1px);border-radius:4px}
-    .fit .lbl{left:3px;max-width:calc(100% - 5px);padding:1px 4px 1px 1px;gap:2px;font-size:10px;line-height:14px;border-radius:7px}
-    .fit .ini{min-width:14px;height:14px;font-size:9px}
-    .fit .many .ini{width:14px}
-    .fit .lbl.multi span{display:none}
-    .fit .lbl:not(.multi){background:transparent;padding:0 1px;left:4px;max-width:calc(100% - 7px);white-space:normal;align-items:flex-start;font-size:10.5px;line-height:13px;font-weight:600;letter-spacing:-.3px}
-    .fit .lbl:not(.multi) .ini{display:none}
-    .fit .lbl:not(.multi) span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;word-break:keep-all;overflow-wrap:anywhere}
-    .fit .lbl.lane:not(.multi){left:calc(4px + (100% - 8px) * var(--l) / var(--n));max-width:calc((100% - 8px) / var(--n) - 3px);font-size:9.5px}
-    .fit .lbl.multi{padding-right:1px}
+    .compact .timecol span{right:4px;font-size:10px;letter-spacing:-.3px}
+    .compact .blk{left:2px;right:2px;border-radius:6px}
+    .compact .blk.lane{right:auto;left:calc(2px + (100% - 4px) * var(--l) / var(--n));width:calc((100% - 4px) / var(--n) - 1px);border-radius:4px}
+    .compact .lbl{left:3px;max-width:calc(100% - 5px);padding:1px 4px 1px 1px;gap:2px;font-size:10px;line-height:14px;border-radius:7px}
+    .compact .ini{min-width:14px;height:14px;font-size:9px}
+    .compact .many .ini{width:14px}
+    .compact .lbl.multi span{display:none}
+    .compact .lbl:not(.multi){background:transparent;padding:0 1px;left:4px;max-width:calc(100% - 7px);white-space:normal;align-items:flex-start;font-size:10.5px;line-height:13px;font-weight:600;letter-spacing:-.3px}
+    .compact .lbl:not(.multi) .ini{display:none}
+    .compact .lbl:not(.multi) span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;word-break:keep-all;overflow-wrap:anywhere}
+    .compact .lbl.lane:not(.multi){left:calc(4px + (100% - 8px) * var(--l) / var(--n));max-width:calc((100% - 8px) / var(--n) - 3px);font-size:9.5px}
+    .compact .lbl.multi{padding-right:1px}
     .mgrid{min-width:0}
     .mgrid.routine{grid-template-columns:38px repeat(7,minmax(0,1fr))}
     .mhead{font-size:13px;padding:10px 0 8px}
@@ -495,33 +507,43 @@
     <div class="seg" role="tablist" aria-label="보기 방식">
       <button data-view="week" role="tab">주간</button><button data-view="month" role="tab">월간</button><button data-view="range" role="tab">기간</button>
     </div>
-    <button class="pill datetoggle" id="routineToggle" aria-pressed="false" title="날짜 없이 요일·시간만으로 매주(또는 매달) 반복되는 시간표예요. 학교 시간표처럼 쓰세요.">루틴 시간표</button>
     <div class="weeknav">
       <button class="navbtn" id="prevWeek" aria-label="지난 주">
         <svg viewBox="0 0 20 20" fill="none" stroke="#2B2B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4.5 7 10l5.5 5.5"/></svg>
       </button>
       <span class="weeklabel" id="weekLabel"></span>
       <span class="rangebox" id="rangeBox" hidden>
-        <input type="date" id="rangeStart" aria-label="시작 날짜"><span>~</span><input type="date" id="rangeEnd" aria-label="끝 날짜">
+        <label class="datebtn"><span id="rangeStartTxt"></span><input type="date" id="rangeStart" aria-label="시작 날짜"></label><span>~</span><label class="datebtn"><span id="rangeEndTxt"></span><input type="date" id="rangeEnd" aria-label="끝 날짜"></label>
       </span>
       <button class="navbtn" id="nextWeek" aria-label="다음 주">
         <svg viewBox="0 0 20 20" fill="none" stroke="#2B2B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5 13 10l-5.5 5.5"/></svg>
       </button>
       <button class="thisweek" id="thisWeek" hidden>이번 주</button>
     </div>
+    <div class="tools">
+      <button class="pill freebtn" id="freeToggle" aria-pressed="false" title="모두 비어 있는 시간을 노란 빗금으로 보여 줘요">빈 시간</button>
+      <div class="optwrap">
+        <button class="pill optbtn" id="optBtn" aria-expanded="false" aria-haspopup="true" aria-label="더 보기" title="더 보기"><svg viewBox="0 0 20 20" fill="currentColor"><circle cx="4.5" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="15.5" cy="10" r="1.7"/></svg></button>
+        <div class="optmenu" id="optMenu" role="menu" hidden>
+          <div class="omrow timepick" title="표에 보일 시간대">
+            <label for="hourStart">시간대</label>
+            <span><select id="hourStart" aria-label="시작 시각"></select> – <select id="hourEnd" aria-label="끝 시각"></select></span>
+          </div>
+          <button class="omitem" id="routineToggle" role="menuitemcheckbox" aria-checked="false"><span>루틴 시간표 <small>날짜 없이 매주 반복</small></span><i class="omsw"></i></button>
+          <button class="omitem" id="copyLastWeek" hidden>지난주 내 일정 가져오기</button>
+          <button class="omitem" id="weekToRoutine" hidden>보던 주를 루틴으로 가져오기</button>
+          <hr>
+          <button class="omitem" id="shareLink">링크로 한 번 보내기</button>
+          <button class="omitem" id="openShare">받은 링크 붙여넣기 · 백업</button>
+          <button class="omitem" id="installBtn" hidden>앱으로 설치</button>
+        </div>
+      </div>
+    </div>
     </div>
   </header>
 
   <div class="toolbar">
     <div class="chips" id="chips"></div>
-    <div class="tools">
-      <button class="pill optbtn" id="optBtn" aria-expanded="false" aria-label="보기 설정 (시간대, 모두 빈 시간)" title="보기 설정"><svg viewBox="0 0 20 20" fill="currentColor"><circle cx="4.5" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="15.5" cy="10" r="1.7"/></svg></button>
-      <div class="pill timepick" title="표에 보일 시간대">
-        <label for="hourStart">시간</label>
-        <select id="hourStart" aria-label="시작 시각"></select><span>–</span><select id="hourEnd" aria-label="끝 시각"></select>
-      </div>
-      <button class="pill" id="freeToggle" aria-pressed="false">모두 빈 시간 표시</button>
-    </div>
   </div>
 
   <p class="metip" id="meTip" hidden>이름을 <b>꾹</b> 누르면 그 사람 일정을 칠할 수 있어요.</p>
@@ -535,8 +557,7 @@
 
   <div class="paintbar" id="paintbar" hidden>
     <span class="pbwho"><span class="dot" id="pbDot"></span><b id="pbName"></b></span>
-    <label for="labelInput" class="pblabel">일정 이름</label>
-    <input class="tin pbinput" id="labelInput" maxlength="12" placeholder="예: 수업, 알바 (비워도 돼요)" autocomplete="off">
+    <input class="tin pbinput" id="labelInput" maxlength="12" placeholder="일정 이름 (선택)" autocomplete="off" aria-label="일정 이름">
     <div class="recent" id="recentLabels"></div>
   </div>
 
@@ -559,12 +580,7 @@
   <div class="foot">
     <span id="status"></span>
     <div class="acts">
-      <button class="linkbtn" id="copyLastWeek" hidden>지난주 내 일정 가져오기</button>
-      <button class="linkbtn" id="weekToRoutine" hidden>보던 주를 루틴으로 가져오기</button>
       <button class="sharebtn main" id="roomBtn" hidden>함께 쓰기</button>
-      <button class="sharebtn" id="installBtn" hidden>앱으로 설치</button>
-      <button class="linkbtn" id="shareLink">링크로 한 번 보내기</button>
-      <button class="linkbtn" id="openShare">받은 링크 붙여넣기 · 백업</button>
     </div>
   </div>
 </div>
@@ -1270,8 +1286,16 @@
       tbody.appendChild(el);
       return { date, wk, d, head, el, cells };
     });
-    $('table').style.minWidth = `${Math.max(560, 56 + specs.length * 72)}px`;
-    $('table').classList.toggle('fit', specs.length <= 7);   // 한 주(7일 이하)는 휴대폰에서도 가로 스크롤 없이 한 화면에
+    const narrow = window.matchMedia('(max-width:640px)').matches;
+    const fit = specs.length <= 7;
+    if (narrow && !fit) {
+      // 휴대폰 기간 보기: 7일이 한 화면에 들어가는 칸 너비로, 옆으로 밀면 하루씩 딱 멈춰요
+      const w = ($('table').parentElement.clientWidth || 360) - 30;
+      $('table').style.minWidth = `${30 + specs.length * (w / 7)}px`;
+    } else $('table').style.minWidth = `${Math.max(560, 56 + specs.length * 72)}px`;
+    $('table').classList.toggle('fit', fit);   // 한 주(7일 이하)는 휴대폰에서도 가로 스크롤 없이 한 화면에
+    $('table').classList.toggle('compact', fit || narrow);
+    $('table').parentElement.classList.toggle('snap', narrow && !fit);
   }
 
   /* ---------- 그리기 ---------- */
@@ -1285,7 +1309,7 @@
     const now = new Date();
     const rt = state.routine;
     $('routineToggle').classList.toggle('on', rt);
-    $('routineToggle').setAttribute('aria-pressed', rt);
+    $('routineToggle').setAttribute('aria-checked', rt);
     document.querySelector('.seg button[data-view="range"]').hidden = rt;
     $('weekLabel').hidden = isRange;
     $('rangeBox').hidden = !isRange;
@@ -1310,6 +1334,9 @@
       atNow = state.month === monthKeyOf(now);
     } else {
       if (document.activeElement !== $('rangeStart')) $('rangeStart').value = state.range.start;
+      const shortDate = (k) => { const d = new Date(k + 'T00:00'); return `${d.getMonth() + 1}/${d.getDate()}(${DAYS[dayIdx(d)]})`; };
+      $('rangeStartTxt').textContent = shortDate(state.range.start);
+      $('rangeEndTxt').textContent = shortDate(state.range.end);
       if (document.activeElement !== $('rangeEnd')) $('rangeEnd').value = state.range.end;
       const t = dayKey(now);
       atNow = state.range.start <= t && t <= state.range.end;
@@ -1320,7 +1347,7 @@
       $('prevWeek').setAttribute('aria-label', `이전 ${unit}`);
       $('nextWeek').setAttribute('aria-label', `다음 ${unit}`);
     }
-    $('thisWeek').textContent = state.view === 'week' ? '이번 주' : isMonth ? '이번 달' : '오늘부터';
+    $('thisWeek').textContent = state.view === 'week' ? '이번 주' : isMonth ? '이번 달' : '오늘';
     $('thisWeek').hidden = atNow;
     $('tableCard').hidden = isMonth;
     $('monthCard').hidden = !isMonth;
@@ -1915,7 +1942,7 @@
   tbody.addEventListener('lostpointercapture', endDrag);
 
   // 화면 폭이 휴대폰↔컴퓨터로 바뀌면 월간을 다시 그려요
-  try { window.matchMedia('(max-width:640px)').addEventListener('change', () => { if (state.view === 'month') { renderMonth(); renderHint(); } }); } catch (e) {}
+  try { window.matchMedia('(max-width:640px)').addEventListener('change', () => { if (state.view === 'month') { renderMonth(); renderHint(); } else { tableSig = ''; renderAll(); } }); } catch (e) {}
   /* ---------- 상단 조작 ---------- */
   function onViewChange() {
     if (state.view !== 'month') buildTable();
@@ -1972,6 +1999,8 @@
   }
   $('prevWeek').addEventListener('click', () => shiftView(-1));
   $('nextWeek').addEventListener('click', () => shiftView(1));
+  // 날짜 칸을 누르면 달력이 바로 열리게 (컴퓨터)
+  ['rangeStart', 'rangeEnd'].forEach((id) => $(id).addEventListener('click', (e) => { try { e.target.showPicker && e.target.showPicker(); } catch (er) {} }));
   $('thisWeek').addEventListener('click', () => {
     const now = new Date();
     if (state.view === 'week') state.week = thisWeekKey();
@@ -2010,12 +2039,18 @@
   });
   $('labelInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); e.target.blur(); } });
   // 휴대폰 ⋯ 보기 설정: 시간대·모두 빈 시간 펼치기/접기 (켜져 있으면 버튼이 노랗게)
+  // ⋯ 더 보기: 아래로 펼쳐지는 작은 메뉴 (화면을 밀어내지 않아요)
   function renderOptBtn() {
-    const open = document.querySelector('.tools').classList.contains('open');
+    const open = !$('optMenu').hidden;
     $('optBtn').setAttribute('aria-expanded', open);
-    $('optBtn').classList.toggle('on', open || state.showFree);
+    $('optBtn').classList.toggle('on', open);
   }
-  $('optBtn').addEventListener('click', () => { document.querySelector('.tools').classList.toggle('open'); renderOptBtn(); });
+  function closeOptMenu() { if (!$('optMenu').hidden) { $('optMenu').hidden = true; renderOptBtn(); } }
+  $('optBtn').addEventListener('click', (e) => { e.stopPropagation(); $('optMenu').hidden = !$('optMenu').hidden; renderOptBtn(); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('.optwrap')) closeOptMenu(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOptMenu(); });
+  // 메뉴 안 버튼을 누르면 메뉴는 닫혀요 (시간대 고르기는 열린 채로)
+  $('optMenu').addEventListener('click', (e) => { if (e.target.closest('.omitem')) setTimeout(closeOptMenu, 0); });
   $('freeToggle').addEventListener('click', () => {
     state.showFree = !state.showFree; savePrefs(); renderGrid();
     if (state.showFree && !peopleList().some((p) => !state.hidden.has(p.id))) flash('켜진 사람이 없어요. 이름 칩을 눌러 사람을 켜 주세요.');
