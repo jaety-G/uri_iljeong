@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>우리 일정</title>
 <meta name="theme-color" content="#FAF6EA">
 <meta name="color-scheme" content="light">
@@ -221,6 +221,10 @@
   .metip[hidden]{display:none}
   .chip{touch-action:manipulation;transition:transform .08s ease-out;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .chip:active{transform:scale(.94)}
+
+  /* 확대·축소 막기: 두 번 톡 확대 없음, 입력칸 누를 때 아이폰 자동 확대 없음(16px) */
+  html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  @media (max-width:640px){ input, select, textarea{font-size:16px !important} }
 
   /* 첫 시작 */
   .startcard{margin:-4px 0 14px;padding:14px 16px;border:1.5px solid var(--ink);border-radius:14px;background:#FFFDF6}
@@ -1803,31 +1807,19 @@
     renderAll();
   }
   const queues = {};
-  async function writeDoc(path, body) {   // body=null 이면 삭제. 같은 문서는 한 번에 하나씩.
+  // 서버에 저장: 기다리지 않고 바로 보내요 (순서는 Firebase가 지켜 줘요).
+  // 내가 방금 고친 내용(updatedAt)을 기억해 두고, 그보다 오래된 서버 상태가 오면 화면을 되돌리지 않아요.
+  const localNewer = {};   // '일정표|busy/문서' → 마지막으로 내가 쓴 updatedAt
+  function writeDoc(path, body) {   // body=null 이면 삭제
     if (state.mode !== 'db' || !db) return;
-    // 일정표를 바꾸는 중에 쓰기가 남아 있어도, 원래 일정표의 저장소에 써요
-    const key = CALS.current + '|' + path;
-    const q = queues[key] || (queues[key] = { running: false, pending: undefined, db: null, cal: '' });
-    q.pending = body; q.db = db; q.cal = CALS.current;
-    if (q.running) return;
-    q.running = true; state.saving++; renderFoot();
-    while (q.pending !== undefined) {
-      const b = q.pending; q.pending = undefined;
-      const store = q.db;
-      try {
-        const ref = store.doc(path);
-        if (b === null) await ref.delete(); else await ref.set(b);
-        state.statusNote = '';
-      } catch (e) {
-        if (e && e.code === 'unavailable') {
-          await new Promise((r) => setTimeout(r, 600 + Math.random() * 800));
-          try { const ref = store.doc(path); if (b === null) await ref.delete(); else await ref.set(b); continue; } catch (e2) { onWriteError(e2); }
-        } else onWriteError(e);
-      }
-    }
-    q.running = false;
-    if (q.cal === CALS.current) state.saving = Math.max(0, state.saving - 1);
-    renderFoot();
+    const store = db, key = CALS.current + '|' + path;
+    if (body && body.updatedAt) localNewer[key] = body.updatedAt; else delete localNewer[key];
+    const run = () => { const ref = store.doc(path); return body === null ? ref.delete() : ref.set(body); };
+    run().then(() => { if (state.statusNote && !state.legacyRoom && !state.readOnly) { state.statusNote = ''; renderFoot(); } })
+      .catch((e) => {
+        if (e && e.code === 'unavailable') setTimeout(() => run().catch(onWriteError), 600 + Math.random() * 800);
+        else onWriteError(e);
+      });
   }
   function saveCells(wk, pid, cells, labels = {}) {
     const id = `${wk}_${pid}`;
@@ -1941,6 +1933,9 @@
   tbody.addEventListener('pointercancel', () => { cancelTouchWait(); endDrag(); });
   tbody.addEventListener('lostpointercapture', endDrag);
 
+  // 아이폰 Safari는 user-scalable=no를 무시해서, 두 손가락 확대 동작을 직접 막아요
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) => document.addEventListener(t, (e) => e.preventDefault(), { passive: false }));
+  document.addEventListener('touchmove', (e) => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
   // 화면 폭이 휴대폰↔컴퓨터로 바뀌면 월간을 다시 그려요
   try { window.matchMedia('(max-width:640px)').addEventListener('change', () => { if (state.view === 'month') { renderMonth(); renderHint(); } else { tableSig = ''; renderAll(); } }); } catch (e) {}
   /* ---------- 상단 조작 ---------- */
@@ -2560,14 +2555,25 @@
     const tok = openToken;
     unsubBusy = db.collection('busy').where('week', 'in', weeks).onSnapshot((snap) => {
       if (sig !== busySig || tok !== openToken) return;
-      for (const k of Object.keys(state.busy)) if (wanted.has(state.busy[k].week)) delete state.busy[k];
+      // 내가 방금 고쳤는데 아직 서버가 그 전 상태를 보내면, 내 것을 그대로 둬요 (깜빡임 방지)
+      const keep = {};
+      for (const k of Object.keys(state.busy)) {
+        if (!wanted.has(state.busy[k].week)) continue;
+        const lk = CALS.current + '|busy/' + k;
+        if (localNewer[lk] && (Number(state.busy[k].updatedAt) || 0) >= localNewer[lk]) keep[k] = state.busy[k];
+        delete state.busy[k];
+      }
       snap.docs.forEach((d) => {
         const v = d.data();
         if (v && wanted.has(v.week) && typeof v.pid === 'string') {
           const cells = Array.isArray(v.cells) ? v.cells.filter(validCell) : [];
-          state.busy[d.id] = { week: v.week, pid: v.pid, cells, labels: cleanLabels(v.labels, cells), updatedAt: Number(v.updatedAt) || 0 };
+          const up = Number(v.updatedAt) || 0, lk = CALS.current + '|busy/' + d.id;
+          if (keep[d.id] && up < localNewer[lk]) return;   // 서버 것이 더 오래됐어요
+          if (localNewer[lk] && up >= localNewer[lk]) delete localNewer[lk];   // 서버가 따라왔어요
+          state.busy[d.id] = { week: v.week, pid: v.pid, cells, labels: cleanLabels(v.labels, cells), updatedAt: up };
         }
       });
+      for (const k of Object.keys(keep)) if (!state.busy[k]) state.busy[k] = keep[k];
       renderGrid(); renderPaintbar(); renderFoot();
     }, () => { state.statusNote = '일정을 받아오지 못했어요. 새로고침해 주세요.'; renderFoot(); });
   }
