@@ -20,7 +20,7 @@
 <style>
   :root{
     --bg:#FAF6EA; --ink:#2B2B2B; --line:#E8E2D3; --muted:#7A746A;
-    --accent:#C8553D; --rowH:44px; --tcol:56px;
+    --accent:#C8553D; --sat:#3A6BC2; --sun:#D2453B; --rowH:44px; --tcol:56px;
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink)}
@@ -145,6 +145,28 @@
   .updatebar span{flex:1 1 220px}
   .updatebar .sbtn{height:34px;display:inline-flex;align-items:center;text-decoration:none}
 
+  /* 시작 화면 (로그인) */
+  .splash{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:24px;background:var(--bg);animation:splashIn .22s ease-out}
+  .splash[hidden]{display:none}
+  .splash.out{animation:splashOut .18s ease-in forwards}
+  .splashbox{width:min(320px,100%);display:flex;flex-direction:column;align-items:center;text-align:center}
+  .splashmark{width:132px;height:92px;margin-bottom:10px;overflow:visible}
+  .sm1,.sm2{mix-blend-mode:multiply}
+  .sm1{animation:smL .55s cubic-bezier(.2,.8,.3,1.2) both}
+  .sm2{animation:smR .55s cubic-bezier(.2,.8,.3,1.2) .06s both}
+  .sm3,.smface{animation:smT .55s cubic-bezier(.2,.8,.3,1.2) .12s both}
+  .splashbox h2{font-family:'Gowun Dodum',sans-serif;font-weight:400;font-size:34px;margin:0;letter-spacing:-.5px}
+  .splashbox p{margin:4px 0 26px;color:var(--muted);font-size:15px}
+  .splashgo{width:100%;height:48px;font-size:15.5px;border-radius:12px}
+  .splashskip{margin-top:14px;font-size:14px}
+  .splashbox small{margin-top:22px;color:var(--muted);font-size:12px;line-height:1.5}
+  @keyframes splashIn{from{opacity:0}to{opacity:1}}
+  @keyframes splashOut{to{opacity:0;visibility:hidden}}
+  @keyframes smL{from{transform:translateX(-18px);opacity:0}to{transform:none;opacity:1}}
+  @keyframes smR{from{transform:translateX(18px);opacity:0}to{transform:none;opacity:1}}
+  @keyframes smT{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
+  @media (prefers-reduced-motion:reduce){.splash,.splash.out,.sm1,.sm2,.sm3,.smface{animation:none}}
+
   /* 계정 (메뉴바 아래) */
   .acct{margin:10px 0 0;padding:12px;border:1.5px solid var(--ink);border-radius:12px;background:#fff}
   .acct[hidden],#acctIn[hidden],#acctOut[hidden],#startLogin[hidden]{display:none}
@@ -183,8 +205,11 @@
   .tcol{width:var(--tcol);flex:none;align-self:stretch;position:sticky;left:0;z-index:5;background:#fff}
   .dhead{flex:1;min-width:0;text-align:center;font-weight:700;font-size:16px}
   .dhead small{font-weight:400;color:var(--muted);font-size:13px;margin-left:4px}
-  .dhead.today{color:var(--accent)}
-  .dhead.today small{color:var(--accent)}
+  .dhead.sat,.dhead.sat small,.mhead.sat,.mday.sat .mnum{color:var(--sat)}
+  .dhead.sun,.dhead.sun small,.mhead.sun,.mday.sun .mnum{color:var(--sun)}
+  /* 오늘: 날짜에 검은 동그라미 */
+  .dhead.today small,.mday.today .mnum,.dhead.today:not(:has(small)) .dn{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 5px;border-radius:12px;background:var(--ink);color:#fff;font-weight:700}
+  .dhead.today small{margin-left:5px}
   .tbody{display:flex;padding:10px 0 12px;position:relative}
   .timecol{position:sticky;left:0;z-index:3;background:#fff;width:var(--tcol);flex:none}
   .timecol .inner{position:relative}
@@ -224,8 +249,10 @@
   .mgrid.routine .mnum{display:none}
   .mday:hover{background:#FFFDF6}
   .mday.other{opacity:.42}
-  .mnum{font-size:13px;font-weight:700}
-  .mday.today .mnum{color:var(--accent)}
+  .mtop{display:flex;align-items:center;gap:5px;min-width:0;min-height:24px}
+  .mnum{font-size:13px;font-weight:700;flex:none}
+  .mhol{font-size:11px;color:var(--sun);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .mdhol{font-family:'Noto Sans KR',system-ui,sans-serif;font-size:12.5px;margin-left:8px;color:var(--sun)}
   .mev{display:flex;align-items:center;gap:4px;min-width:0;padding:2px 6px 2px 4px;border-left:3px solid var(--ink);border-radius:5px;font-size:12px;line-height:17px;white-space:nowrap;overflow:hidden}
   .mev.multi{background:#F4F1E8}
   .mev .ini{min-width:15px;height:15px;font-size:9.5px}
@@ -318,6 +345,8 @@
     .fit .thead{height:46px}
     .fit .dhead{font-size:13px;line-height:1.2}
     .fit .dhead small{display:block;margin:1px 0 0;font-size:11px}
+    .fit .dhead.today small{display:grid;width:fit-content;min-width:20px;height:20px;margin:1px auto 0;padding:0 4px}
+    .mday.today .mnum{min-width:21px;height:21px;padding:0 4px}
     .fit .timecol span{right:4px;font-size:10px;letter-spacing:-.3px}
     .fit .blk{left:2px;right:2px;border-radius:6px}
     .fit .lbl{left:3px;max-width:calc(100% - 5px);padding:1px 4px 1px 1px;gap:2px;font-size:10px;line-height:14px;border-radius:7px}
@@ -335,6 +364,21 @@
 </style>
 </head>
 <body>
+<div class="splash" id="splash" role="dialog" aria-modal="true" aria-labelledby="splashTitle" hidden>
+  <div class="splashbox">
+    <svg class="splashmark" viewBox="0 0 120 84" aria-hidden="true">
+      <circle class="sm1" cx="38" cy="52" r="26" fill="#F2A385" stroke="#2B2B2B" stroke-width="2"/>
+      <circle class="sm2" cx="82" cy="52" r="26" fill="#93CFC3" stroke="#2B2B2B" stroke-width="2"/>
+      <circle class="sm3" cx="60" cy="30" r="23" fill="#C9E37A" stroke="#2B2B2B" stroke-width="2"/>
+      <path class="smface" d="M52.5 28v1M67.5 28v1M55 35.5q5 4 10 0" fill="none" stroke="#2B2B2B" stroke-width="2.6" stroke-linecap="round"/>
+    </svg>
+    <h2 id="splashTitle">우리 일정</h2>
+    <p>같이 비는 시간, 한눈에</p>
+    <button class="sbtn primary splashgo" id="splashLogin">구글로 시작하기</button>
+    <button class="linkbtn splashskip" id="splashSkip">로그인 없이 쓸게요</button>
+    <small>로그인하면 휴대폰·컴퓨터 어디서나 같은 일정표를 써요.</small>
+  </div>
+</div>
 <div class="app" id="app">
 <aside class="sidebar" id="sidebar" aria-label="일정표 목록">
   <div class="sbhead">
@@ -1177,7 +1221,13 @@
       const t = dayKey(now);
       cols.forEach((c, i) => {
         c.head.innerHTML = '';
-        c.head.append(DAYS[c.d]);
+        const tone = dayTone(c.d, c.date);
+        c.head.classList.toggle('sat', tone === 'sat');
+        c.head.classList.toggle('sun', tone === 'sun');
+        const hol = holidayOf(c.date);
+        c.head.title = hol ? `${hol}` : '';
+        const dn = document.createElement('span'); dn.className = 'dn'; dn.textContent = DAYS[c.d];
+        c.head.append(dn);
         if (!c.date) { c.head.classList.toggle('today', state.rweek === 'RW' && c.d === dayIdx(now)); return; }   // 루틴: 날짜 없음
         const sm = document.createElement('small');
         sm.textContent = (c.date.getDate() === 1 || (i === 0 && isRange)) ? `${c.date.getMonth() + 1}/${c.date.getDate()}` : c.date.getDate();
@@ -1188,6 +1238,28 @@
     $('hourStart').value = String(state.hours.start);
     $('hourEnd').value = String(state.hours.end);
   }
+
+  // 한국 공휴일 (공공데이터 기준, 대체·임시공휴일 포함 — 2024~2027). 그 밖의 해는 날짜가 정해진 공휴일만 표시해요.
+  const HOLIDAY_DATA = {
+    2024: '01-01=신정|02-09=설날 전날|02-10=설날|02-11=설날 다음 날|02-12=대체공휴일(설날)|03-01=3·1절|04-10=국회의원선거|05-05=어린이날|05-06=대체공휴일(어린이날)|05-15=부처님 오신 날|06-06=현충일|08-15=광복절|09-16=추석 전날|09-17=추석|09-18=추석 다음 날|10-01=임시공휴일|10-03=개천절|10-09=한글날|12-25=성탄절',
+    2025: '01-01=신정|01-27=임시공휴일|01-28=설날 전날|01-29=설날|01-30=설날 다음 날|03-01=3·1절|03-03=대체공휴일(3·1절)|05-05=어린이날·부처님 오신 날|05-06=대체공휴일(부처님 오신 날)|06-03=임시공휴일(대통령선거)|06-06=현충일|08-15=광복절|10-03=개천절|10-05=추석 전날|10-06=추석|10-07=추석 다음 날|10-08=대체공휴일(추석)|10-09=한글날|12-25=성탄절',
+    2026: '01-01=신정|02-16=설날 전날|02-17=설날|02-18=설날 다음 날|03-01=3·1절|03-02=대체공휴일(3·1절)|05-01=노동절|05-05=어린이날|05-24=부처님 오신 날|05-25=대체공휴일(부처님 오신 날)|06-03=전국동시지방선거|06-06=현충일|07-17=제헌절|08-15=광복절|08-17=대체공휴일(광복절)|09-24=추석 전날|09-25=추석|09-26=추석 다음 날|10-03=개천절|10-05=대체공휴일(개천절)|10-09=한글날|12-25=성탄절',
+    2027: '01-01=신정|02-06=설날 전날|02-07=설날|02-08=설날 다음 날|02-09=대체공휴일(설날)|03-01=3·1절|05-01=노동절|05-03=대체공휴일(노동절)|05-05=어린이날|05-13=부처님 오신 날|06-06=현충일|07-17=제헌절|07-19=대체공휴일(제헌절)|08-15=광복절|08-16=대체공휴일(광복절)|09-14=추석 전날|09-15=추석|09-16=추석 다음 날|10-03=개천절|10-04=대체공휴일(개천절)|10-09=한글날|10-11=대체공휴일(한글날)|12-25=성탄절|12-27=대체공휴일(성탄절)',
+  };
+  const FIXED_HOLIDAYS = '01-01=신정|03-01=3·1절|05-01=노동절|05-05=어린이날|06-06=현충일|07-17=제헌절|08-15=광복절|10-03=개천절|10-09=한글날|12-25=성탄절';
+  const holidayCache = {};
+  function holidayOf(date) {
+    if (!date) return '';
+    const y = date.getFullYear();
+    if (!holidayCache[y]) {
+      const m = {};
+      (HOLIDAY_DATA[y] || FIXED_HOLIDAYS).split('|').forEach((x) => { const [k, v] = x.split('='); m[k] = v; });
+      holidayCache[y] = m;
+    }
+    return holidayCache[y][`${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`] || '';
+  }
+  // 토요일 파랑, 일요일·공휴일 빨강
+  const dayTone = (d, date) => (d === 6 || holidayOf(date) ? 'sun' : d === 5 ? 'sat' : '');
 
   function renderChips() {
     const box = $('chips');
@@ -1357,7 +1429,7 @@
     const rt = state.routine;
     box.classList.toggle('routine', rt);
     if (rt) { const h = document.createElement('div'); h.className = 'mhead'; box.appendChild(h); }
-    DAYS.forEach((d) => { const h = document.createElement('div'); h.className = 'mhead'; h.textContent = d; box.appendChild(h); });
+    DAYS.forEach((d, i) => { const h = document.createElement('div'); h.className = 'mhead' + (i === 5 ? ' sat' : i === 6 ? ' sun' : ''); h.textContent = d; box.appendChild(h); });
     const visible = peopleList().filter((p) => !state.hidden.has(p.id));
     const hours = hoursList();
     const m = Number(state.month.split('-')[1]);
@@ -1384,11 +1456,16 @@
       const info = dayInfo(visible, wk, d, hours);
       const k = keyOf(x);
       const cell = document.createElement('button');
-      cell.className = 'mday' + (d === 0 ? ' c0' : '') + (date && date.getMonth() + 1 !== m ? ' other' : '') + (date && dayKey(date) === t ? ' today' : '') + (narrow && k === monthPick ? ' picked' : '');
-      const num = document.createElement('div');
+      const tone = dayTone(d, date), hol = holidayOf(date);
+      cell.className = 'mday' + (d === 0 ? ' c0' : '') + (tone ? ' ' + tone : '') + (date && date.getMonth() + 1 !== m ? ' other' : '') + (date && dayKey(date) === t ? ' today' : '') + (narrow && k === monthPick ? ' picked' : '');
+      const top = document.createElement('div');
+      top.className = 'mtop';
+      const num = document.createElement('span');
       num.className = 'mnum';
       num.textContent = date ? date.getDate() : '';   // 루틴은 날짜 없음
-      cell.appendChild(num);
+      top.appendChild(num);
+      if (hol && !narrow) { const hn = document.createElement('span'); hn.className = 'mhol'; hn.textContent = hol.replace(/^대체공휴일\((.+)\)$/, '대체($1)'); top.appendChild(hn); }
+      cell.appendChild(top);
       if (narrow) {
         // 휴대폰: 바쁜 사람 색 점만, 자세한 건 아래에
         const who = [...new Map(info.events.flatMap((e) => e.people).map((p) => [p.id, p])).values()];
@@ -1422,7 +1499,7 @@
         }
       }
       const busyNames = [...new Set(info.events.flatMap((e) => e.people.map((p) => p.name)))];
-      cell.title = (date ? `${date.getMonth() + 1}/${date.getDate()}(${DAYS[d]})` : `매달 ${wi + 1}주차 ${DAYS[d]}요일`) + (busyNames.length ? ` · ${busyNames.join(', ')} 일정 있음` : ' · 일정 없음');
+      cell.title = (date ? `${date.getMonth() + 1}/${date.getDate()}(${DAYS[d]})${hol ? ' ' + hol : ''}` : `매달 ${wi + 1}주차 ${DAYS[d]}요일`) + (busyNames.length ? ` · ${busyNames.join(', ')} 일정 있음` : ' · 일정 없음');
       cell.addEventListener('click', () => {
         if (narrow) { monthPick = k; renderMonth(); return; }
         if (rt) state.rweek = wk; else state.week = wk;
@@ -1443,6 +1520,9 @@
     head.className = 'mdhead';
     const ttl = document.createElement('strong');
     ttl.textContent = x.date ? `${x.date.getMonth() + 1}월 ${x.date.getDate()}일 ${DAYS[x.d]}요일` : `매달 ${x.wi + 1}주차 ${DAYS[x.d]}요일`;
+    const hol = holidayOf(x.date), tone = dayTone(x.d, x.date);
+    if (tone) ttl.style.color = `var(--${tone})`;
+    if (hol) { const hs = document.createElement('small'); hs.className = 'mdhol'; hs.textContent = hol; ttl.appendChild(hs); }
     const go = document.createElement('button');
     go.className = 'sbtn'; go.textContent = x.date ? '이 주 칠하기' : '이 주차 칠하기';
     go.addEventListener('click', () => { if (state.routine) state.rweek = x.wk; else state.week = x.wk; setView('week'); });
@@ -2701,6 +2781,27 @@
       $('acctDot').textContent = (ACCOUNT.name || ACCOUNT.email || '나').trim().charAt(0).toUpperCase();
     }
   }
+  // 로그인 버튼을 누르려는 순간 미리 연결해 둬요 (구글 창이 바로 뜨도록)
+  const warmLogin = () => { if (ACCOUNT_OK && !ACCOUNT && !window.__uriAccountImpl) fbCore().then(ensureSignedIn).catch(() => {}); };
+  ['loginBtn', 'startLogin'].forEach((id) => { $(id).addEventListener('pointerdown', warmLogin); $(id).addEventListener('focus', warmLogin); });
+  // 시작 화면: 로그인 안 한 웹에서 열면 잠깐 보여요 ("로그인 없이 쓸게요"를 누르면 이 창을 닫을 때까지 다시 안 떠요)
+  const SS_SPLASH = 'uri-iljeong:splash-skip';
+  function maybeShowSplash() {
+    if (!ACCOUNT_OK || ACCOUNT || !(IS_WEB || window.__uriShowSplash)) return;
+    if (location.hash) return;   // 초대 링크·받은 일정 링크로 열었으면 바로 그 화면으로
+    try { if (sessionStorage.getItem(SS_SPLASH)) return; } catch (e) {}
+    $('splash').hidden = false;
+    warmLogin();
+    setTimeout(() => { try { $('splashLogin').focus({ preventScroll: true }); } catch (e) {} }, 50);
+  }
+  function hideSplash() {
+    const el = $('splash');
+    if (el.hidden) return;
+    el.classList.add('out');
+    setTimeout(() => { el.hidden = true; el.classList.remove('out'); }, 180);
+  }
+  $('splashLogin').addEventListener('click', () => { hideSplash(); doLogin(); });
+  $('splashSkip').addEventListener('click', () => { try { sessionStorage.setItem(SS_SPLASH, '1'); } catch (e) {} hideSplash(); });
   $('loginBtn').addEventListener('click', doLogin);
   $('startLogin').addEventListener('click', doLogin);
   $('logoutBtn').addEventListener('click', () => {
@@ -3208,6 +3309,7 @@
     if (!checkRoomLink()) checkIncomingLink();
     checkAppUpdate();
     await resumeLogin();
+    maybeShowSplash();
     restoreAccount();
   }
   init();
