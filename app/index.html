@@ -144,6 +144,19 @@
   .updatebar span{flex:1 1 220px}
   .updatebar .sbtn{height:34px;display:inline-flex;align-items:center;text-decoration:none}
 
+  /* 계정 (메뉴바 아래) */
+  .acct{margin:10px 0 0;padding:12px;border:1.5px solid var(--ink);border-radius:12px;background:#fff}
+  .acct[hidden],#acctIn[hidden],#acctOut[hidden],#startLogin[hidden]{display:none}
+  .acct p{margin:0 0 8px;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .acct .sbtn{width:100%;height:38px}
+  .acctrow{display:flex;align-items:center;gap:9px;min-width:0}
+  .acctdot{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#FFF0B3;border:1.5px solid var(--ink);font-weight:700;font-size:13px}
+  .acctwho{display:flex;flex-direction:column;min-width:0;line-height:1.3}
+  .acctwho b{font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .acctwho small{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .acct .linkbtn{margin-top:8px;font-size:12.5px}
+  #startLogin{margin-top:10px;font-size:13px}
+
   /* 첫 시작 */
   .startcard{margin:-4px 0 14px;padding:14px 16px;border:1.5px solid var(--ink);border-radius:14px;background:#FFFDF6}
   .startcard[hidden]{display:none}
@@ -278,6 +291,28 @@
     .paintbar{flex-wrap:wrap}
     .recent{flex-basis:100%}
     :root{--rowH:42px;--tcol:46px}
+    /* 휴대폰: 한 주를 가로 스크롤 없이 한 화면에 */
+    .wrap{padding-left:calc(10px + env(safe-area-inset-left));padding-right:calc(10px + env(safe-area-inset-right))}
+    .card{padding:4px 3px 10px}
+    .table.fit{min-width:0 !important;--tcol:30px}
+    .fit .thead{height:46px}
+    .fit .dhead{font-size:13px;line-height:1.2}
+    .fit .dhead small{display:block;margin:1px 0 0;font-size:11px}
+    .fit .timecol span{right:4px;font-size:10px;letter-spacing:-.3px}
+    .fit .blk{left:2px;right:2px;border-radius:6px}
+    .fit .lbl{left:3px;max-width:calc(100% - 5px);padding:1px 4px 1px 1px;gap:2px;font-size:10px;line-height:14px;border-radius:7px}
+    .fit .ini{min-width:14px;height:14px;font-size:9px}
+    .fit .many .ini{width:14px}
+    .fit .lbl.multi span{display:none}
+    .fit .lbl.multi{padding-right:1px}
+    .mgrid{min-width:0}
+    .mgrid.routine{grid-template-columns:38px repeat(7,minmax(0,1fr))}
+    .mhead{font-size:13px;padding:10px 0 8px}
+    .mday{min-height:84px;padding:5px 3px 6px;gap:4px}
+    .mbar{height:10px}
+    .mlbl{gap:2px}
+    .mlbl em,.mlbl span{display:none}
+    .mweek{font-size:11px}
   }
 </style>
 </head>
@@ -290,6 +325,16 @@
   </div>
   <button class="newcal" id="newCal"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>새로 만들기</button>
   <div class="callist" id="calList"></div>
+  <div class="acct" id="acctBox" hidden>
+    <div id="acctOut">
+      <p>로그인하면 다른 기기에서도 내 일정표가 그대로 보여요.</p>
+      <button class="sbtn primary" id="loginBtn">구글로 로그인</button>
+    </div>
+    <div id="acctIn" hidden>
+      <div class="acctrow"><span class="acctdot" id="acctDot"></span><span class="acctwho"><b id="acctName"></b><small id="acctMail"></small></span></div>
+      <button class="linkbtn" id="logoutBtn">로그아웃</button>
+    </div>
+  </div>
   <div class="sbfoot">일정표마다 사람과 일정이 따로 저장돼요. "메인" 일정표는 앱을 열면 먼저 보여요.</div>
 </aside>
 <div class="scrim" id="scrim"></div>
@@ -345,6 +390,7 @@
     <strong>처음 오셨네요. 내 이름부터 적어 주세요.</strong>
     <p>이름을 적으면 바로 내 바쁜 시간을 칠할 수 있어요. 친구는 나중에 "함께 쓰기"로 초대하거나 + 버튼으로 더하면 돼요.</p>
     <div class="row2"><input class="tin" id="startName" maxlength="10" placeholder="내 이름" autocomplete="off" style="flex:0 1 220px"><button class="sbtn primary" id="startBtn">시작하기</button></div>
+    <button class="linkbtn" id="startLogin" hidden>다른 기기에서 쓰던 게 있나요? 구글로 로그인해서 불러오기</button>
   </div>
 
   <div class="paintbar" id="paintbar" hidden>
@@ -669,7 +715,7 @@
   const dataKey = (id = CALS.current) => (id === 'main' ? LS_DATA : `${LS_DATA}:${id}`);
   const prefKey = (id = CALS.current) => (id === 'main' ? LS_PREF : `${LS_PREF}:${id}`);
   const calsByNewest = () => [...CALS.list].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  function saveCals() { try { localStorage.setItem(LS_CALS, JSON.stringify(CALS)); } catch (e) {} }
+  function saveCals(fromCloud) { try { localStorage.setItem(LS_CALS, JSON.stringify(CALS)); } catch (e) {} if (!fromCloud && typeof pushCals === 'function') pushCals(); }
   function loadCals() {
     try {
       const c = JSON.parse(localStorage.getItem(LS_CALS) || 'null');
@@ -848,8 +894,16 @@
     CALS.current = id; saveCals();
     openCalendar();
   }
+  async function wipeAccountCal(id) {
+    try {
+      const st = await acctStore(id);
+      for (const coll of ['busy', 'people']) for (const d of (await st.collection(coll).get()).docs) await st.doc(`${coll}/${d.id}`).delete();
+    } catch (e) { /* 다음에 지워져도 괜찮아요 */ }
+  }
   function deleteCalendar(id) {
     const wasCurrent = id === CALS.current;
+    const gone = CALS.list.find((c) => c.id === id);
+    if (ACCOUNT && gone && !gone.room) wipeAccountCal(id);
     try { localStorage.removeItem(dataKey(id)); localStorage.removeItem(prefKey(id)); } catch (e) {}
     CALS.list = CALS.list.filter((c) => c.id !== id);
     if (CALS.main === id) CALS.main = '';
@@ -1037,6 +1091,7 @@
       return { date, wk, d, head, el, cells };
     });
     $('table').style.minWidth = `${Math.max(560, 56 + specs.length * 72)}px`;
+    $('table').classList.toggle('fit', specs.length <= 7);   // 한 주(7일 이하)는 휴대폰에서도 가로 스크롤 없이 한 화면에
   }
 
   /* ---------- 그리기 ---------- */
@@ -1218,7 +1273,7 @@
         const y = stack[t.start] || 0;
         stack[t.start] = y + 20;
         const lb = document.createElement('div');
-        lb.className = 'lbl';
+        lb.className = t.people.length > 1 ? 'lbl multi' : 'lbl';
         lb.style.top = `calc(var(--rowH) * ${t.start} + ${5 + y}px)`;
         appendInitials(lb, t.people);
         const tx = document.createElement('span');
@@ -1327,7 +1382,7 @@
     h.classList.remove('flash');
     const me = state.people[state.me];
     if (state.mode === 'pending') h.textContent = '일정을 불러오는 중이에요…';
-    else if (!peopleList().length) h.textContent = state.mode === 'local' ? '위 칸에 내 이름을 적으면 바로 시작할 수 있어요.' : '+ 버튼을 눌러 함께 볼 사람을 추가해 보세요.';
+    else if (!peopleList().length) h.textContent = !$('startCard').hidden ? '위 칸에 내 이름을 적으면 바로 시작할 수 있어요.' : '+ 버튼을 눌러 함께 볼 사람을 추가해 보세요.';
     else if (state.routine && state.view === 'month') h.textContent = '날짜 없이 매달 반복되는 루틴이에요(1~5주차). 주차나 칸을 누르면 그 주차 표로 들어가 칠할 수 있어요. 매주 반복되는 시간표는 "주간"에 있어요.';
     else if (state.view === 'month') h.textContent = '날짜마다 색 막대(왼쪽이 이른 시간)와 일정 이름이 보여요. 색이 겹쳐 진한 곳은 여러 명이 바쁜 시간이에요. 날짜를 누르면 그 주를 자세히 보고 칠할 수 있어요.';
     else if (state.legacyRoom) h.textContent = LEGACY_NOTE;
@@ -1349,8 +1404,10 @@
     if (state.mode === 'pending') s = '불러오는 중…';
     else if (state.mode === 'db') {
       if (state.readOnly) s = '보기 전용이에요 — 칠하려면 소유자에게 편집 권한을 받아 주세요.';
-      else s = state.saving > 0 ? '저장 중…' : state.room ? `방 ${fmtRoom(state.room)}에서 함께 쓰는 중 · 자동 저장돼요` : '모두와 함께 보는 일정 · 자동 저장돼요';
+      else s = state.saving > 0 ? '저장 중…' : state.room ? `방 ${fmtRoom(state.room)}에서 함께 쓰는 중 · 자동 저장돼요`
+        : ACCOUNT && !IS_ARTIFACT ? '구글 계정에 저장돼요 · 다른 기기에서 로그인하면 그대로 보여요' : '모두와 함께 보는 일정 · 자동 저장돼요';
     } else s = !localOK ? '저장할 수 없는 환경이에요 · "받은 링크 붙여넣기 · 백업"에서 따로 보관해 주세요'
+      : ACCOUNT_OK ? '이 기기에만 저장돼요 · 로그인하면 다른 기기에서도 그대로, 친구와는 "함께 쓰기"로'
       : CLOUD_READY && !IS_ARTIFACT ? '이 기기에만 저장돼요 · 친구와 같이 쓰려면 "함께 쓰기"를 눌러 보세요'
       : '이 기기에 저장돼요 · "링크로 한 번 보내기"로 친구와 맞춰 보세요';
     if (state.statusNote) s = state.statusNote;
@@ -1360,13 +1417,14 @@
     // 루틴(매주)이 비어 있으면, 날짜 달력에서 보던 주를 통째로 옮겨 올 수 있게
     const routineEmpty = state.routine && state.view === 'week' && state.rweek === 'RW' && peopleList().filter((p) => canEditPerson(p.id)).every((p) => cellsOf(p.id, 'RW').size === 0) && peopleList().some((p) => canEditPerson(p.id));
     $('weekToRoutine').hidden = !(routineEmpty && peopleList().length && !state.readOnly && state.mode !== 'pending');
-    $('shareLink').hidden = state.mode === 'db';   // 공유 저장소에서는 이미 모두 같은 일정을 봐요
+    $('shareLink').hidden = state.mode === 'db' && (!!state.room || IS_ARTIFACT);   // 방·공유 저장소에서는 이미 모두 같은 일정을 봐요
     $('roomBtn').hidden = !CLOUD_READY || IS_ARTIFACT || state.mode === 'pending';
     $('roomBtn').textContent = state.room ? `함께 쓰는 방 ${fmtRoom(state.room).slice(0, 4)}…` : '함께 쓰기';
   }
 
   function renderStart() {
-    $('startCard').hidden = !(state.mode === 'local' && !state.readOnly && state.peopleLoaded && !peopleList().length);
+    const mine = state.mode === 'local' || (state.mode === 'db' && !state.room && !!ACCOUNT && !IS_ARTIFACT);
+    $('startCard').hidden = !(mine && !state.readOnly && state.peopleLoaded && !peopleList().length);
   }
   function renderAll() {
     if (state.me && state.mode !== 'pending' && state.peopleLoaded && !state.people[state.me]) { state.me = ''; savePrefs(); }
@@ -1816,7 +1874,7 @@
     return JSON.stringify({ app: '우리 일정', version: 2, exportedAt: new Date().toISOString(), people, busy });
   }
   $('openShare').addEventListener('click', async () => {
-    $('shareSub').textContent = state.mode === 'db'
+    $('shareSub').textContent = state.mode === 'db' && (state.room || IS_ARTIFACT)
       ? '지금은 모두가 같은 일정을 함께 봐요. 백업이 필요할 때 내보내기를 복사해 두세요.'
       : (IS_WEB ? '받은 링크를' : '받은 일정 코드를') + ' 붙여 넣으면 일정이 합쳐져요. 아래 전체 백업은 모든 주의 일정을 담고 있어서 따로 보관해 두기 좋아요.';
     $('exportText').value = '만드는 중…'; $('importText').value = ''; $('shareMsg').textContent = '';
@@ -2125,24 +2183,33 @@
     return Array.from(a, (x) => ROOM_ALPHABET[x % ROOM_ALPHABET.length]).join('');
   }
   const newRoomCode = () => newCode(12);
-  async function connectCloud(room) {
-    const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VER}/`;
-    const appMod = await import(base + 'firebase-app.js');
-    const fs = await import(base + 'firebase-firestore.js');
-    const authMod = await import(base + 'firebase-auth.js');
-    const app = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(FIREBASE_CONFIG);
-    // 기기마다 자동으로 익명 로그인 → 이 uid가 방 안에서 "나"예요 (내 사람·일정만 고칠 수 있게)
-    const auth = authMod.getAuth(app);
-    if (auth.authStateReady) await auth.authStateReady();
-    if (!auth.currentUser) {
-      try { await authMod.signInAnonymously(auth); }
-      catch (e) { throw { code: e && e.code === 'auth/operation-not-allowed' ? 'auth_disabled' : 'unavailable', message: String((e && e.message) || e) }; }
-    }
-    const uid = auth.currentUser.uid;
-    let fdb;
-    try { fdb = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) }); }
-    catch (e) { fdb = fs.getFirestore(app); }
-    const root = `rooms/${room}`;
+  // Firebase 연결은 한 번만 만들어 두고, 방(rooms/…)과 내 계정 저장소(users/…)가 같이 써요
+  let fbCorePromise = null;
+  function fbCore() {
+    if (!fbCorePromise) fbCorePromise = (async () => {
+      const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VER}/`;
+      const appMod = await import(base + 'firebase-app.js');
+      const fs = await import(base + 'firebase-firestore.js');
+      const authMod = await import(base + 'firebase-auth.js');
+      const app = appMod.getApps().find((x) => x.name === '[DEFAULT]') || appMod.initializeApp(FIREBASE_CONFIG);
+      const auth = authMod.getAuth(app);
+      if (auth.authStateReady) await auth.authStateReady();
+      let fdb;
+      try { fdb = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) }); }
+      catch (e) { fdb = fs.getFirestore(app); }
+      return { appMod, fs, authMod, app, auth, fdb };
+    })().catch((e) => { fbCorePromise = null; throw e; });
+    return fbCorePromise;
+  }
+  // 기기마다 자동으로 익명 로그인 → 이 uid가 방 안에서 "나"예요 (구글로 로그인하면 그 계정이 "나")
+  async function ensureSignedIn(c) {
+    if (c.auth.currentUser) return;
+    try { await c.authMod.signInAnonymously(c.auth); }
+    catch (e) { throw { code: e && e.code === 'auth/operation-not-allowed' ? 'auth_disabled' : 'unavailable', message: String((e && e.message) || e) }; }
+  }
+  function makeAdapter(c, root) {
+    const { fs, fdb } = c;
+    const uid = c.auth.currentUser ? c.auth.currentUser.uid : '';
     const mapErr = (e) => ({ code: e && e.code === 'permission-denied' ? 'permission_denied' : (e && e.code) || 'unavailable', message: String((e && e.message) || e) });
     const docSnap = (s) => ({ id: s.id, exists: s.exists(), data: () => s.data(), metadata: s.metadata });
     const querySnap = (q) => ({ docs: q.docs.map(docSnap), size: q.size, empty: q.empty, metadata: q.metadata });
@@ -2167,8 +2234,297 @@
       collection: (path) => ({ ...wrapQuery(fs.collection(fdb, `${root}/${path}`)), doc: (id) => docRef(`${path}/${id}`) }),
     };
   }
+  async function connectCloud(room) {
+    const c = await fbCore();
+    await ensureSignedIn(c);
+    return makeAdapter(c, `rooms/${room}`);
+  }
   const cloudConnector = window.__uriCloudConnector || connectCloud;   // (테스트용으로 바꿔 끼울 수 있어요)
   const CLOUD_READY = !!(FIREBASE_CONFIG || window.__uriCloudConnector);
+
+  /* ---------- 구글 로그인 (내 일정표를 계정에 저장) ----------
+     로그인하면 이 기기의 익명 계정을 구글 계정에 이어 붙여요. 같은 구글 계정으로 다른 기기에서 로그인하면
+     그 기기도 같은 사람이 되고, 일정표 목록(users/{uid}/meta/cals)과 내 일정표(users/{uid}/cals/{id}/…)가 그대로 보여요. */
+  const LS_ACCT = 'uri-iljeong:acct:v1';
+  const ACCOUNT_OK = CLOUD_READY && !IS_ARTIFACT && (IS_WEB || !!window.__uriAccountImpl);   // 웹 버전에서만 (앱은 구글 창을 띄울 수 없어요)
+  let ACCOUNT = null, acctUnsub = null, acctSig = '', acctTimer = null, acctBusy = false;
+  const authErr = (e) => {
+    const c = (e && e.code) || '';
+    if (c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request' || c === 'auth/user-cancelled') return { code: 'cancel' };
+    if (c === 'auth/popup-blocked') return { code: 'popup_blocked' };
+    if (c === 'auth/unauthorized-domain') return { code: 'bad_domain' };
+    if (c === 'auth/operation-not-allowed') return { code: 'not_enabled' };
+    if (c === 'auth/network-request-failed') return { code: 'network' };
+    return { code: c || 'unavailable', message: String((e && e.message) || e) };
+  };
+  const loginErrMsg = (e) => ({
+    popup_blocked: '로그인 창이 막혔어요. 주소창 오른쪽에서 팝업을 허용하고 다시 눌러 주세요.',
+    bad_domain: '이 주소에서는 아직 로그인이 허용되지 않았어요. (Firebase → Authentication → 설정 → 승인된 도메인)',
+    not_enabled: '구글 로그인이 아직 켜지지 않았어요. (Firebase → Authentication → 로그인 방법 → Google)',
+    network: '인터넷 연결을 확인하고 다시 해 주세요.',
+  }[e && e.code] || '로그인하지 못했어요. 잠시 뒤 다시 해 주세요.');
+  const googleProfile = (u) => {
+    const g = (u.providerData || []).find((x) => x && x.providerId === 'google.com') || {};
+    return { uid: u.uid, name: u.displayName || g.displayName || '', email: u.email || g.email || '' };
+  };
+  const accountImpl = window.__uriAccountImpl || {
+    async info() {
+      const c = await fbCore();
+      const u = c.auth.currentUser;
+      return u && !u.isAnonymous ? googleProfile(u) : null;
+    },
+    // 1) 이 기기 익명 계정에 구글을 이어 붙이기(처음 로그인하는 기기) → uid 그대로
+    // 2) 이미 다른 기기에서 쓰던 구글 계정이면 → 그 계정 uid를 먼저 알려 주고, 바꾸는 건 switchTo에서
+    async login() {
+      const c = await fbCore();
+      await ensureSignedIn(c);
+      const provider = new c.authMod.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const u = c.auth.currentUser;
+      try {
+        if (u.isAnonymous) {
+          await c.authMod.linkWithPopup(u, provider);
+          await c.auth.currentUser.getIdToken(true);   // 새 출입증(구글 연결됨)으로 바로 저장소를 쓸 수 있게
+          return { kind: 'linked' };
+        }
+        return { kind: 'linked' };
+      } catch (e) {
+        if (e && (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use')) {
+          const cred = c.authMod.GoogleAuthProvider.credentialFromError(e);
+          if (!cred) throw { code: 'unavailable' };
+          // 잠깐 쓰는 두 번째 연결로 그 계정 uid만 확인해요 (이 기기 로그인은 아직 그대로)
+          const app2 = c.appMod.getApps().find((x) => x.name === 'login-check') || c.appMod.initializeApp(FIREBASE_CONFIG, 'login-check');
+          let a2;
+          try { a2 = c.authMod.initializeAuth(app2, { persistence: c.authMod.inMemoryPersistence }); } catch (er) { a2 = c.authMod.getAuth(app2); }
+          const r2 = await c.authMod.signInWithCredential(a2, cred);
+          const newUid = r2.user.uid;
+          await c.authMod.signOut(a2).catch(() => {});
+          return { kind: 'existing', cred, newUid };
+        }
+        throw authErr(e);
+      }
+    },
+    async switchTo(cred) { const c = await fbCore(); try { await c.authMod.signInWithCredential(c.auth, cred); } catch (e) { throw authErr(e); } },
+    async logout() { const c = await fbCore(); await c.authMod.signOut(c.auth); await c.authMod.signInAnonymously(c.auth).catch(() => {}); },
+    async adapter(root) { const c = await fbCore(); return makeAdapter(c, root); },
+  };
+  const acctStore = (calId) => accountImpl.adapter(`users/${ACCOUNT.uid}/cals/${calId}`);
+  const canonCals = (list) => (list || []).filter((x) => x && typeof x.id === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(x.id))
+    .map((x) => ({ id: x.id, name: cleanCalName(x.name) || '이름 없는 일정표', room: /^[A-Z2-9]{12}$/.test(x.room || '') ? x.room : '', createdAt: Number(x.createdAt) || 0, pinnedAt: Number(x.pinnedAt) || 0 }));
+  const calsSig = (list, main) => JSON.stringify([canonCals(list), main || '']);
+  // 일정표 목록이 바뀌면 계정에도 저장 (다른 기기에 바로 보여요)
+  function pushCals() {
+    if (!ACCOUNT || acctBusy) return;
+    clearTimeout(acctTimer);
+    acctTimer = setTimeout(async () => {
+      const sig = calsSig(CALS.list, CALS.main);
+      if (sig === acctSig || !ACCOUNT) return;
+      acctSig = sig;
+      try { const a = await accountImpl.adapter(`users/${ACCOUNT.uid}`); await a.doc('meta/cals').set({ list: canonCals(CALS.list), main: CALS.main || '', updatedAt: Date.now() }); }
+      catch (e) { acctSig = ''; }
+    }, 300);
+  }
+  // 다른 기기에서 목록을 바꾸면 여기에도 반영
+  async function subscribeCals() {
+    if (acctUnsub) { acctUnsub(); acctUnsub = null; }
+    if (!ACCOUNT) return;
+    const a = await accountImpl.adapter(`users/${ACCOUNT.uid}`);
+    acctUnsub = a.doc('meta/cals').onSnapshot((s) => {
+      if (!s.exists || !ACCOUNT || acctBusy) return;
+      const d = s.data() || {};
+      const sig = calsSig(d.list, d.main);
+      if (sig === acctSig) return;
+      acctSig = sig;
+      const list = canonCals(d.list);
+      if (!list.length) return;
+      const cur = curCal();
+      const before = cur ? cur.room : '';
+      CALS.list = list;
+      CALS.main = list.some((c) => c.id === d.main) ? d.main : '';
+      const still = list.find((c) => c.id === CALS.current);
+      if (!still) CALS.current = calsByNewest()[0].id;
+      saveCals(true);
+      if (!still || still.room !== before) openCalendar();
+      else renderSidebar();
+    }, () => {});
+  }
+  function readLocalCal(id) {
+    try { const d = JSON.parse(localStorage.getItem(dataKey(id)) || 'null'); if (d && d.people && typeof d.people === 'object') return { people: d.people, busy: d.busy && typeof d.busy === 'object' ? d.busy : {} }; } catch (e) {}
+    return { people: {}, busy: {} };
+  }
+  // 기기 일정표를 계정으로 올려요. 계정에 같은 문서가 있으면 더 최근에 고친 쪽을 남겨요.
+  async function uploadCal(id, data) {
+    const st = await acctStore(id);
+    const ps = Object.entries(data.people || {}).filter(([, p]) => p && cleanName(p.name));
+    const bs = Object.values(data.busy || {}).filter((b) => b && isWeekKey(b.week) && typeof b.pid === 'string' && Array.isArray(b.cells));
+    if (!ps.length && !bs.length) return 0;
+    const have = {};
+    try { (await st.collection('busy').get()).docs.forEach((d) => { have[d.id] = Number((d.data() || {}).updatedAt) || 0; }); } catch (e) {}
+    let havePeople = new Set();
+    const usedColors = new Set();
+    try { (await st.collection('people').get()).docs.forEach((d) => { havePeople.add(d.id); usedColors.add(String(cleanColor((d.data() || {}).color))); }); } catch (e) {}
+    for (const [pid, p] of ps) {
+      if (havePeople.has(pid)) continue;
+      // 합치다가 색이 겹치면 안 쓰는 색으로 바꿔요
+      let color = cleanColor(p.color);
+      if (usedColors.has(String(color))) color = cleanColor([0, 1, 2, 3, 4, ...EXTRA_COLORS].find((c) => !usedColors.has(String(cleanColor(c)))) ?? color);
+      usedColors.add(String(color));
+      await st.doc(`people/${pid}`).set({ name: cleanName(p.name), color, createdAt: Number(p.createdAt) || Date.now() });
+    }
+    let n = 0;
+    for (const b of bs) {
+      const key = `${b.week}_${b.pid}`, up = Number(b.updatedAt) || 0;
+      if (key in have && have[key] >= up) continue;
+      const cells = b.cells.filter(validCell).sort();
+      await st.doc(`busy/${key}`).set({ week: b.week, pid: b.pid, cells, labels: cleanLabels(b.labels, cells), updatedAt: up || Date.now() });
+      n++;
+    }
+    return n;
+  }
+  async function fetchCal(id) {
+    const st = await acctStore(id);
+    const [ps, bs] = await Promise.all([st.collection('people').get(), st.collection('busy').get()]);
+    const people = {}, busy = {};
+    ps.docs.forEach((d) => { const v = d.data() || {}; if (cleanName(v.name)) people[d.id] = { name: cleanName(v.name), color: cleanColor(v.color), createdAt: Number(v.createdAt) || 0 }; });
+    bs.docs.forEach((d) => { const v = d.data() || {}; if (isWeekKey(v.week) && Array.isArray(v.cells)) busy[d.id] = { week: v.week, pid: v.pid, cells: v.cells.filter(validCell), labels: v.labels || {}, updatedAt: Number(v.updatedAt) || 0 }; });
+    return { people, busy };
+  }
+  // 이 기기가 방에서 따로 쓰던 사람에 구글 계정 uid를 미리 더해 둬요 (로그인을 바꾸기 전에, 아직 이 기기 이름으로)
+  async function handOverRooms(newUid) {
+    for (const c of CALS.list.filter((x) => x.room)) {
+      try {
+        const cdb = await cloudConnector(c.room);
+        const ps = await cdb.collection('people').get();
+        const mine = ps.docs.find((d) => d.id === cdb.uid || ((d.data() || {}).devices || []).includes(cdb.uid));
+        if (!mine) continue;
+        const pd = mine.data() || {};
+        const devs = Array.isArray(pd.devices) ? pd.devices : [];
+        if (mine.id === newUid || devs.includes(newUid) || devs.length >= 5) continue;
+        await cdb.doc(`people/${mine.id}`).set({ ...pd, devices: [...devs, newUid] });
+      } catch (e) { /* 이 방은 건너뛰어요 */ }
+    }
+  }
+  // 로그인한 뒤, 한 방에 내가 두 사람으로 있으면(이 기기 따로 + 다른 기기에서 쓰던 계정) 하나로 합쳐요
+  async function mergeRoomSelves() {
+    let merged = 0;
+    for (const c of CALS.list.filter((x) => x.room)) {
+      try {
+        const cdb = await cloudConnector(c.room);
+        const uid = cdb.uid;
+        const ps = await cdb.collection('people').get();
+        const mine = ps.docs.filter((d) => d.id === uid || ((d.data() || {}).devices || []).includes(uid));
+        if (mine.length < 2) continue;
+        mine.sort((x, y) => (x.id === uid ? -1 : y.id === uid ? 1 : ((x.data() || {}).num || 9) - ((y.data() || {}).num || 9)));
+        const target = mine[0].id;
+        const metaSnap = await cdb.doc('meta/info').get();
+        const meta = metaSnap.exists ? metaSnap.data() || {} : null;
+        for (const d of mine.slice(1)) { await absorbOldSelf(cdb, target, d.data() || {}, meta, d.id); merged++; }
+      } catch (e) { /* 이 방은 건너뛰어요 */ }
+    }
+    return merged;
+  }
+  function setAccount(a) {
+    ACCOUNT = a;
+    try { if (a) localStorage.setItem(LS_ACCT, JSON.stringify(a)); else localStorage.removeItem(LS_ACCT); } catch (e) {}
+    renderAccount();
+  }
+  async function doLogin() {
+    if (acctBusy) return;
+    acctBusy = true; renderAccount('로그인하는 중…');
+    try {
+      const r = await accountImpl.login();
+      if (r.kind === 'existing') {
+        await handOverRooms(r.newUid);
+        await accountImpl.switchTo(r.cred);
+      }
+      const info = await accountImpl.info();
+      if (!info) throw { code: 'unavailable' };
+      setAccount(info);
+      // 일정표 목록 합치기: 계정에 있던 것 + 이 기기에만 있던 것
+      const a = await accountImpl.adapter(`users/${info.uid}`);
+      const snap = await a.doc('meta/cals').get();
+      const cloud = snap.exists ? snap.data() || {} : {};
+      const cloudList = canonCals(cloud.list);
+      const ids = new Set(cloudList.map((c) => c.id)), rooms = new Set(cloudList.map((c) => c.room).filter(Boolean));
+      let up = 0;
+      for (const c of CALS.list) if (!c.room) up += await uploadCal(c.id, readLocalCal(c.id));
+      const localOnly = CALS.list.filter((c) => !ids.has(c.id) && !(c.room && rooms.has(c.room)))
+        .filter((c) => c.room || c.id !== 'main' || Object.keys(readLocalCal(c.id).people).length || !cloudList.length);
+      CALS.list = [...cloudList, ...localOnly];
+      if (!CALS.list.length) CALS.list = [{ id: 'main', name: '우리 일정', room: '', createdAt: 1, pinnedAt: 0 }];
+      CALS.main = CALS.list.some((c) => c.id === cloud.main) ? cloud.main : CALS.list.some((c) => c.id === CALS.main) ? CALS.main : '';
+      if (!CALS.list.some((c) => c.id === CALS.current)) CALS.current = CALS.main || calsByNewest()[0].id;
+      acctSig = '';
+      acctBusy = false;
+      saveCals();
+      const merged = await mergeRoomSelves();
+      await subscribeCals();
+      await openCalendar();
+      flash(`${info.name || info.email || '구글 계정'}(으)로 로그인했어요. 같은 구글 계정으로 다른 기기에서 로그인하면 일정표가 그대로 보여요.${merged ? ` 방에서 따로 들어가 있던 나 ${merged}명을 하나로 합쳤어요.` : ''}`);
+    } catch (e) {
+      const er = e && e.code ? e : authErr(e);
+      if (er.code !== 'cancel') flash(loginErrMsg(er));
+    } finally { acctBusy = false; renderAccount(); }
+  }
+  async function doLogout() {
+    if (!ACCOUNT || acctBusy) return;
+    acctBusy = true; renderAccount('로그아웃하는 중…');
+    let kept = 0;
+    try {
+      // 내 일정표는 이 기기에 사본으로 남겨요. 함께 쓰는 방은 계정에 남아 있다가 다시 로그인하면 돌아와요.
+      for (const c of CALS.list.filter((x) => !x.room)) {
+        try { const d = await fetchCal(c.id); localStorage.setItem(dataKey(c.id), JSON.stringify(d)); kept++; } catch (e) {}
+      }
+      if (acctUnsub) { acctUnsub(); acctUnsub = null; }
+      const rooms = CALS.list.filter((c) => c.room).length;
+      CALS.list = CALS.list.filter((c) => !c.room);
+      if (!CALS.list.length) CALS.list = [{ id: 'main', name: '우리 일정', room: '', createdAt: 1, pinnedAt: 0 }];
+      if (!CALS.list.some((c) => c.id === CALS.main)) CALS.main = '';
+      if (!CALS.list.some((c) => c.id === CALS.current)) CALS.current = CALS.main || calsByNewest()[0].id;
+      setAccount(null);
+      saveCals();
+      await accountImpl.logout();
+      await openCalendar();
+      flash(`로그아웃했어요. 내 일정표 ${kept}개는 이 기기에 사본으로 남겼어요.${rooms ? ' 함께 쓰는 방은 다시 로그인하면 돌아와요.' : ''}`);
+    } catch (e) { flash('로그아웃하지 못했어요. 다시 해 주세요.'); }
+    finally { acctBusy = false; renderAccount(); }
+  }
+  function renderAccount(busyText) {
+    const box = $('acctBox');
+    box.hidden = !ACCOUNT_OK;
+    if (!ACCOUNT_OK) { $('startLogin').hidden = true; return; }
+    $('acctIn').hidden = !ACCOUNT; $('acctOut').hidden = !!ACCOUNT;
+    $('loginBtn').disabled = $('logoutBtn').disabled = !!busyText || acctBusy;
+    $('startLogin').hidden = !!ACCOUNT;
+    if (busyText) { $('loginBtn').textContent = busyText; $('logoutBtn').textContent = busyText; return; }
+    $('loginBtn').textContent = '구글로 로그인'; $('logoutBtn').textContent = '로그아웃';
+    if (ACCOUNT) {
+      $('acctName').textContent = ACCOUNT.name || ACCOUNT.email || '구글 계정';
+      $('acctMail').textContent = ACCOUNT.name ? ACCOUNT.email : '';
+      $('acctDot').textContent = (ACCOUNT.name || ACCOUNT.email || '나').trim().charAt(0).toUpperCase();
+    }
+  }
+  $('loginBtn').addEventListener('click', doLogin);
+  $('startLogin').addEventListener('click', doLogin);
+  $('logoutBtn').addEventListener('click', () => {
+    const b = $('logoutBtn');
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = '정말 로그아웃'; setTimeout(() => { delete b.dataset.armed; renderAccount(); }, 3000); return; }
+    delete b.dataset.armed; doLogout();
+  });
+  // 앱을 열 때: 전에 로그인해 둔 기기면 계정을 확인하고 목록을 맞춰요
+  async function restoreAccount() {
+    if (!ACCOUNT_OK) return;
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(LS_ACCT) || 'null'); } catch (e) {}
+    if (!saved || !saved.uid) { renderAccount(); return; }
+    ACCOUNT = saved; renderAccount();
+    try {
+      const info = await accountImpl.info();
+      if (!info) { setAccount(null); flash('구글 로그인이 풀렸어요. 왼쪽 메뉴에서 다시 로그인해 주세요.'); openCalendar(); return; }   // 로그인이 풀렸어요
+      setAccount(info);
+      await subscribeCals();
+    } catch (e) { /* 인터넷이 없으면 저장해 둔 계정으로 계속 써요 */ }
+  }
 
   function renderRoomModal() {
     const inRoom = !!state.room;
@@ -2244,8 +2600,8 @@
     return 0;
   }
   // 이 기기로 따로 들어와 있던 사람(예: 2번)을 연결한 사람에게 합치고 정리해요
-  async function absorbOldSelf(cdb, pid, old, meta) {
-    const uid = cdb.uid;
+  async function absorbOldSelf(cdb, pid, old, meta, oldPid = cdb.uid) {
+    const uid = oldPid;
     const rows = await cdb.collection('busy').where('pid', '==', uid).get();
     const target = await cdb.collection('busy').where('pid', '==', pid).get();
     const tmap = {};
@@ -2443,6 +2799,7 @@
       data.people.forEach((p) => { people[p.id] = { name: p.name, color: p.color, createdAt: p.createdAt }; });
       data.busy.forEach((b) => { busy[`${b.week}_${b.pid}`] = b; });
       localStorage.setItem(dataKey(cal.id), JSON.stringify({ people, busy }));
+      if (ACCOUNT) await uploadCal(cal.id, { people, busy });
     } catch (e) { /* 복사에 실패해도 나가기는 해요 */ }
     let cloudOk = true;
     try { await leaveCloud(); } catch (e) { cloudOk = false; }
@@ -2522,6 +2879,20 @@
         state.readOnly = true;
         state.statusNote = `함께 쓰는 방(${fmtRoom(cal.room)})에 연결하지 못해서 이 기기에 저장된 일정을 보기만 할 수 있어요. 인터넷을 확인하고 다시 열어 주세요.`;
       }
+    } else if (ACCOUNT && ACCOUNT_OK) {
+      // 로그인했으면 내 일정표는 구글 계정에 저장돼요 (다른 기기와 실시간으로 맞춰져요)
+      try {
+        const st = await acctStore(cal.id);
+        if (tok !== openToken) return;
+        db = st; state.mode = 'db';
+        loadTimer = setTimeout(() => { state.statusNote = '계정 저장소에 아직 연결되지 않았어요. 인터넷 연결을 확인해 주세요.'; renderFoot(); }, 10000);
+        subscribePeople(); subscribeBusy();
+      } catch (e) {
+        if (tok !== openToken) return;
+        db = null; startLocal();
+        state.readOnly = true;
+        state.statusNote = '구글 계정 저장소에 연결하지 못해서 이 기기에 남아 있는 일정을 보기만 할 수 있어요. 인터넷을 확인하고 다시 열어 주세요.';
+      }
     } else startLocal();
     renderSidebar(); renderAll();
   }
@@ -2581,9 +2952,12 @@
     loadCals();
     if (CALS.main) { CALS.current = CALS.main; saveCals(); }   // 앱을 열면 메인 일정표부터
     try { if (localStorage.getItem(LS_SIDE) === 'collapsed') $('app').classList.add('collapsed'); } catch (e) {}
+    if (ACCOUNT_OK) { try { const sv = JSON.parse(localStorage.getItem(LS_ACCT) || 'null'); if (sv && sv.uid) ACCOUNT = sv; } catch (e) {} }
+    renderAccount();
     await openCalendar();
     if (!checkRoomLink()) checkIncomingLink();
     checkAppUpdate();
+    restoreAccount();
   }
   init();
 })();
