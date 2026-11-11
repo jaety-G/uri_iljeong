@@ -201,7 +201,8 @@
 
   .metip{margin:-6px 2px 12px;font-size:13px;color:var(--muted)}
   .metip[hidden]{display:none}
-  .chip{touch-action:manipulation}
+  .chip{touch-action:manipulation;transition:transform .08s ease-out}
+  .chip:active{transform:scale(.94)}
 
   /* 첫 시작 */
   .startcard{margin:-4px 0 14px;padding:14px 16px;border:1.5px solid var(--ink);border-radius:14px;background:#FFFDF6}
@@ -1386,18 +1387,15 @@
       if (p.id === state.me) {
         const t = document.createElement('span'); t.className = 'metag'; t.textContent = '나'; b.appendChild(t);
       }
-      // 한 번 = 바로 보이기/숨기기, 곧이어 한 번 더 = 방금 것을 되돌리고 칠할 사람으로
+      // 한 번 = 보이기/숨기기 (0.2초 안에 한 번 더 누르면 깜빡임 없이 칠할 사람으로)
       b.addEventListener('click', () => {
-        const now = Date.now();
-        if (chipTap && chipTap.id === p.id && now - chipTap.t < 350) {
-          if (chipTap.wasHidden) state.hidden.add(p.id); else state.hidden.delete(p.id);
-          chipTap = null;
-          pickMe(p);
-          return;
-        }
-        chipTap = { id: p.id, t: now, wasHidden: state.hidden.has(p.id) };
-        if (state.hidden.has(p.id)) state.hidden.delete(p.id); else state.hidden.add(p.id);
-        savePrefs(); renderChips(); renderGrid(); renderHint();
+        if (chipTap && chipTap.id === p.id) { clearTimeout(chipTap.timer); chipTap = null; pickMe(p); return; }
+        if (chipTap) { clearTimeout(chipTap.timer); chipTap.run(); }
+        const run = () => {
+          if (state.hidden.has(p.id)) state.hidden.delete(p.id); else state.hidden.add(p.id);
+          savePrefs(); renderChips(); renderGrid(); renderHint();
+        };
+        chipTap = { id: p.id, run, timer: setTimeout(() => { chipTap = null; run(); }, 200) };
       });
       box.appendChild(b);
     });
