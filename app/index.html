@@ -140,9 +140,6 @@
   .pill{height:44px;border:1.5px solid var(--ink);border-radius:10px;background:#fff;padding:0 16px;font-weight:700;font-size:14px;
         display:inline-flex;align-items:center;gap:8px}
   .pill.on{background:#FFF0B3}
-  .mepick{padding:0 6px 0 14px;font-weight:500}
-  .mepick label{font-weight:700}
-  .mepick select{border:none;background:transparent;font-weight:700;height:40px;padding:0 4px;cursor:pointer;outline:none;max-width:150px}
   .timepick{padding:0 6px 0 14px;gap:2px}
   .timepick label{font-weight:700;margin-right:4px}
   .timepick select{border:none;background:transparent;font-weight:700;height:40px;padding:0 2px;cursor:pointer;outline:none}
@@ -201,6 +198,10 @@
   .pwwrap .tin{padding-right:46px !important}
   .pweye{position:absolute;right:2px;top:50%;transform:translateY(-50%);width:42px;height:42px;border:none;background:transparent;color:#8A8579;display:grid;place-items:center;border-radius:10px}
   .pweye.on{color:var(--ink)}
+
+  .metip{margin:-6px 2px 12px;font-size:13px;color:var(--muted)}
+  .metip[hidden]{display:none}
+  .chip{touch-action:manipulation}
 
   /* 첫 시작 */
   .startcard{margin:-4px 0 14px;padding:14px 16px;border:1.5px solid var(--ink);border-radius:14px;background:#FFFDF6}
@@ -310,9 +311,6 @@
   #status{margin-right:auto}
   #status:empty{display:none}
   .hint.flash{color:var(--accent);font-weight:500}
-  .undobar{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:14px;padding:8px 8px 8px 16px;border-radius:12px;background:var(--ink);color:#fff;font-size:14px}
-  .undobar[hidden]{display:none}
-  .undobar button{height:34px;padding:0 14px;border:none;border-radius:9px;background:#FFF0B3;color:var(--ink);font-weight:700;font-size:14px}
   .foot{display:flex;justify-content:flex-end;align-items:center;gap:10px 16px;margin:10px 2px 0;font-size:13px;color:var(--muted);flex-wrap:wrap}
   .foot .acts{display:flex;gap:14px;flex-wrap:wrap}
   .linkbtn{border:none;background:none;padding:2px 0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-size:13px}
@@ -369,8 +367,6 @@
     .addchip{width:40px;height:40px}
     .pill{height:38px;font-size:13px;padding:0 12px}
     .tools{gap:8px}
-    .mepick{padding:0 4px 0 12px;flex:1 1 auto;min-width:0}
-    .mepick select{min-width:0;flex:1}
     /* 휴대폰: 제목 줄에 주 이동, 시간·모두 빈 시간은 ⋯ 안에 */
     header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px 6px}
     .headright{display:contents}
@@ -384,7 +380,11 @@
     .navbtn{width:44px;height:44px}
     .menubtn{width:44px;height:44px;margin-left:-8px}
     .toolbar{margin:16px 0 12px;gap:10px}
-    .tools{width:100%;flex-wrap:nowrap}
+    .toolbar{flex-wrap:nowrap;align-items:flex-start}
+    .toolbar .chips{flex:1 1 auto;min-width:0}
+    .tools{width:auto;flex:none;flex-wrap:nowrap}
+    .toolbar:has(.tools.open){flex-wrap:wrap}
+    .tools.open{width:100%;justify-content:flex-end}
     .pill.optbtn{display:inline-flex;flex:none}
     .tools .timepick,.tools #freeToggle{display:none}
     .tools.open{flex-wrap:wrap}
@@ -514,10 +514,6 @@
   <div class="toolbar">
     <div class="chips" id="chips"></div>
     <div class="tools">
-      <div class="pill mepick">
-        <label for="meSelect">나는</label>
-        <select id="meSelect" aria-label="내 이름 고르기"></select>
-      </div>
       <button class="pill optbtn" id="optBtn" aria-expanded="false" aria-label="보기 설정 (시간대, 모두 빈 시간)" title="보기 설정"><svg viewBox="0 0 20 20" fill="currentColor"><circle cx="4.5" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="15.5" cy="10" r="1.7"/></svg></button>
       <div class="pill timepick" title="표에 보일 시간대">
         <label for="hourStart">시간</label>
@@ -526,6 +522,8 @@
       <button class="pill" id="freeToggle" aria-pressed="false">모두 빈 시간 표시</button>
     </div>
   </div>
+
+  <p class="metip" id="meTip" hidden>이름을 <b>두 번</b> 누르면 그 사람 일정을 칠할 수 있어요.</p>
 
   <div class="startcard" id="startCard" hidden>
     <strong>처음 오셨네요. 내 이름부터 적어 주세요.</strong>
@@ -557,7 +555,6 @@
   </div>
 
   <p class="hint" id="hint"></p>
-  <div class="undobar" id="undoBar" role="status" hidden><span id="undoText">칠했어요</span><button id="undoBtn">되돌리기</button></div>
   <div class="foot">
     <span id="status"></span>
     <div class="acts">
@@ -1371,6 +1368,7 @@
   // 토요일 파랑, 일요일·공휴일 빨강
   const dayTone = (d, date) => (d === 6 || holidayOf(date) ? 'sun' : d === 5 ? 'sat' : '');
 
+  let chipTap = null;
   function renderChips() {
     const box = $('chips');
     box.innerHTML = '';
@@ -1383,16 +1381,21 @@
       b.style.setProperty('--fill', c.fill);
       b.style.setProperty('--lineC', c.line);
       b.setAttribute('aria-pressed', on);
-      b.title = on ? `${p.name} 끄기 (두 번 누르면 이름 수정)` : `${p.name} 켜기 (두 번 누르면 이름 수정)`;
+      b.title = `한 번: ${on ? '숨기기' : '보이기'} · 두 번: ${p.id === state.me ? '칠하기 멈추기' : '이 사람 일정 칠하기'}`;
       b.append(p.name);
       if (p.id === state.me) {
         const t = document.createElement('span'); t.className = 'metag'; t.textContent = '나'; b.appendChild(t);
       }
+      // 한 번 = 보이기/숨기기, 두 번 = 칠할 사람으로 (두 번째를 잠깐 기다려요)
       b.addEventListener('click', () => {
-        if (state.hidden.has(p.id)) state.hidden.delete(p.id); else state.hidden.add(p.id);
-        savePrefs(); renderChips(); renderGrid(); renderHint();
+        if (chipTap && chipTap.id === p.id) { clearTimeout(chipTap.timer); chipTap = null; pickMe(p); return; }
+        if (chipTap) clearTimeout(chipTap.timer);
+        chipTap = { id: p.id, timer: setTimeout(() => {
+          chipTap = null;
+          if (state.hidden.has(p.id)) state.hidden.delete(p.id); else state.hidden.add(p.id);
+          savePrefs(); renderChips(); renderGrid(); renderHint();
+        }, 260) };
       });
-      b.addEventListener('dblclick', () => openPeople());
       box.appendChild(b);
     });
     const add = document.createElement('button');
@@ -1404,17 +1407,9 @@
     box.appendChild(add);
   }
 
+  // 아직 아무도 칠하지 않을 때만 짧은 안내
   function renderMe() {
-    const sel = $('meSelect');
-    sel.innerHTML = '';
-    const o = document.createElement('option'); o.value = ''; o.textContent = '고르지 않음 (보기만)'; sel.appendChild(o);
-    peopleList().forEach((p) => {
-      const op = document.createElement('option'); op.value = p.id; op.textContent = p.name; sel.appendChild(op);
-    });
-    sel.value = state.people[state.me] ? state.me : '';
-    // 방에서는 내가 누구인지 정해져 있어요
-    sel.disabled = !!state.room;
-    sel.title = state.room ? '함께 쓰는 방에서는 내 일정만 칠할 수 있어요' : '';
+    $('meTip').hidden = !!(state.me && state.people[state.me]) || !!state.room || state.readOnly || !peopleList().length || state.mode === 'pending';
   }
 
   // 칠하기 막대: 지금 칠할 일정 이름 + 최근 이름
@@ -1814,8 +1809,6 @@
     const s = new Set(b && Array.isArray(b.cells) ? b.cells.filter(validCell) : []);
     const l = { ...((b && b.labels) || {}) };
     drag.sets.set(wk, s); drag.labels.set(wk, l); drag.before.set(wk, sigOf(s, l));
-    drag.orig = drag.orig || new Map();
-    drag.orig.set(wk, { cells: [...s].sort(), labels: { ...l } });
   }
   function applyCell(wk, key) {
     ensureDragWeek(wk);
@@ -1824,29 +1817,12 @@
     else { s.delete(key); delete l[key]; }
     drag.last = wk + '|' + key;
   }
-  // 칠하거나 지운 뒤 잠깐 "되돌리기"
-  let undoState = null, undoTimer = null;
-  function showUndo(u) {
-    undoState = u;
-    $('undoText').textContent = u.mode === 'erase' ? '지웠어요' : '칠했어요';
-    $('undoBar').hidden = false;
-    clearTimeout(undoTimer);
-    undoTimer = setTimeout(hideUndo, 5000);
-  }
-  function hideUndo() { clearTimeout(undoTimer); undoState = null; $('undoBar').hidden = true; }
-  $('undoBtn').addEventListener('click', () => {
-    const u = undoState; hideUndo();
-    if (!u || u.cal !== CALS.current || !canEditPerson(u.pid) || state.readOnly) return;
-    u.items.forEach((it) => saveCells(it.wk, u.pid, it.cells, it.labels));
-    renderGrid(); renderFoot();
-    flash('되돌렸어요.');
-  });
   // 지금 칠할 수 있는지 (안 되면 이유를 알려 줘요)
   function canPaint() {
     if (state.mode === 'pending') return false;
     if (state.legacyRoom) { flash(LEGACY_NOTE); return false; }
     if (state.room && !state.people[state.myUid]) { flash('이 방에 아직 들어오지 않아서 보기만 할 수 있어요. "함께 쓰기"에서 방 코드로 들어가 주세요.'); return false; }
-    if (!state.people[state.me]) { flash('먼저 오른쪽 위 "나는"에서 내 이름을 골라 주세요. 그다음 칸을 눌러 칠할 수 있어요.'); return false; }
+    if (!state.people[state.me]) { flash('먼저 위에서 내 이름을 두 번 눌러 주세요. 그다음 칸을 눌러 칠할 수 있어요.'); return false; }
     if (!canEditPerson(state.me)) { flash('다른 사람의 일정은 그 사람만 고칠 수 있어요.'); return false; }
     if (state.readOnly) { flash('보기 전용이라 칠할 수 없어요.'); return false; }
     return true;
@@ -1905,12 +1881,10 @@
     tbody.classList.remove('touchpaint');
     if (!drag) return;
     const d = drag; drag = null;
-    const undo = [];
     for (const [wk, s] of d.sets) {
       const l = d.labels.get(wk);
-      if (sigOf(s, l) !== d.before.get(wk)) { saveCells(wk, d.pid, [...s].sort(), l); undo.push({ wk, ...d.orig.get(wk) }); }
+      if (sigOf(s, l) !== d.before.get(wk)) saveCells(wk, d.pid, [...s].sort(), l);
     }
-    if (undo.length) showUndo({ pid: d.pid, cal: CALS.current, items: undo, mode: d.mode });
     if (d.mode === 'paint' && d.label) { state.recent = [d.label, ...state.recent.filter((x) => x !== d.label)].slice(0, 8); savePrefs(); }
     renderGrid(); renderPaintbar(); renderFoot();
   }
@@ -2032,12 +2006,20 @@
     state.showFree = !state.showFree; savePrefs(); renderGrid();
     if (state.showFree && !peopleList().some((p) => !state.hidden.has(p.id))) flash('켜진 사람이 없어요. 이름 칩을 눌러 사람을 켜 주세요.');
   });
-  $('meSelect').addEventListener('change', (e) => {
-    state.me = e.target.value;
+  // 이름 알약을 두 번 누르면 그 사람 일정을 칠해요 (다시 두 번 누르면 그만)
+  function pickMe(p) {
+    if (state.room) {
+      flash(p.id === state.myUid ? '함께 쓰는 방에서는 언제나 내 일정을 칠해요.' : '다른 사람의 일정은 그 사람만 고칠 수 있어요.');
+      return;
+    }
+    if (state.readOnly) { flash('보기 전용이라 칠할 수 없어요.'); return; }
     state.meTouched = true;
-    if (state.me) state.hidden.delete(state.me);
-    savePrefs(); clearTimeout(flashTimer); flashTimer = null; renderAll();
-  });
+    if (state.me === p.id) { state.me = ''; savePrefs(); renderAll(); flash(`${p.name} 일정 칠하기를 멈췄어요.`); return; }
+    state.me = p.id;
+    state.hidden.delete(p.id);
+    savePrefs(); renderAll();
+    flash(`${p.name} 일정을 칠해요. 칸을 누르면 칠해지고, 이름을 다시 두 번 누르면 멈춰요.`);
+  }
   $('copyLastWeek').addEventListener('click', async () => {
     const me = state.me; if (!state.people[me]) return;
     const prev = shiftWeek(state.week, -1);
@@ -3313,7 +3295,7 @@
     const msg = $('roomMsg');
     const roomName = cleanCalName($('roomNameIn').value) || cleanCalName(curCal().name) || '함께 쓰는 일정';
     const myName = cleanName($('myNameIn').value) || '1번';
-    const meP = !state.room ? state.people[state.me] : null;   // 지금 일정표에서 "나는"으로 고른 사람
+    const meP = !state.room ? state.people[state.me] : null;   // 지금 일정표에서 칠하고 있는 사람
     const myRows = meP ? Object.values(state.busy).filter((b) => b.pid === state.me && Array.isArray(b.cells) && b.cells.length) : [];
     roomBusyUI(true);
     msg.textContent = '방을 만드는 중이에요…';
