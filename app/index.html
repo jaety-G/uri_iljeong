@@ -2246,6 +2246,10 @@
      로그인하면 이 기기의 익명 계정을 구글 계정에 이어 붙여요. 같은 구글 계정으로 다른 기기에서 로그인하면
      그 기기도 같은 사람이 되고, 일정표 목록(users/{uid}/meta/cals)과 내 일정표(users/{uid}/cals/{id}/…)가 그대로 보여요. */
   const LS_ACCT = 'uri-iljeong:acct:v1';
+  const LS_LOGIN_PENDING = 'uri-iljeong:login-pending';
+  const IS_STANDALONE = (() => { try { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; } catch (e) { return false; } })();
+  // 카카오톡·인스타그램·네이버 앱 안 브라우저는 구글이 로그인을 막아요
+  const INAPP = (() => { const ua = navigator.userAgent || ''; return /KAKAOTALK/i.test(ua) ? 'kakao' : /Instagram|FBAN|FBAV|NAVER\(inapp|Line\/|DaumApps|everytimeApp|; wv\)/i.test(ua) ? 'other' : ''; })();
   const ACCOUNT_OK = CLOUD_READY && !IS_ARTIFACT && (IS_WEB || !!window.__uriAccountImpl);   // 웹 버전에서만 (앱은 구글 창을 띄울 수 없어요)
   let ACCOUNT = null, acctUnsub = null, acctSig = '', acctTimer = null, acctBusy = false;
   const authErr = (e) => {
@@ -2267,6 +2271,19 @@
     const g = (u.providerData || []).find((x) => x && x.providerId === 'google.com') || {};
     return { uid: u.uid, name: u.displayName || g.displayName || '', email: u.email || g.email || '' };
   };
+  // 이미 다른 기기에서 쓰던 구글 계정이면: 잠깐 쓰는 두 번째 연결로 그 계정 uid만 확인해요 (이 기기 로그인은 아직 그대로)
+  async function accountExisting(c, e) {
+    if (!(e && (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use'))) throw authErr(e);
+    const cred = c.authMod.GoogleAuthProvider.credentialFromError(e);
+    if (!cred) throw { code: 'unavailable' };
+    const app2 = c.appMod.getApps().find((x) => x.name === 'login-check') || c.appMod.initializeApp(FIREBASE_CONFIG, 'login-check');
+    let a2;
+    try { a2 = c.authMod.initializeAuth(app2, { persistence: c.authMod.inMemoryPersistence }); } catch (er) { a2 = c.authMod.getAuth(app2); }
+    const r2 = await c.authMod.signInWithCredential(a2, cred);
+    const newUid = r2.user.uid;
+    await c.authMod.signOut(a2).catch(() => {});
+    return { kind: 'existing', cred, newUid };
+  }
   const accountImpl = window.__uriAccountImpl || {
     async info() {
       const c = await fbCore();
@@ -2275,34 +2292,32 @@
     },
     // 1) 이 기기 익명 계정에 구글을 이어 붙이기(처음 로그인하는 기기) → uid 그대로
     // 2) 이미 다른 기기에서 쓰던 구글 계정이면 → 그 계정 uid를 먼저 알려 주고, 바꾸는 건 switchTo에서
-    async login() {
+    // 홈 화면 앱처럼 팝업이 안 되는 곳에서는 구글 화면으로 이동했다가 돌아와요(redirect) → 돌아오면 resume()
+    async login(useRedirect) {
       const c = await fbCore();
       await ensureSignedIn(c);
       const provider = new c.authMod.GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
       const u = c.auth.currentUser;
-      try {
-        if (u.isAnonymous) {
-          await c.authMod.linkWithPopup(u, provider);
-          await c.auth.currentUser.getIdToken(true);   // 새 출입증(구글 연결됨)으로 바로 저장소를 쓸 수 있게
-          return { kind: 'linked' };
-        }
-        return { kind: 'linked' };
-      } catch (e) {
-        if (e && (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use')) {
-          const cred = c.authMod.GoogleAuthProvider.credentialFromError(e);
-          if (!cred) throw { code: 'unavailable' };
-          // 잠깐 쓰는 두 번째 연결로 그 계정 uid만 확인해요 (이 기기 로그인은 아직 그대로)
-          const app2 = c.appMod.getApps().find((x) => x.name === 'login-check') || c.appMod.initializeApp(FIREBASE_CONFIG, 'login-check');
-          let a2;
-          try { a2 = c.authMod.initializeAuth(app2, { persistence: c.authMod.inMemoryPersistence }); } catch (er) { a2 = c.authMod.getAuth(app2); }
-          const r2 = await c.authMod.signInWithCredential(a2, cred);
-          const newUid = r2.user.uid;
-          await c.authMod.signOut(a2).catch(() => {});
-          return { kind: 'existing', cred, newUid };
-        }
-        throw authErr(e);
+      if (!u.isAnonymous) return { kind: 'linked' };
+      if (useRedirect) {
+        try { await c.authMod.linkWithRedirect(u, provider); } catch (e) { throw authErr(e); }
+        return { kind: 'redirect' };
       }
+      try {
+        await c.authMod.linkWithPopup(u, provider);
+        await c.auth.currentUser.getIdToken(true);   // 새 출입증(구글 연결됨)으로 바로 저장소를 쓸 수 있게
+        return { kind: 'linked' };
+      } catch (e) { return accountExisting(c, e); }
+    },
+    async resume() {
+      const c = await fbCore();
+      try {
+        const r = await c.authMod.getRedirectResult(c.auth);
+        if (!r) return c.auth.currentUser && !c.auth.currentUser.isAnonymous ? { kind: 'linked' } : null;
+        await c.auth.currentUser.getIdToken(true);
+        return { kind: 'linked' };
+      } catch (e) { return accountExisting(c, e); }
     },
     async switchTo(cred) { const c = await fbCore(); try { await c.authMod.signInWithCredential(c.auth, cred); } catch (e) { throw authErr(e); } },
     async logout() { const c = await fbCore(); await c.authMod.signOut(c.auth); await c.authMod.signInAnonymously(c.auth).catch(() => {}); },
@@ -2430,9 +2445,51 @@
   }
   async function doLogin() {
     if (acctBusy) return;
+    if (INAPP) { inAppNotice(); return; }
+    acctBusy = true; renderAccount('로그인하는 중…');
+    let r;
+    try {
+      if (IS_STANDALONE) localStorage.setItem(LS_LOGIN_PENDING, String(Date.now()));
+      r = await accountImpl.login(IS_STANDALONE);
+      if (r.kind === 'redirect') { renderAccount('구글로 이동하는 중…'); return; }
+    } catch (e) {
+      const er = e && e.code ? e : authErr(e);
+      // 팝업이 막히면 구글 화면으로 이동하는 방식으로 다시
+      if (er.code === 'popup_blocked' || er.code === 'auth/operation-not-supported-in-this-environment') {
+        try { localStorage.setItem(LS_LOGIN_PENDING, String(Date.now())); r = await accountImpl.login(true); if (r.kind === 'redirect') { renderAccount('구글로 이동하는 중…'); return; } }
+        catch (e2) { localStorage.removeItem(LS_LOGIN_PENDING); acctBusy = false; renderAccount(); flash(loginErrMsg(e2 && e2.code ? e2 : authErr(e2))); return; }
+      } else { try { localStorage.removeItem(LS_LOGIN_PENDING); } catch (e2) {} acctBusy = false; renderAccount(); if (er.code !== 'cancel') flash(loginErrMsg(er)); return; }
+    }
+    await finishLogin(r);
+  }
+  // 구글 화면에서 돌아왔을 때 이어서 로그인 마무리
+  async function resumeLogin() {
+    let pending = 0;
+    try { pending = Number(localStorage.getItem(LS_LOGIN_PENDING)) || 0; localStorage.removeItem(LS_LOGIN_PENDING); } catch (e) {}
+    if (!ACCOUNT_OK || !pending || Date.now() - pending > 15 * 60 * 1000) return;
+    acctBusy = true; renderAccount('로그인을 마무리하는 중…');
+    let r = null;
+    try { r = await accountImpl.resume(); }
+    catch (e) { acctBusy = false; renderAccount(); const er = e && e.code ? e : authErr(e); if (er.code !== 'cancel') flash(loginErrMsg(er)); return; }
+    if (!r) {
+      acctBusy = false; renderAccount();
+      flash(IS_STANDALONE && /iPhone|iPad/i.test(navigator.userAgent)
+        ? '로그인을 마치지 못했어요. 아이폰 홈 화면 앱에서는 구글 로그인이 잘 안 될 수 있어요. Safari에서 웹 버전을 열어 로그인해 주세요.'
+        : '로그인을 마치지 못했어요. 홈 화면 앱 대신 Chrome에서 웹 버전을 열어 로그인해 보세요. 안드로이드는 Chrome에서 한 번 로그인하면 홈 화면 앱도 같이 로그인돼요.');
+      return;
+    }
+    await finishLogin(r);
+  }
+  function inAppNotice() {
+    const url = location.href.split('#')[0];
+    if (INAPP === 'kakao') { location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url); }   // 카카오톡이 기본 브라우저로 열어 줘요
+    flash(INAPP === 'kakao'
+      ? '카카오톡 안에서는 구글 로그인이 막혀 있어요. 오른쪽 아래 공유(또는 ⋯) → "다른 브라우저로 열기"(Safari)로 연 다음 로그인해 주세요.'
+      : '앱 안에서 열린 브라우저에서는 구글 로그인이 막혀 있어요. 메뉴의 "다른 브라우저로 열기"로 Chrome이나 Safari에서 열어 로그인해 주세요.');
+  }
+  async function finishLogin(r) {
     acctBusy = true; renderAccount('로그인하는 중…');
     try {
-      const r = await accountImpl.login();
       if (r.kind === 'existing') {
         await handOverRooms(r.newUid);
         await accountImpl.switchTo(r.cred);
@@ -2446,8 +2503,7 @@
       const cloud = snap.exists ? snap.data() || {} : {};
       const cloudList = canonCals(cloud.list);
       const ids = new Set(cloudList.map((c) => c.id)), rooms = new Set(cloudList.map((c) => c.room).filter(Boolean));
-      let up = 0;
-      for (const c of CALS.list) if (!c.room) up += await uploadCal(c.id, readLocalCal(c.id));
+      for (const c of CALS.list) if (!c.room) await uploadCal(c.id, readLocalCal(c.id));
       const localOnly = CALS.list.filter((c) => !ids.has(c.id) && !(c.room && rooms.has(c.room)))
         .filter((c) => c.room || c.id !== 'main' || Object.keys(readLocalCal(c.id).people).length || !cloudList.length);
       CALS.list = [...cloudList, ...localOnly];
@@ -2957,6 +3013,7 @@
     await openCalendar();
     if (!checkRoomLink()) checkIncomingLink();
     checkAppUpdate();
+    await resumeLogin();
     restoreAccount();
   }
   init();
