@@ -146,6 +146,8 @@
   .omrow select{border:1.5px solid var(--ink);border-radius:8px;background:#fff;height:32px;padding:0 4px;font-weight:700}
   .omitem{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:10px;border:none;border-radius:8px;background:transparent;text-align:left;font-size:14px;font-weight:600;color:var(--ink)}
   .omitem:hover{background:#F6F1E4}
+  .omitem.omroom{background:#FFF0B3;margin-bottom:6px;font-weight:700}
+  .omitem.omroom:hover{background:#FFE98A}
   .omitem[hidden]{display:none}
   .omitem small{display:block;font-weight:400;font-size:12px;color:var(--muted);margin-top:1px}
   .omsw{flex:none;width:34px;height:20px;border-radius:10px;border:1.5px solid var(--ink);background:#fff;position:relative}
@@ -175,8 +177,10 @@
   .splash input, .splash button{touch-action:manipulation}
   html:has(#splash:not([hidden])), html:has(#splash:not([hidden])) body{overflow:hidden;overscroll-behavior:none;height:100%}
   /* 스크롤 막대 숨기기 (스크롤은 그대로) */
-  *{scrollbar-width:none}
-  *::-webkit-scrollbar{display:none;width:0;height:0}
+  @media (hover:none), (pointer:coarse){
+    *{scrollbar-width:none}
+    *::-webkit-scrollbar{display:none;width:0;height:0}
+  }
   .splash.out{animation:splashOut .18s ease-in forwards}
   .splashbox{width:min(320px,100%);display:flex;flex-direction:column;align-items:center;text-align:center}
   .splashmark{width:132px;height:92px;margin-bottom:10px;overflow:visible}
@@ -253,8 +257,14 @@
   /* 표 */
   .card{background:#fff;border:1.5px solid var(--ink);border-radius:16px;padding:6px 8px 14px;isolation:isolate}
   .scroller{overflow:auto;-webkit-overflow-scrolling:touch;max-height:max(420px, calc(100vh - 96px));overscroll-behavior:contain}
-  .scroller.snap{scroll-snap-type:x mandatory;scroll-padding-left:30px}
+  .scroller.snap{scroll-snap-type:x mandatory;scroll-padding-left:32px}
   .scroller.snap .day{scroll-snap-align:start}
+  .pager{display:flex;justify-content:center;align-items:center;gap:8px;padding:6px 0 4px;border-bottom:1px dashed #D8D1C0}
+  .pager[hidden]{display:none}
+  .pager button{width:22px;height:22px;padding:0;border:none;background:none;display:grid;place-items:center}
+  .pager button i{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ink);background:#fff;display:block}
+  .pager button.on i{background:var(--ink)}
+  .pager small{color:var(--muted);font-size:12px;margin-left:4px}
   .table{min-width:560px}
   .thead{display:flex;height:52px;align-items:center;border-bottom:1.5px solid var(--ink);position:sticky;top:0;z-index:4;background:#fff}
   .tcol{width:var(--tcol);flex:none;align-self:stretch;position:sticky;left:0;z-index:5;background:#fff}
@@ -268,7 +278,7 @@
   .tbody{display:flex;padding:10px 0 12px;position:relative}
   .timecol{position:sticky;left:0;z-index:3;background:#fff;width:var(--tcol);flex:none}
   .timecol .inner{position:relative}
-  .timecol span{position:absolute;right:10px;transform:translateY(-50%);font-size:12px;color:var(--muted);white-space:nowrap}
+  .timecol span{position:absolute;right:10px;transform:translateY(-50%);font-size:13px;color:var(--muted);white-space:nowrap}
   .day{flex:1;min-width:0;position:relative}
   .day + .day{border-left:1px solid var(--ink)}
   .cell{height:var(--rowH);border-top:1px solid var(--line)}
@@ -276,17 +286,17 @@
   .painting .cell{cursor:crosshair;touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .touchpaint .cell{touch-action:none}
   .touchpaint{outline:2px dashed var(--accent);outline-offset:-2px}
-  .cell.free{background:#FFFAE3 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath d='M-1 1 L1 -1 M0 10 L10 0 M9 11 L11 9' stroke='%23F2D26E' stroke-width='1.3'/%3E%3C/svg%3E")}
+  .cell.free{background:#FFF6D1}
   .blk{position:absolute;left:4px;right:4px;border-radius:9px;box-shadow:inset 0 0 0 1px var(--lineC);pointer-events:none}
   .blk.lane{right:auto;left:calc(4px + (100% - 8px) * var(--l) / var(--n));width:calc((100% - 8px) / var(--n) - 2px);border-radius:7px}
   .lbl.lane{left:calc(6px + (100% - 8px) * var(--l) / var(--n));max-width:calc((100% - 8px) / var(--n) - 6px)}
-  .day.today{background:rgba(255,240,179,.32)}
+  .day.today{background:rgba(43,43,43,.045)}
   .card.loading{position:relative}
   .card.loading::after{content:'불러오는 중…';position:absolute;inset:0;display:grid;place-items:center;background:rgba(255,255,255,.72);border-radius:inherit;font-size:14px;color:#5E5A52;z-index:5}
   .painting .blk.mine{box-shadow:inset 0 0 0 2px var(--lineC)}
   /* 이름표: 블록 색이 진해도 읽히도록 반투명 흰 바탕 */
   .lbl{position:absolute;left:7px;max-width:calc(100% - 13px);z-index:1;display:flex;align-items:center;gap:4px;padding:1px 7px 1px 2px;
-       border-radius:9px;background:rgba(255,255,255,.86);font-size:12px;line-height:16px;font-weight:500;color:var(--ink);pointer-events:none;white-space:nowrap;overflow:hidden}
+       border-radius:9px;background:rgba(255,255,255,.86);font-size:13px;line-height:17px;font-weight:500;color:var(--ink);pointer-events:none;white-space:nowrap;overflow:hidden}
   .lbl span,.mlbl span{overflow:hidden;text-overflow:ellipsis}
   /* 누구 일정인지: 이름 첫 글자 동그라미 */
   .ini{flex:none;display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 2px;border-radius:8px;border:1.2px solid;font-size:10px;font-weight:700;line-height:1;color:var(--ink);font-style:normal;letter-spacing:-.5px}
@@ -323,6 +333,7 @@
   .mdots i{width:9px;height:9px;border-radius:50%;border:1.5px solid}
   .mdots b{font-size:10px;font-weight:700;line-height:9px}
   .mfreebar{margin-top:auto;height:4px;border-radius:2px;background:#F2D26E}
+  .mday.allfree{background:#FFF6D1}
   .mday.picked{box-shadow:inset 0 0 0 2px var(--ink);background:#FFFDF6}
   .mdetail{margin:10px 4px 2px;padding:12px 12px 10px;border-top:1.5px solid var(--ink)}
   .mdetail[hidden]{display:none}
@@ -419,23 +430,23 @@
     .wrap{padding-left:calc(10px + env(safe-area-inset-left));padding-right:calc(10px + env(safe-area-inset-right))}
     .card{padding:4px 3px 10px}
     .table.fit{min-width:0 !important}
-    .table.compact{--tcol:30px}
+    .table.compact{--tcol:32px}
     .compact .thead{height:46px}
     .compact .dhead{font-size:13px;line-height:1.2}
     .compact .dhead small{display:block;margin:1px 0 0;font-size:11px}
     .compact .dhead.today small{display:grid;width:fit-content;min-width:20px;height:20px;margin:1px auto 0;padding:0 4px}
     .mday.today .mnum{min-width:21px;height:21px;padding:0 4px}
-    .compact .timecol span{right:4px;font-size:10px;letter-spacing:-.3px}
+    .compact .timecol span{right:3px;font-size:11px;letter-spacing:-.4px}
     .compact .blk{left:2px;right:2px;border-radius:6px}
     .compact .blk.lane{right:auto;left:calc(2px + (100% - 4px) * var(--l) / var(--n));width:calc((100% - 4px) / var(--n) - 1px);border-radius:4px}
-    .compact .lbl{left:3px;max-width:calc(100% - 5px);padding:1px 4px 1px 1px;gap:2px;font-size:10px;line-height:14px;border-radius:7px}
-    .compact .ini{min-width:14px;height:14px;font-size:9px}
-    .compact .many .ini{width:14px}
+    .compact .lbl{left:3px;max-width:calc(100% - 5px);padding:1px 4px 1px 1px;gap:2px;font-size:11px;line-height:15px;border-radius:7px}
+    .compact .ini{min-width:15px;height:15px;font-size:10px}
+    .compact .many .ini{width:15px}
     .compact .lbl.multi span{display:none}
-    .compact .lbl:not(.multi){background:transparent;padding:0 1px;left:4px;max-width:calc(100% - 7px);white-space:normal;align-items:flex-start;font-size:10.5px;line-height:13px;font-weight:600;letter-spacing:-.3px}
+    .compact .lbl:not(.multi){background:transparent;padding:0 1px;left:4px;max-width:calc(100% - 7px);white-space:normal;align-items:flex-start;font-size:11.5px;line-height:14px;font-weight:600;letter-spacing:-.3px}
     .compact .lbl:not(.multi) .ini{display:none}
     .compact .lbl:not(.multi) span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;word-break:keep-all;overflow-wrap:anywhere}
-    .compact .lbl.lane:not(.multi){left:calc(4px + (100% - 8px) * var(--l) / var(--n));max-width:calc((100% - 8px) / var(--n) - 3px);font-size:9.5px}
+    .compact .lbl.lane:not(.multi){left:calc(4px + (100% - 8px) * var(--l) / var(--n));max-width:calc((100% - 8px) / var(--n) - 3px);font-size:10.5px}
     .compact .lbl.multi{padding-right:1px}
     .mgrid{min-width:0}
     .mgrid.routine{grid-template-columns:38px repeat(7,minmax(0,1fr))}
@@ -443,6 +454,12 @@
     .mday{padding:6px 4px 6px}
     .mday{min-height:58px;gap:5px}
     .mweek{font-size:11px}
+  }
+  @media (max-width:360px){
+    h1{font-size:21px}
+    .weeklabel{font-size:13px}
+    .navbtn{width:38px;height:38px}
+    .menubtn{width:40px;height:40px}
   }
 </style>
 </head>
@@ -535,6 +552,7 @@
       <div class="optwrap">
         <button class="pill optbtn" id="optBtn" aria-expanded="false" aria-haspopup="true" aria-label="더 보기" title="더 보기"><svg viewBox="0 0 20 20" fill="currentColor"><circle cx="4.5" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="15.5" cy="10" r="1.7"/></svg></button>
         <div class="optmenu" id="optMenu" role="menu" hidden>
+          <button class="omitem omroom" id="roomBtn" role="menuitem" hidden>함께 쓰기</button>
           <div class="omrow timepick" title="표에 보일 시간대">
             <label for="hourStart">시간대</label>
             <span><select id="hourStart" aria-label="시작 시각"></select> – <select id="hourEnd" aria-label="끝 시각"></select></span>
@@ -572,6 +590,7 @@
   </div>
 
   <div class="card" id="tableCard">
+    <div class="pager" id="pager" hidden></div>
     <div class="scroller">
       <div class="table" id="table">
         <div class="thead" id="thead"><div class="tcol"></div></div>
@@ -589,9 +608,6 @@
   <p class="hint" id="hint"></p>
   <div class="foot">
     <span id="status"></span>
-    <div class="acts">
-      <button class="sharebtn main" id="roomBtn" hidden>함께 쓰기</button>
-    </div>
   </div>
 </div>
 </main>
@@ -601,7 +617,7 @@
 <div class="modal-bg" id="peopleModal" role="dialog" aria-modal="true" aria-labelledby="peopleTitle">
   <div class="modal">
     <h2 id="peopleTitle">함께 보는 사람</h2>
-    <p class="sub">이름을 고치면 바로 저장돼요. 색 동그라미를 누르면 색을, ⋯를 누르면 일정 비우기·삭제를 할 수 있어요.</p>
+    <p class="sub">이름은 바로 저장돼요. 동그라미는 색, ⋯는 비우기·삭제예요.</p>
     <div id="peopleList"></div>
     <hr class="divider">
     <div class="prow" id="addRow">
@@ -1300,13 +1316,42 @@
     const fit = specs.length <= 7;
     if (narrow && !fit) {
       // 휴대폰 기간 보기: 7일이 한 화면에 들어가는 칸 너비로, 옆으로 밀면 하루씩 딱 멈춰요
-      const w = ($('table').parentElement.clientWidth || 360) - 30;
-      $('table').style.minWidth = `${30 + specs.length * (w / 7)}px`;
+      const w = ($('table').parentElement.clientWidth || 360) - 32;
+      $('table').style.minWidth = `${32 + specs.length * (w / 7)}px`;
+      pagerW = w;
     } else $('table').style.minWidth = `${Math.max(560, 56 + specs.length * 72)}px`;
     $('table').classList.toggle('fit', fit);   // 한 주(7일 이하)는 휴대폰에서도 가로 스크롤 없이 한 화면에
     $('table').classList.toggle('compact', fit || narrow);
     $('table').parentElement.classList.toggle('snap', narrow && !fit);
+    renderPager(narrow && !fit ? specs.length : 0);
   }
+  // 기간 보기(휴대폰): 7일씩 한 화면, 아래 점으로 지금 어디쯤인지 보여 줘요
+  let pagerW = 0, pagerPages = 0;
+  function renderPager(days) {
+    const box = $('pager'), sc = $('table').parentElement;
+    pagerPages = Math.ceil(days / 7);
+    if (pagerPages < 2) { box.hidden = true; box.innerHTML = ''; return; }
+    box.hidden = false; box.innerHTML = '';
+    for (let i = 0; i < pagerPages; i++) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('aria-label', `${i + 1}번째 7일 보기`);
+      b.innerHTML = '<i></i>';
+      b.addEventListener('click', () => sc.scrollTo({ left: i * pagerW, behavior: 'smooth' }));
+      box.appendChild(b);
+    }
+    const t = document.createElement('small'); box.appendChild(t);
+    updatePager();
+  }
+  function updatePager() {
+    if ($('pager').hidden) return;
+    const sc = $('table').parentElement;
+    let at = pagerW ? Math.round(sc.scrollLeft / pagerW) : 0;
+    if (sc.scrollLeft >= sc.scrollWidth - sc.clientWidth - 2) at = pagerPages - 1;
+    at = Math.max(0, Math.min(pagerPages - 1, at));
+    [...$('pager').querySelectorAll('button')].forEach((b, i) => b.classList.toggle('on', i === at));
+    const t = $('pager').querySelector('small'); if (t) t.textContent = `${at + 1} / ${pagerPages}`;
+  }
+  $('table').parentElement.addEventListener('scroll', updatePager, { passive: true });
 
   /* ---------- 그리기 ---------- */
   function renderHeader() {
@@ -1460,7 +1505,7 @@
 
   // 아직 아무도 칠하지 않을 때만 짧은 안내
   function renderMe() {
-    $('meTip').hidden = !!(state.me && state.people[state.me]) || !!state.room || state.readOnly || !peopleList().length || state.mode === 'pending';
+    $('meTip').hidden = !!(state.me && state.people[state.me]) || !!state.meTouched || !!state.room || state.readOnly || !peopleList().length || state.mode === 'pending';
   }
 
   // 칠하기 막대: 지금 칠할 일정 이름 + 최근 이름
@@ -1635,7 +1680,7 @@
       const k = keyOf(x);
       const cell = document.createElement('button');
       const tone = dayTone(d, date), hol = holidayOf(date);
-      cell.className = 'mday' + (d === 0 ? ' c0' : '') + (tone ? ' ' + tone : '') + (date && date.getMonth() + 1 !== m ? ' other' : '') + (date && dayKey(date) === t ? ' today' : '') + (narrow && k === monthPick ? ' picked' : '');
+      cell.className = 'mday' + (d === 0 ? ' c0' : '') + (tone ? ' ' + tone : '') + (date && date.getMonth() + 1 !== m ? ' other' : '') + (date && dayKey(date) === t ? ' today' : '') + (narrow && k === monthPick ? ' picked' : '') + (state.showFree && visible.length && info.all && date && date.getMonth() + 1 === m ? ' allfree' : '');
       const top = document.createElement('div');
       top.className = 'mtop';
       const num = document.createElement('span');
@@ -1752,11 +1797,11 @@
       : `${me.name}의 바쁜 시간을 칠하는 중이에요. 위 "일정 이름"을 적고 칠하면 칸에 이름이 같이 보여요. 칠한 칸을 다시 누르면 지워져요.`;
     else h.textContent = state.routine ? `날짜 없이 요일과 시간만으로 저장되는 ${routineLabel(state.rweek)} 루틴이에요. 학교 시간표처럼 칠해 두세요.` : DEFAULT_HINT;
   }
-  function flash(msg) {
+  function flash(msg, ms) {
     const h = $('hint');
     clearTimeout(flashTimer);
     h.textContent = msg; h.classList.add('flash');
-    flashTimer = setTimeout(() => { flashTimer = null; renderHint(); }, 2800);
+    flashTimer = setTimeout(() => { flashTimer = null; renderHint(); }, ms || 2800);
   }
 
   function renderFoot() {
@@ -1857,11 +1902,20 @@
     drag.last = wk + '|' + key;
   }
   // 지금 칠할 수 있는지 (안 되면 이유를 알려 줘요)
-  function canPaint() {
+  // 칠할 사람을 안 골랐을 때 칸을 누르면: 그 시간에 누가 무슨 일정인지 보여 줘요
+  function showCellInfo(cell) {
+    const wk = cell.dataset.wk, key = cell.dataset.key;
+    const d = Number(key.split('-')[0]), h = Number(key.split('-')[1]);
+    const who = peopleList().filter((p) => !state.hidden.has(p.id) && cellsOf(p.id, wk).has(key))
+      .map((p) => { const l = (labelsOf(p.id, wk) || {})[key]; return l ? `${p.name} ${l}` : p.name; });
+    const when = `${DAYS[d]}요일 ${h}–${h + 1}시`;
+    flash(who.length ? `${when} · ${who.join(', ')}` : `${when}에는 일정이 없어요. 칠하려면 위에서 이름을 꾹 눌러 주세요.`, 4500);
+  }
+  function canPaint(cell) {
     if (state.mode === 'pending') return false;
     if (state.legacyRoom) { flash(LEGACY_NOTE); return false; }
     if (state.room && !state.people[state.myUid]) { flash('이 방에 아직 들어오지 않아서 보기만 할 수 있어요. "함께 쓰기"에서 방 코드로 들어가 주세요.'); return false; }
-    if (!state.people[state.me]) { flash('먼저 위에서 내 이름을 꾹 눌러 주세요. 그다음 칸을 눌러 칠할 수 있어요.'); return false; }
+    if (!state.people[state.me]) { if (cell && !state.room) showCellInfo(cell); else flash('먼저 위에서 내 이름을 꾹 눌러 주세요. 그다음 칸을 눌러 칠할 수 있어요.'); return false; }
     if (!canEditPerson(state.me)) { flash('다른 사람의 일정은 그 사람만 고칠 수 있어요.'); return false; }
     if (state.readOnly) { flash('보기 전용이라 칠할 수 없어요.'); return false; }
     return true;
@@ -1889,7 +1943,7 @@
       cancelTouchWait();
       touchWait = { id: e.pointerId, x: e.clientX, y: e.clientY, cell, timer: setTimeout(() => {
         const w = touchWait; touchWait = null;
-        if (!w || !canPaint()) return;
+        if (!w || !canPaint(w.cell)) return;
         startDrag(w.cell, w.id);
         drag.touch = true;
         tbody.classList.add('touchpaint');
@@ -1897,7 +1951,7 @@
       }, LONG_PRESS) };
       return;   // 기본 동작(스크롤)은 그대로
     }
-    if (!canPaint()) return;
+    if (!canPaint(cell)) return;
     e.preventDefault();
     startDrag(cell, e.pointerId);
   });
@@ -1931,7 +1985,7 @@
     // 길게 누르기 전에 뗐으면: 톡 = 한 칸 칠하기/지우기
     if (touchWait && e.pointerId === touchWait.id) {
       const w = touchWait; cancelTouchWait();
-      if (canPaint()) { startDrag(w.cell, null); endDrag(); }
+      if (canPaint(w.cell)) { startDrag(w.cell, null); endDrag(); }
       return;
     }
     endDrag();
@@ -2271,15 +2325,15 @@
   }
   async function refreshDbSched() {
     if (state.mode !== 'db' || !db) { dbSched = {}; return; }
-    const store = db, next = {};
-    await Promise.all(peopleList().map(async (p) => {
-      try {
-        const snap = await store.collection('busy').where('pid', '==', p.id).get();
-        next[p.id] = snap.docs.some((d) => { const v = d.data(); return v && isWeekKey(v.week) && Array.isArray(v.cells) && v.cells.length; });
-      } catch (e) { next[p.id] = true; }   // 확인을 못 하면 눌러 볼 수 있게 둠
-    }));
+    const store = db;
+    let next;
+    try {
+      const snap = await store.collection('busy').get();   // 사람 수와 상관없이 한 번만 읽어요
+      next = {};
+      snap.docs.forEach((d) => { const v = d.data(); if (v && isWeekKey(v.week) && Array.isArray(v.cells) && v.cells.length) next[v.pid] = true; });
+    } catch (e) { next = null; }
     if (store !== db) return;
-    dbSched = next;
+    dbSched = next || Object.fromEntries(peopleList().map((p) => [p.id, true]));   // 확인을 못 하면 눌러 볼 수 있게 둠
     if ($('peopleModal').classList.contains('open')) renderPeopleModal();
   }
 
@@ -3030,6 +3084,13 @@
     const email = idEmail(id);
     if (pw.length < 6) { msg.textContent = emailErrMsg({ code: 'weak' }); return; }
     if (acctBusy) return;
+    if (create && $(ui.pw).type === 'password') {
+      // 비밀번호는 찾을 수 없어서, 만들기 전에 눈으로 한 번 확인하게 해요
+      const eye = $(ui.pw).parentNode.querySelector('.pweye');
+      if (eye) eye.click(); else $(ui.pw).type = 'text';
+      msg.textContent = '비밀번호가 맞는지 보고, "새 아이디 만들기"를 한 번 더 눌러 주세요. 잊으면 찾을 수 없어요.';
+      return;
+    }
     ui.btns.forEach((b) => { $(b).disabled = true; });
     msg.textContent = create ? '아이디를 만드는 중…' : '로그인하는 중…';
     let r;
@@ -3037,6 +3098,7 @@
     catch (e) { msg.textContent = emailErrMsg(e && e.code ? e : emailErr(e)); ui.btns.forEach((b) => { $(b).disabled = false; }); return; }
     ui.btns.forEach((b) => { $(b).disabled = false; });
     $(ui.pw).value = ''; msg.textContent = '';
+    { const eye = $(ui.pw).parentNode.querySelector('.pweye'); if (eye && $(ui.pw).type === 'text') eye.click(); }
     if (ui.modal) closeModal(ui.modal); else hideSplash();
     await finishLogin(r);
   }
