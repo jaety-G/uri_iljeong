@@ -290,8 +290,8 @@
   .blk{position:absolute;left:4px;right:4px;border-radius:9px;box-shadow:inset 0 0 0 1px var(--lineC);pointer-events:none}
   /* 여럿이 겹친 구간: 색을 섞지 않고 흰 바탕 + 진한 테두리 + 겹친 사람 동그라미 */
   .blk.ovl{background:#F1EDE2;box-shadow:inset 0 0 0 1.5px var(--ink);padding:2px 5px;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:1px}
-  .ovlinis{display:flex;flex-wrap:wrap;row-gap:1px;padding-left:4px}
-  .ovlinis .ini{width:16px;min-width:0;padding:0;margin-left:-4px}
+  .ovlinis{display:flex;flex-wrap:wrap;gap:1px}
+  .ovlinis .ini{width:16px;min-width:0;padding:0;margin-left:0}
   .ovlinis .ini.more{background:#fff;border-color:var(--ink);font-size:9px;letter-spacing:-.6px}
   .ovltxt{max-width:100%;font-size:13px;line-height:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .day.today{background:rgba(43,43,43,.045)}
@@ -358,7 +358,9 @@
   .hint:empty{display:none}
   #status{margin-right:auto}
   #status:empty{display:none}
-  .hint.flash{color:var(--accent);font-weight:500}
+  .hint.flash{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));z-index:60;margin:0;
+       width:max-content;max-width:min(92vw,520px);padding:10px 16px;border-radius:12px;background:var(--ink);color:#fff;font-size:14px;font-weight:500;line-height:1.5;text-align:center;pointer-events:none;animation:toastIn .16s ease-out}
+  @keyframes toastIn{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}
   .foot{display:flex;justify-content:flex-end;align-items:center;gap:10px 16px;margin:10px 2px 0;font-size:13px;color:var(--muted);flex-wrap:wrap}
   .foot .acts{display:flex;gap:14px;flex-wrap:wrap}
   .linkbtn{border:none;background:none;padding:2px 0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-size:13px}
@@ -422,6 +424,8 @@
     h1{font-size:25px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .weeknav{grid-column:2;grid-row:1;gap:0}
     /* "이번 주"는 날짜 이동 칸을 밀지 않게 화면 아래에 따로 떠요 */
+    body:has(#thisWeek:not([hidden])) .hint.flash{bottom:calc(72px + env(safe-area-inset-bottom))}
+    body:has(#thisWeek:not([hidden])) .wrap{padding-bottom:calc(80px + env(safe-area-inset-bottom))}
     .thisweek{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));z-index:30;margin:0;height:40px;padding:0 20px;font-size:14px;font-weight:700;background:#FFF0B3}
     .weeklabel{font-size:14px;min-width:0;width:108px;flex:none}   /* 날짜 글자 길이가 달라도 화살표가 안 움직이게 폭 고정 */
     .seg{grid-column:1 / -1;grid-row:2;justify-self:start}   /* 주 이동 칸 폭에 눌려 글씨가 세로로 서지 않게 두 칸을 다 씀 */
@@ -446,8 +450,7 @@
     .compact .timecol span{right:3px;font-size:11px;letter-spacing:-.4px}
     .compact .blk{left:2px;right:2px;border-radius:6px}
     .compact .blk.ovl{padding:2px 3px}
-    .compact .ovlinis{padding-left:6px}
-    .compact .ovlinis .ini{width:15px;margin-left:-6px}
+    .compact .ovlinis .ini{width:15px}
     .compact .ovltxt{font-size:11.5px;line-height:14px;letter-spacing:-.3px}
     .compact .lbl{left:3px;max-width:calc(100% - 5px);padding:1px 4px 1px 1px;gap:2px;font-size:11px;line-height:15px;border-radius:7px}
     .compact .ini{min-width:15px;height:15px;font-size:10px}
@@ -1390,7 +1393,8 @@
       const mon = parseKey(state.week), sun = addDays(mon, 6);
       const left = `${mon.getMonth() + 1}월 ${mon.getDate()}일`;
       const right = mon.getMonth() === sun.getMonth() ? `${sun.getDate()}일` : `${sun.getMonth() + 1}월 ${sun.getDate()}일`;
-      $('weekLabel').textContent = `${left} – ${right}`;
+      const crossNarrow = mon.getMonth() !== sun.getMonth() && window.matchMedia('(max-width:640px)').matches;
+      $('weekLabel').textContent = crossNarrow ? `${mon.getMonth() + 1}/${mon.getDate()} – ${sun.getMonth() + 1}/${sun.getDate()}` : `${left} – ${right}`;
       atNow = state.week === thisWeekKey();
     } else if (isMonth) {
       const [y, m] = state.month.split('-').map(Number);
@@ -1600,7 +1604,7 @@
         }
         // 겹친 구간
         blk.className = 'blk ovl' + (sg.people.some((p) => p.id === state.me) ? ' mine' : '');
-        const ini = dim.ini, step = ini - dim.lap;
+        const ini = dim.ini, step = ini + 1;
         const innerW = colW - dim.side * 2 - dim.pad * 2, innerH = dim.rowH * (sg.end - sg.start) - 6 - 4;
         const perRow = Math.max(1, Math.floor((innerW - ini) / step) + 1);
         const rowsFit = Math.max(1, Math.floor((innerH + 1) / (ini + 1)));
