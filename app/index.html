@@ -79,7 +79,7 @@
   .calmore svg{width:16px;height:16px}
   .calitem:hover .calmore,.calitem.on .calmore,.calmore:focus-visible{opacity:1}
   @media (hover:none){ .calmore{opacity:1} }
-  html,body{overscroll-behavior-y:none}
+  html,body{overscroll-behavior-y:none;overscroll-behavior-x:none}
   .calmenu{position:absolute;right:2px;top:36px;z-index:20;display:flex;flex-direction:column;min-width:150px;padding:4px;background:#FFFFFF;border:1.5px solid var(--bd);border-radius:10px;font-weight:400}
   .calmenu button{border:none;background:transparent;text-align:left;padding:8px 10px;border-radius:7px;font-size:13px}
   .calmenu button:hover{background:#ECECF2}
@@ -256,16 +256,17 @@
   /* 첫 시작 */
 
   /* 칠하기 막대 */
-  .paintbar{display:flex;align-items:center;gap:8px;margin:-4px 0 12px;flex-wrap:nowrap}
+  .paintbar{display:flex;align-items:flex-start;gap:8px;margin:-4px 0 12px;flex-wrap:nowrap}
+  .paintbar .pbwho{height:30px}
   .pbwho b{display:none}
   .pbwho{display:inline-flex;align-items:center;gap:6px;font-size:14px}
   .pbwho .dot{width:14px;height:14px}
   .pblabel{font-size:13px;color:var(--muted)}
-  .paintbar .pbinput{flex:0 1 200px;min-width:120px;height:36px}
+  .paintbar .pbinput{flex:0 0 120px;width:120px;height:30px;padding:0 10px;border-radius:999px;font-size:13px}
   .pbwho{flex:none}
-  .recent{display:flex;gap:6px;flex:1 1 0;min-width:0;overflow-x:auto;padding:2px 0}
+  .recent{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1 1 0;min-width:0;padding:0}
   .rchip{flex:none}
-  .rchip{height:28px;padding:0 11px;border-radius:999px;border:1.2px solid var(--bd);background:#fff;font-size:13px;white-space:nowrap}
+  .rchip{height:30px;padding:0 12px;border-radius:999px;border:1.2px solid var(--bd);background:#fff;font-size:13px;white-space:nowrap}
   .rchip.on{background:#FFF0B3;font-weight:700}
 
   /* 표 */
@@ -374,6 +375,12 @@
   #status:empty{display:none}
   .hint.flash{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));z-index:60;margin:0;
        width:max-content;max-width:min(92vw,520px);padding:10px 16px;border-radius:12px;background:var(--ink);color:#fff;font-size:14px;font-weight:500;line-height:1.5;text-align:center;pointer-events:none;animation:toastIn .16s ease-out}
+  .snack{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));z-index:61;display:flex;align-items:center;gap:4px;
+       max-width:min(94vw,520px);padding:6px 6px 6px 16px;border-radius:999px;background:var(--ink);color:#fff;font-size:14px;font-weight:500;white-space:nowrap;animation:toastIn .16s ease-out}
+  .snack[hidden]{display:none}
+  .snack span{margin-right:6px}
+  .snack button{height:32px;padding:0 12px;border:none;border-radius:999px;background:rgba(255,255,255,.14);color:#FFE78A;font-size:13.5px;font-weight:700}
+  .snack .snackx{width:32px;padding:0;background:transparent;color:#B9B9C6;font-size:18px;font-weight:400}
   @keyframes toastIn{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}
   .foot{display:flex;justify-content:flex-end;align-items:center;gap:10px 16px;margin:10px 2px 0;font-size:13px;color:var(--muted);flex-wrap:wrap}
   .foot .acts{display:flex;gap:14px;flex-wrap:wrap}
@@ -473,7 +480,13 @@
   .calitem{border:none;border-radius:12px}
   .calitem.on{background:#fff}
   .caltag{border:none;background:#FFE78A}
-  .acct{border:none;border-radius:18px}
+  .acct{border:none;border-radius:16px;padding:8px 10px;margin-top:8px}
+  .acct .sbtn{height:34px;font-size:13px}
+  .acctdot{width:26px;height:26px;font-size:12px}
+  .acctwho b{font-size:13px}
+  .acctwho small:empty{display:none}
+  .acct .acctlinks{display:flex;gap:10px;margin-top:1px}
+  .acct .acctlinks .linkbtn{margin:0;font-size:11.5px;color:var(--muted);padding:0}
   .acctdot{border:none;background:#FFE78A}
   .calrename{border:1.5px solid var(--ink);border-radius:8px}
   /* 칠하기 줄 */
@@ -481,6 +494,7 @@
   .paintbar .tin{background:#fff}
   .paintbar .tin:focus{border-color:var(--ink)}
   .rchip.on{background:#FFE78A}
+  .rchip.rnew{background:transparent;border:1.5px dashed #CBCBD6;color:#767684}
   /* 표 */
   .thead{border-bottom:1px solid #EBEBF0}
   .day + .day{border-left:1px solid #F0F0F4}
@@ -521,8 +535,6 @@
   .hint.flash{border-radius:999px;padding:10px 18px}
   .roomcode{border:none;background:var(--soft);border-radius:16px}
   .paintbar.ghost{visibility:hidden}
-  .pbrepeat{flex:none;height:36px;border:none;border-radius:12px;background:#fff;padding:0 8px;font-size:13px;font-weight:600;color:var(--ink)}
-  .pbrepeat[hidden]{display:none}
   #pbDot.pick{cursor:pointer;width:18px;height:18px;box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--bd)}
   .lcpanel{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:-6px 0 12px;padding:10px 12px;border-radius:16px;background:#fff}
   .lcpanel[hidden]{display:none}
@@ -555,7 +567,7 @@
     h1{font-size:25px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .weeknav{grid-column:2;grid-row:1;gap:0}
     /* "이번 주"는 날짜 이동 칸을 밀지 않게 화면 아래에 따로 떠요 */
-    body:has(#thisWeek:not([hidden])) .hint.flash{bottom:calc(72px + env(safe-area-inset-bottom))}
+    body:has(#thisWeek:not([hidden])) .hint.flash,body:has(#thisWeek:not([hidden])) .snack{bottom:calc(72px + env(safe-area-inset-bottom))}
     body:has(#thisWeek:not([hidden])) .wrap{padding-bottom:calc(80px + env(safe-area-inset-bottom))}
     .thisweek{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));z-index:30;margin:0;height:40px;padding:0 20px;font-size:14px;font-weight:700;background:var(--ink);color:#fff}
     .weeklabel{font-size:14px;min-width:0;width:108px;flex:none}   /* 날짜 글자 길이가 달라도 화살표가 안 움직이게 폭 고정 */
@@ -565,7 +577,7 @@
     .menubtn{width:44px;height:44px;margin-left:-8px}
     .toolbar{margin:16px 0 12px;gap:10px}
     .timepick{padding:6px 4px 6px 12px}
-    .paintbar .pbinput{flex:0 0 132px;min-width:0}
+    .paintbar .pbinput{flex:0 0 110px;width:110px;min-width:0}
     :root{--rowH:42px;--tcol:46px}
     /* 휴대폰: 한 주를 가로 스크롤 없이 한 화면에 */
     .wrap{padding-left:calc(10px + env(safe-area-inset-left));padding-right:calc(10px + env(safe-area-inset-right))}
@@ -649,13 +661,11 @@
   <div class="callist" id="calList"></div>
   <div class="acct" id="acctBox" hidden>
     <div id="acctOut">
-      <p>로그인하면 다른 기기에서도 내 일정표를 그대로 볼 수 있어요.</p>
-      <button class="sbtn primary" id="loginBtn">로그인 · 아이디 만들기</button>
+      <button class="sbtn primary" id="loginBtn" title="로그인하면 다른 기기에서도 내 일정표를 그대로 볼 수 있어요">로그인</button>
       <button class="linkbtn acctemail" id="emailLoginBtn" hidden>아이디로 로그인</button>
     </div>
     <div id="acctIn" hidden>
-      <div class="acctrow"><span class="acctdot" id="acctDot"></span><span class="acctwho"><b id="acctName"></b><small id="acctMail"></small></span></div>
-      <div class="acctlinks"><button class="linkbtn" id="pwBtn">아이디 만들기</button><button class="linkbtn" id="logoutBtn">로그아웃</button></div>
+      <div class="acctrow"><span class="acctdot" id="acctDot"></span><span class="acctwho"><b id="acctName"></b><small id="acctMail"></small><span class="acctlinks"><button class="linkbtn" id="pwBtn">아이디 만들기</button><button class="linkbtn" id="logoutBtn">로그아웃</button></span></span></div>
     </div>
   </div>
   <button class="linkbtn sblic" id="licBtn">글꼴·자료 라이선스</button>
@@ -671,7 +681,7 @@
   <header>
     <div class="titlewrap">
       <button class="iconbtn menubtn" id="menuBtn" aria-label="일정표 목록 열기" title="일정표 목록"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5"/><path d="M7.5 3.5v13"/></svg></button>
-      <h1 id="calTitle" tabindex="0" title="눌러서 이름 바꾸기">우리 일정</h1>
+      <h1 id="calTitle" tabindex="0" title="눌러서 이름 변경">우리 일정</h1>
     </div>
     <div class="headright">
     <div class="seg" role="tablist" aria-label="보기 방식">
@@ -725,13 +735,8 @@
 
   <div class="paintbar" id="paintbar" hidden>
     <span class="pbwho"><span class="dot" id="pbDot"></span><b id="pbName"></b></span>
-    <input class="tin pbinput" id="labelInput" maxlength="12" placeholder="일정 이름 (선택)" autocomplete="off" aria-label="일정 이름">
-    <select class="pbrepeat" id="repeatSel" aria-label="반복">
-      <option value="">반복 안 함</option>
-      <option value="w">매주</option>
-      <option value="m">매월</option>
-    </select>
     <div class="recent" id="recentLabels"></div>
+    <input class="tin pbinput" id="labelInput" maxlength="12" autocomplete="off" aria-label="새 일정 이름" enterkeyhint="done" hidden>
   </div>
   <div class="lcpanel" id="lcPanel" hidden></div>
 
@@ -752,6 +757,7 @@
   </div>
 
   <p class="hint" id="hint"></p>
+  <div class="snack" id="snack" role="status" hidden><span id="snackText"></span><button type="button" id="snackW"></button><button type="button" id="snackM"></button><button type="button" class="snackx" id="snackX" aria-label="닫기">×</button></div>
   <div class="foot">
     <span id="status"></span>
   </div>
@@ -1085,7 +1091,6 @@
     label: '',                // 지금 칠하는 일정 이름
     recent: [],               // 최근 쓴 일정 이름
     labelColors: {},          // 개인 일정표: 일정 이름별 색 (이름 → 색 번호나 색 코드)
-    repeat: '',               // 칠할 때 반복: '' / 'w'(매주) / 'm'(매월) — 저장하지 않음
     hidden: new Set(),
     me: '',
     showFree: false,
@@ -1242,7 +1247,7 @@
     const m = document.createElement('div');
     m.className = 'calmenu';
     const rn = document.createElement('button');
-    rn.textContent = '이름 바꾸기';
+    rn.textContent = '이름 변경';
     rn.addEventListener('click', (e) => { e.stopPropagation(); closeCalMenu(); startRenameItem(id); });
     const del = document.createElement('button');
     del.className = 'danger';
@@ -1253,10 +1258,10 @@
       closeCalMenu(); deleteCalendar(id);
     });
     const mainBtn = document.createElement('button');
-    mainBtn.textContent = CALS.main === id ? '메인 지정 풀기' : '메인으로 지정';
+    mainBtn.textContent = CALS.main === id ? '메인 해제' : '메인';
     mainBtn.addEventListener('click', (e) => { e.stopPropagation(); closeCalMenu(); toggleMain(id); });
     const pinBtn = document.createElement('button');
-    pinBtn.textContent = c.pinnedAt ? '고정 풀기' : '맨 위에 고정';
+    pinBtn.textContent = c.pinnedAt ? '고정 해제' : '고정';
     pinBtn.addEventListener('click', (e) => { e.stopPropagation(); closeCalMenu(); togglePin(id); });
     m.append(mainBtn, pinBtn, rn, del);
     m.addEventListener('click', (e) => e.stopPropagation());
@@ -1734,12 +1739,9 @@
     $('pbDot').title = lc ? `"${state.label}" 색 바꾸기` : '';
     if (!lc) $('lcPanel').hidden = true;
     $('pbName').textContent = me.name;
-    $('repeatSel').hidden = state.routine;   // 루틴은 원래 매주(매달) 반복이라 필요 없어요
-    $('repeatSel').value = state.repeat;
-    if (document.activeElement !== $('labelInput')) $('labelInput').value = state.label;
     const mine = [];
     neededWeeks().forEach((wk) => Object.values(labelsOf(state.me, wk)).forEach((l) => mine.push(l)));
-    const list = [...new Set([...state.recent, ...mine])].slice(0, 8);
+    const list = [...new Set([...(state.label ? [state.label] : []), ...state.recent, ...mine])].slice(0, 12);
     const box = $('recentLabels');
     box.innerHTML = '';
     list.forEach((l) => {
@@ -1753,6 +1755,15 @@
       });
       box.appendChild(b);
     });
+    // 새 일정 이름: "+ 일정"을 누르면 그 자리에서 바로 적어요
+    if ($('labelInput').hidden) {
+      const add = document.createElement('button');
+      add.className = 'rchip rnew';
+      add.textContent = '+ 일정';
+      add.setAttribute('aria-label', '새 일정 이름 적기');
+      add.addEventListener('click', () => { const i = $('labelInput'); i.value = ''; i.hidden = false; renderPaintbar(); i.focus(); });
+      box.appendChild(add);
+    }
   }
 
   function renderGrid() {
@@ -2033,6 +2044,7 @@
     else h.textContent = state.routine ? `날짜 없이 요일과 시간만 저장하는 ${routineLabel(state.rweek)} 루틴이에요. 학교 시간표처럼 칠해 두세요.` : DEFAULT_HINT;
   }
   function flash(msg, ms) {
+    if ($('snack') && !$('snack').hidden) hideSnack();
     const h = $('hint');
     clearTimeout(flashTimer);
     h.textContent = msg; h.classList.add('flash');
@@ -2212,13 +2224,34 @@
       const l = d.labels.get(wk);
       if (sigOf(s, l) !== d.before.get(wk)) saveCells(wk, d.pid, [...s].sort(), l);
     }
-    if (state.repeat && !state.routine) repeatDrag(d);
+    if (!state.routine) offerRepeat(d);
     if (d.mode === 'paint' && d.label) { state.recent = [d.label, ...state.recent.filter((x) => x !== d.label)].slice(0, 8); savePrefs(); }
     renderGrid(); renderPaintbar(); renderFoot();
   }
   // 반복: 방금 칠하거나 지운 칸을 앞으로의 주(매주 26주) 또는 달(매월 12개월, 같은 주차·요일)에도 똑같이
   const REPEAT_WEEKS = 26, REPEAT_MONTHS = 12;
-  async function repeatDrag(d) {
+  // 칠하거나 지운 직후 화면 아래에 "매주 · 매월" 버튼이 잠깐 떠요. 누르면 방금 바꾼 칸을 앞으로도 똑같이.
+  let snackTimer = null;
+  function hideSnack() { clearTimeout(snackTimer); $('snack').hidden = true; }
+  function offerRepeat(d) {
+    let n = 0, erase = false;
+    for (const [wk, s] of d.sets) {
+      if (!isDateKey(wk) || !d.orig || !d.orig.has(wk)) continue;
+      const o = d.orig.get(wk), l = d.labels.get(wk);
+      s.forEach((k) => { if (!o.s.has(k) || (o.l[k] || '') !== (l[k] || '')) n++; });
+      o.s.forEach((k) => { if (!s.has(k)) { n++; erase = true; } });
+    }
+    if (!n) return;
+    $('snackText').textContent = erase && d.mode === 'erase' ? `${n}칸 지웠어요` : `${n}칸 칠했어요`;
+    $('snackW').textContent = erase && d.mode === 'erase' ? '매주 지우기' : '매주 반복';
+    $('snackM').textContent = erase && d.mode === 'erase' ? '매월 지우기' : '매월 반복';
+    $('snackW').onclick = () => { hideSnack(); repeatDrag(d, 'w'); };
+    $('snackM').onclick = () => { hideSnack(); repeatDrag(d, 'm'); };
+    clearTimeout(flashTimer); flashTimer = null; renderHint();
+    $('snack').hidden = false;
+    clearTimeout(snackTimer); snackTimer = setTimeout(hideSnack, 6000);
+  }
+  async function repeatDrag(d, mode) {
     const ops = new Map();   // 대상 주 → [{key, on, label}]
     const push = (wk, op) => { if (!ops.has(wk)) ops.set(wk, []); ops.get(wk).push(op); };
     for (const [wk, s] of d.sets) {
@@ -2229,7 +2262,7 @@
       o.s.forEach((k) => { if (!s.has(k)) changed.push({ key: k, on: false, label: '' }); });
       changed.forEach((op) => {
         const [dd] = op.key.split('-').map(Number);
-        if (state.repeat === 'w') { for (let i = 1; i <= REPEAT_WEEKS; i++) push(shiftWeek(wk, i), op); }
+        if (mode === 'w') { for (let i = 1; i <= REPEAT_WEEKS; i++) push(shiftWeek(wk, i), op); }
         else {
           const date = addDays(parseKey(wk), dd), nth = Math.ceil(date.getDate() / 7);
           for (let i = 1; i <= REPEAT_MONTHS; i++) {
@@ -2256,7 +2289,7 @@
       saveCells(wk, d.pid, [...set].sort(), labs);
     });
     renderGrid();
-    flash(state.repeat === 'w' ? `앞으로 ${REPEAT_WEEKS}주에도 똑같이 반영했어요.` : `앞으로 ${REPEAT_MONTHS}개월에도 똑같이 반영했어요.`);
+    flash(mode === 'w' ? `앞으로 ${REPEAT_WEEKS}주에도 똑같이 반영했어요.` : `앞으로 ${REPEAT_MONTHS}개월에도 똑같이 반영했어요.`);
   }
   tbody.addEventListener('pointerup', (e) => {
     // 길게 누르기 전에 뗐으면: 톡 = 한 칸 칠하기/지우기
@@ -2407,14 +2440,16 @@
   buildWheel($('wheelEnd'), 1, 24);
   $('hourStart').addEventListener('change', () => onHoursInput('start'));
   $('hourEnd').addEventListener('change', () => onHoursInput('end'));
-  $('labelInput').addEventListener('input', (e) => {
-    state.label = cleanLabel(e.target.value);
-    savePrefs(); renderHint(); renderPaintbar();
-  });
-  $('repeatSel').addEventListener('change', (e) => {
-    state.repeat = ['w', 'm'].includes(e.target.value) ? e.target.value : '';
-    if (state.repeat) flash(state.repeat === 'w' ? '이제 칠하면 앞으로 26주(6개월) 같은 요일·시간에도 칠해져요.' : '이제 칠하면 앞으로 12개월 매달 같은 주차·요일에도 칠해져요.', 4000);
-  });
+  function commitLabel() {
+    const i = $('labelInput');
+    if (i.hidden) return;
+    const v = cleanLabel(i.value);
+    i.hidden = true; i.value = '';
+    if (v) { state.label = v; state.recent = [v, ...state.recent.filter((x) => x !== v)].slice(0, 8); savePrefs(); }
+    renderPaintbar(); renderHint();
+  }
+  $('labelInput').addEventListener('blur', commitLabel);
+  $('snackX').addEventListener('click', hideSnack);
   // 일정 색 바꾸기 (개인 일정표)
   $('pbDot').addEventListener('click', () => {
     if (!useLabelColors() || !state.label) return;
@@ -2434,7 +2469,10 @@
     });
     box.hidden = false;
   });
-  $('labelInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); e.target.blur(); } });
+  $('labelInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); e.target.blur(); }
+    if (e.key === 'Escape') { e.target.value = ''; e.target.blur(); }
+  });
   // 휴대폰 ⋯ 보기 설정: 시간대·모두 빈 시간 펼치기/접기 (켜져 있으면 버튼이 노랗게)
   // ⋯ 더 보기: 아래로 펼쳐지는 작은 메뉴 (화면을 밀어내지 않아요)
   function renderOptBtn() {
@@ -2494,7 +2532,9 @@
   // 뒤로 가기로 창을 닫을 때 브라우저가 스크롤 위치를 멋대로 되돌리지 않게 (창이 열린 동안 위치는 우리가 지켜요)
   try { history.scrollRestoration = 'manual'; } catch (e) {}
   (function backCloses() {
-    if (window.Capacitor) return;   // 안드로이드 앱은 아래 App 플러그인이 맡아요
+    if (window.Capacitor) return;
+    // 아이폰·아이패드는 뒤로 가기 버튼이 없고, 화면 끝을 밀면 기록 사이를 넘나들어서(화면이 넘어가 보임) 쓰지 않아요
+    if (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return;   // 안드로이드 앱은 아래 App 플러그인이 맡아요
     const anyOpen = () => !!document.querySelector('.modal-bg.open') || $('app').classList.contains('drawer') || !$('optMenu').hidden;
     const closeAll = () => {
       document.querySelectorAll('.modal-bg.open').forEach((m) => m.classList.remove('open'));
@@ -3589,7 +3629,7 @@
     $('acctIn').hidden = !ACCOUNT; $('acctOut').hidden = !!ACCOUNT;
     $('loginBtn').disabled = $('logoutBtn').disabled = !!busyText || acctBusy;
     if (busyText) { $('loginBtn').textContent = busyText; $('logoutBtn').textContent = busyText; return; }
-    $('loginBtn').textContent = '로그인 · 아이디 만들기'; $('logoutBtn').textContent = '로그아웃';
+    $('loginBtn').textContent = '로그인'; $('logoutBtn').textContent = '로그아웃';
     $('pwBtn').textContent = ACCOUNT && ACCOUNT.hasPw ? '비밀번호 바꾸기' : '아이디 만들기';
     if (ACCOUNT) {
       $('acctName').textContent = ACCOUNT.id || ACCOUNT.name || ACCOUNT.email || '내 계정';
@@ -4167,7 +4207,7 @@
       mode: 'pending', people: {}, busy: {}, room: '', authUid: '', myUid: '', roomOwner: '', roomCreatedAt: 0, legacyRoom: false, linkCode: '', linkExp: 0, readOnly: false, saving: 0, statusNote: '', peopleLoaded: false,
       view: 'week', week: thisWeekKey(), month: monthKeyOf(new Date()), routine: false, rweek: 'RW',
       range: { start: thisWeekKey(), end: dayKey(addDays(mondayOf(new Date()), 13)) },
-      hours: { start: 9, end: 21 }, label: '', recent: [], labelColors: {}, repeat: '', hidden: new Set(), me: '', showFree: false,
+      hours: { start: 9, end: 21 }, label: '', recent: [], labelColors: {}, hidden: new Set(), me: '', showFree: false,
     });
     loadPrefs(); renderSidebar(); renderAll();
     const cal = curCal();
