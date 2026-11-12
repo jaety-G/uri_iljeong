@@ -416,7 +416,9 @@
     .titlewrap{grid-column:1;grid-row:1}
     h1{font-size:25px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .weeknav{grid-column:2;grid-row:1;gap:0}
-    .weeklabel{font-size:14px;min-width:0}
+    /* "이번 주"는 날짜 이동 칸을 밀지 않게 화면 아래에 따로 떠요 */
+    .thisweek{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));z-index:30;margin:0;height:40px;padding:0 20px;font-size:14px;font-weight:700;background:#FFF0B3}
+    .weeklabel{font-size:14px;min-width:0;width:108px;flex:none}   /* 날짜 글자 길이가 달라도 화살표가 안 움직이게 폭 고정 */
     .seg{grid-column:1 / -1;grid-row:2;justify-self:start}   /* 주 이동 칸 폭에 눌려 글씨가 세로로 서지 않게 두 칸을 다 씀 */
     .tools{grid-column:2;grid-row:2;justify-self:end}
     header:has(#rangeBox:not([hidden])) .weeknav{grid-column:1 / -1;grid-row:3;justify-self:start}
@@ -457,7 +459,7 @@
   }
   @media (max-width:360px){
     h1{font-size:21px}
-    .weeklabel{font-size:13px}
+    .weeklabel{font-size:13px;width:100px}
     .navbtn{width:38px;height:38px}
     .menubtn{width:40px;height:40px}
   }
