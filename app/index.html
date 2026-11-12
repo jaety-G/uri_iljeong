@@ -317,7 +317,7 @@
   .card.loading{position:relative}
   .card.loading::after{content:'불러오는 중…';position:absolute;inset:0;display:grid;place-items:center;background:rgba(255,255,255,.72);border-radius:inherit;font-size:14px;color:#767684;z-index:5}
   .painting .blk.mine{box-shadow:inset 0 0 0 2px var(--lineC)}
-  .painting .blk.ovl.mine{box-shadow:inset 0 0 0 3px var(--ink)}
+  .painting .blk.ovl.mine{box-shadow:inset 0 0 0 2.5px var(--ink)}
   /* 이름표: 블록 색이 진해도 읽히도록 반투명 흰 바탕 */
   .lbl{position:absolute;left:7px;max-width:calc(100% - 13px);z-index:1;display:flex;align-items:center;gap:4px;padding:1px 7px 1px 2px;
        border-radius:9px;background:rgba(255,255,255,.86);font-size:13px;line-height:17px;font-weight:500;color:var(--ink);pointer-events:none;white-space:nowrap;overflow:hidden}
@@ -507,8 +507,10 @@
   .dhead.today small,.mday.today .mnum,.dhead.today:not(:has(small)) .dn{background:#FFD95A;color:var(--ink)}
   .blk{box-shadow:none;border-radius:12px}
   .painting .blk.mine{box-shadow:inset 0 0 0 2px var(--lineC)}
-  .blk.ovl{background:#FFE27A;box-shadow:inset 0 0 0 2px var(--ink)}
-  .painting .blk.ovl.mine{box-shadow:inset 0 0 0 3px var(--ink)}
+  .blk.ovl{background:var(--stripe,#fff);box-shadow:none}
+  .blk.ovl .ovlinis{background:rgba(255,255,255,.94);border-radius:999px;padding:1px}
+  .blk.ovl .ovltxt{background:rgba(255,255,255,.94);border-radius:6px;padding:0 4px;margin-top:1px}
+  .painting .blk.ovl.mine{box-shadow:inset 0 0 0 2.5px var(--ink)}
   .ini{border:none}
   .ovlinis .ini.more{background:var(--soft)}
   .lbl{background:rgba(255,255,255,.9)}
@@ -639,8 +641,8 @@
     <h2 id="splashTitle">우리 일정</h2>
     <p>같이 비는 시간, 한눈에</p>
     <form class="splashform" id="splashForm" autocomplete="on" onsubmit="return false">
-      <input class="tin" id="splashId" type="text" placeholder="아이디" autocomplete="off" name="uid" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
-      <input spellcheck="false" autocapitalize="off" autocorrect="off" class="tin" id="splashPw" type="text" data-pw="1" placeholder="비밀번호" autocomplete="off" name="upw">
+      <input enterkeyhint="next" class="tin" id="splashId" type="text" placeholder="아이디" autocomplete="off" name="uid" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
+      <input enterkeyhint="go" spellcheck="false" autocapitalize="off" autocorrect="off" class="tin" id="splashPw" type="text" data-pw="1" placeholder="비밀번호" autocomplete="off" name="upw">
       <div class="splashmsg" id="splashMsg" role="status"></div>
       <button class="sbtn primary splashgo" id="splashLogin" type="submit">로그인</button>
       <button class="sbtn splashnew" id="splashNew" type="button">새 아이디 만들기</button>
@@ -743,8 +745,7 @@
 
   <div class="paintbar" id="paintbar" hidden>
     <span class="pbwho"><span class="dot" id="pbDot"></span><b id="pbName"></b></span>
-    <div class="recent" id="recentLabels"></div>
-    <input spellcheck="false" autocapitalize="off" autocorrect="off" class="tin pbinput" id="labelInput" maxlength="12" autocomplete="off" aria-label="새 일정 이름" enterkeyhint="done" hidden>
+    <div class="recent" id="recentLabels"><input spellcheck="false" autocapitalize="off" autocorrect="off" class="tin pbinput" id="labelInput" maxlength="12" autocomplete="off" aria-label="새 일정 이름" enterkeyhint="done" hidden></div>
   </div>
   <div class="lcpanel" id="lcPanel" hidden></div>
 
@@ -782,7 +783,7 @@
     <hr class="divider">
     <div class="prow" id="addRow">
       <span class="dot" id="newDot"></span>
-      <input spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" class="tin" id="newPerson" maxlength="10" placeholder="추가할 사람">
+      <input enterkeyhint="done" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" class="tin" id="newPerson" maxlength="10" placeholder="추가할 사람">
       <button class="sbtn primary" id="addBtn">추가</button>
     </div>
     <p class="note" id="addNote"></p>
@@ -816,8 +817,8 @@
     <h2 id="emailTitle">로그인</h2>
     <p class="sub">처음이면 쓰고 싶은 아이디와 비밀번호를 적고 "새 아이디 만들기"를 눌러 주세요. 다른 기기에서 같은 아이디로 로그인하면 일정표가 그대로 보여요.</p>
     <div class="col2">
-      <input class="tin" id="emailIn" type="text" placeholder="아이디 (영문 소문자·숫자 3~20글자)" autocomplete="off" name="uid" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
-      <input spellcheck="false" autocapitalize="off" autocorrect="off" class="tin" id="pwIn" type="text" data-pw="1" placeholder="비밀번호 (6글자 이상)" autocomplete="off" name="upw">
+      <input enterkeyhint="next" class="tin" id="emailIn" type="text" placeholder="아이디 (영문 소문자·숫자 3~20글자)" autocomplete="off" name="uid" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
+      <input enterkeyhint="go" spellcheck="false" autocapitalize="off" autocorrect="off" class="tin" id="pwIn" type="text" data-pw="1" placeholder="비밀번호 (6글자 이상)" autocomplete="off" name="upw">
     </div>
     <div class="row2"><button class="sbtn primary" id="emailGo">로그인</button><button class="sbtn" id="emailNew">새 아이디 만들기</button></div>
     <p class="note">비밀번호를 잊으면 찾을 수 없어요. 꼭 기억해 두세요.</p>
@@ -830,9 +831,9 @@
     <h2 id="pwTitle">아이디 만들기</h2>
     <p class="sub" id="pwSub"></p>
     <div class="col2">
-      <input class="tin" id="pwIdIn" type="text" placeholder="아이디 (영문 소문자·숫자 3~20글자)" autocomplete="off" name="uid" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
-      <input spellcheck="false" autocapitalize="off" autocorrect="off" class="tin" id="pwSetIn" type="text" data-pw="1" placeholder="새 비밀번호 (6글자 이상)" autocomplete="off">
-      <input spellcheck="false" autocapitalize="off" autocorrect="off" class="tin" id="pwSetIn2" type="text" data-pw="1" placeholder="새 비밀번호 한 번 더" autocomplete="off">
+      <input enterkeyhint="next" class="tin" id="pwIdIn" type="text" placeholder="아이디 (영문 소문자·숫자 3~20글자)" autocomplete="off" name="uid" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
+      <input enterkeyhint="next" spellcheck="false" autocapitalize="off" autocorrect="off" class="tin" id="pwSetIn" type="text" data-pw="1" placeholder="새 비밀번호 (6글자 이상)" autocomplete="off">
+      <input enterkeyhint="done" spellcheck="false" autocapitalize="off" autocorrect="off" class="tin" id="pwSetIn2" type="text" data-pw="1" placeholder="새 비밀번호 한 번 더" autocomplete="off">
     </div>
     <div class="row2"><button class="sbtn primary" id="pwSave">저장</button></div>
     <div class="msg" id="pwMsg"></div>
@@ -846,15 +847,15 @@
       <p class="sub">같은 방에 들어온 사람끼리 일정이 실시간으로 맞춰져요.</p>
       <strong class="sect">새 방 만들기</strong>
       <label class="flabel" for="roomTitleIn">방 이름 <small>모두에게 보여요</small></label>
-      <input spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" class="tin full" id="roomTitleIn" maxlength="20" placeholder="예: 동아리 회의">
+      <input enterkeyhint="next" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" class="tin full" id="roomTitleIn" maxlength="20" placeholder="예: 동아리 회의">
       <label class="flabel" for="myPersonIn">방에서 쓸 내 이름 <small>비우면 1번</small></label>
-      <input spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" class="tin full" id="myPersonIn" maxlength="10" placeholder="예: 재원">
+      <input enterkeyhint="done" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" class="tin full" id="myPersonIn" maxlength="10" placeholder="예: 재원">
       <p class="note" id="createNote"></p>
       <div class="row2"><button class="sbtn primary" id="createRoom">새 방 만들기</button></div>
       <hr class="divider">
       <strong class="sect">방 코드로 들어가기</strong>
       <label class="flabel" for="joinCode">받은 방 코드 <small>내 다른 기기의 연결 코드(20글자)도 넣을 수 있어요</small></label>
-      <div class="row2"><input autocorrect="off" class="tin" id="joinCode" placeholder="예: ABCD-EFGH-JKLM" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1"><button class="sbtn primary" id="joinRoom">들어가기</button></div>
+      <div class="row2"><input enterkeyhint="go" autocorrect="off" class="tin" id="joinCode" placeholder="예: ABCD-EFGH-JKLM" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1"><button class="sbtn primary" id="joinRoom">들어가기</button></div>
       <p class="note">들어가면 나는 다음 번호(2번, 3번…)가 돼요. 다른 사람 일정은 그 사람만 고칠 수 있어요.</p>
     </div>
     <div id="roomIn" hidden>
@@ -874,7 +875,7 @@
             <div class="row2"><button class="sbtn primary" id="copyLink">코드 보내기</button></div>
           </div>
         </div>
-        <div class="row2"><input autocorrect="off" class="tin" id="linkIn" placeholder="다른 기기에서 받은 20글자 코드" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1"><button class="sbtn" id="linkInBtn">연결하기</button></div>
+        <div class="row2"><input enterkeyhint="go" autocorrect="off" class="tin" id="linkIn" placeholder="다른 기기에서 받은 20글자 코드" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1"><button class="sbtn" id="linkInBtn">연결하기</button></div>
       </div>
       <hr class="divider">
       <div class="row2"><button class="sbtn danger" id="leaveRoom">방 나가기</button></div>
@@ -1269,7 +1270,7 @@
     const it = document.querySelector(`.calitem[data-id="${id}"]`);
     const c = CALS.list.find((x) => x.id === id);
     if (!it || !c) return;
-    const inp = document.createElement('input');
+    const inp = document.createElement('input'); inp.enterKeyHint = 'done'; inp.autocomplete = 'off'; inp.setAttribute('autocorrect', 'off'); inp.setAttribute('autocapitalize', 'off'); inp.spellcheck = false;
     inp.className = 'calrename'; inp.maxLength = 20; inp.value = c.name; inp.setAttribute('aria-label', '일정표 이름');
     it.querySelector('.calname').replaceWith(inp);
     inlineEdit(inp, (v) => { if (v !== null) renameCalendar(id, v); renderSidebar(); });
@@ -1278,7 +1279,7 @@
     if (IS_ARTIFACT) return;
     const h = $('calTitle'), c = curCal();
     if (h.hidden) return;
-    const inp = document.createElement('input');
+    const inp = document.createElement('input'); inp.enterKeyHint = 'done'; inp.autocomplete = 'off'; inp.setAttribute('autocorrect', 'off'); inp.setAttribute('autocapitalize', 'off'); inp.spellcheck = false;
     inp.className = 'titlerename'; inp.maxLength = 20; inp.value = c.name; inp.setAttribute('aria-label', '일정표 이름');
     h.hidden = true; h.after(inp);
     inlineEdit(inp, (v) => { if (v !== null) renameCalendar(c.id, v); inp.remove(); h.hidden = false; renderSidebar(); });
@@ -1734,8 +1735,8 @@
     if (grew) savePrefs();
     let list = state.recent.slice(0, 12);
     if (state.label && !list.includes(state.label)) list = [...list.slice(0, 11), state.label];   // 고른 일정도 자리 그대로
-    const box = $('recentLabels');
-    box.innerHTML = '';
+    const box = $('recentLabels'), inp = $('labelInput');
+    box.querySelectorAll('.rchip').forEach((x) => x.remove());   // 입력칸은 그대로 두고 칩만 다시 (적던 글이 안 날아가게)
     list.forEach((l) => {
       const b = document.createElement('button');
       b.className = 'rchip' + (l === state.label ? ' on' : '');
@@ -1745,7 +1746,7 @@
         state.label = state.label === l ? '' : l;
         savePrefs(); renderPaintbar(); renderHint();
       });
-      box.appendChild(b);
+      box.insertBefore(b, inp);
     });
     // 새 일정 이름: "+ 일정"을 누르면 그 자리에서 바로 적어요
     if ($('labelInput').hidden) {
@@ -1753,8 +1754,8 @@
       add.className = 'rchip rnew';
       add.textContent = '+ 일정';
       add.setAttribute('aria-label', '새 일정 이름 적기');
-      add.addEventListener('click', () => { const i = $('labelInput'); i.value = ''; i.hidden = false; renderPaintbar(); i.focus(); });
-      box.appendChild(add);
+      add.addEventListener('click', () => { inp.value = ''; inp.hidden = false; add.remove(); inp.focus(); });
+      box.insertBefore(add, inp);
     }
   }
 
@@ -1810,6 +1811,10 @@
         }
         // 겹친 구간
         blk.className = 'blk ovl' + (sg.people.some((p) => p.id === state.me) ? ' mine' : '');
+        // 겹친 사람들의 색으로 사선 줄무늬 (같은 일정 이름이어도 사람마다 다르게 보이게 사람 색으로)
+        const fills = sg.people.map((p) => colorOf(p.color).fill);
+        const SW = 7;
+        blk.style.setProperty('--stripe', `repeating-linear-gradient(135deg, ${fills.map((f, k) => `${f} ${k * SW}px ${(k + 1) * SW}px`).join(', ')})`);
         blk.dataset.n = sg.people.length;
         const ini = dim.ini, step = ini + 1;
         const innerW = colW - dim.side * 2 - dim.pad * 2, innerH = dim.rowH * (sg.end - sg.start) - 6 - 4;
@@ -2214,7 +2219,6 @@
       const l = d.labels.get(wk);
       if (sigOf(s, l) !== d.before.get(wk)) saveCells(wk, d.pid, [...s].sort(), l);
     }
-    if (!state.routine) offerRepeat(d);
     if (d.mode === 'paint' && d.label && !state.recent.includes(d.label)) { state.recent = [...state.recent, d.label].slice(-20); savePrefs(); }
     renderGrid(); renderPaintbar(); renderFoot();
   }
@@ -2573,7 +2577,7 @@
       const editable = canEditPerson(p.id) && !state.readOnly;
       dot.title = editable ? `${p.name} 색 바꾸기` : `${p.name}의 색은 본인만 바꿀 수 있어요`; dot.setAttribute('aria-label', `${p.name} 색 바꾸기`); dot.disabled = !editable;
       dot.addEventListener('click', () => { swatchFor = swatchFor === p.id ? '' : p.id; renderPeopleModal(); });
-      const inp = document.createElement('input'); inp.className = 'tin'; inp.maxLength = 10; inp.value = p.name; inp.setAttribute('aria-label', `${p.name} 이름`);
+      const inp = document.createElement('input'); inp.enterKeyHint = 'done'; inp.autocomplete = 'off'; inp.setAttribute('autocorrect', 'off'); inp.setAttribute('autocapitalize', 'off'); inp.spellcheck = false; inp.className = 'tin'; inp.maxLength = 10; inp.value = p.name; inp.setAttribute('aria-label', `${p.name} 이름`);
       inp.readOnly = !editable;
       if (state.room && p.id === state.myUid) inp.title = '내 이름이에요. 바꾸면 방의 모두에게 보여요.';
       const commit = () => {
@@ -3522,7 +3526,14 @@
     } catch (e) { msg.textContent = emailErrMsg(e && e.code ? e : emailErr(e)); }
     finally { $('pwSave').disabled = false; }
   });
-  $('pwSetIn').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); $('pwSave').click(); } });
+  // Enter(자판의 다음·완료 키)로 다음 칸 → 마지막 칸에서 저장
+  const enterTo = (from, fn) => { const el = $(from); if (el) el.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); fn(); } }); };
+  enterTo('pwIdIn', () => $('pwSetIn').focus());
+  enterTo('pwSetIn', () => $('pwSetIn2').focus());
+  enterTo('pwSetIn2', () => $('pwSave').click());
+  enterTo('emailIn', () => $('pwIn').focus());
+  enterTo('roomTitleIn', () => $('myPersonIn').focus());
+  enterTo('myPersonIn', () => $('createRoom').click());
   // 브라우저에서 로그인하고 돌아오면 다시 열어서 로그인 상태로
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible' || !ACCOUNT_OK || ACCOUNT || acctBusy) return;
@@ -3855,9 +3866,7 @@
   });
   $('loginBtn').addEventListener('click', doLogin);
   $('logoutBtn').addEventListener('click', () => {
-    const b = $('logoutBtn');
-    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = '정말 로그아웃'; setTimeout(() => { delete b.dataset.armed; renderAccount(); }, 3000); return; }
-    delete b.dataset.armed; doLogout();
+    doLogout();
   });
   // 앱을 열 때: 전에 로그인해 둔 기기면 계정을 확인하고 목록을 맞춰요
   async function restoreAccount() {
