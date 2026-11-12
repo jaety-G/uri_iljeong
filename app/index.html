@@ -121,6 +121,7 @@
   .seg button + button{border-left:1.5px solid var(--ink)}
   .seg button.on{background:var(--ink);color:#fff}
   .seg button[hidden]{display:none}
+  .seg button:disabled{opacity:.35;cursor:default}
   .pill.datetoggle{height:36px;border-radius:999px;padding:0 14px;font-size:13px}
   .pill.datetoggle.on{background:#FFF0B3}
   .navbtn[hidden]{display:grid;visibility:hidden}   /* 숨겨도 자리는 남겨서 날짜 칸이 움직이지 않게 */
@@ -503,8 +504,10 @@
   .dhead.today small,.mday.today .mnum,.dhead.today:not(:has(small)) .dn{background:#FFD95A;color:var(--ink)}
   .blk{box-shadow:none;border-radius:12px}
   .painting .blk.mine{box-shadow:inset 0 0 0 2px var(--lineC)}
-  .blk.ovl{background:#fff;box-shadow:inset 0 0 0 2px var(--ink)}
-  .painting .blk.ovl.mine{box-shadow:inset 0 0 0 3px var(--ink)}
+  .blk.ovl{background:var(--stripe,#fff);box-shadow:none}
+  .blk.ovl .ovlinis{background:rgba(255,255,255,.94);border-radius:999px;padding:1px}
+  .blk.ovl .ovltxt{background:rgba(255,255,255,.94);border-radius:6px;padding:0 4px;margin-top:1px}
+  .painting .blk.ovl.mine{box-shadow:inset 0 0 0 2.5px var(--ink)}
   .ini{border:none}
   .ovlinis .ini.more{background:var(--soft)}
   .lbl{background:rgba(255,255,255,.9)}
@@ -541,6 +544,13 @@
   .lctitle{flex-basis:100%;font-size:13px;font-weight:600;color:var(--muted)}
   .rdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
   .filelab.off{opacity:.4;pointer-events:none}
+  .xlgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 10px}
+  .xlbtn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:104px;border:none;border-radius:18px;background:var(--soft);font-weight:700;font-size:15px;color:var(--ink);cursor:pointer;overflow:hidden}
+  .xlbtn:hover{background:#E6E6EC}
+  .xlbtn svg{width:26px;height:26px}
+  .xlbtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .xlapply{width:100%;height:46px;margin-top:2px}
+  .xlapply[hidden]{display:none}
   .rangepick{display:flex;flex-direction:column;gap:10px}
   .rangepick label{display:flex;align-items:center;gap:12px;font-weight:600;font-size:14px}
   .rangepick .tin{flex:1;height:44px}
@@ -698,7 +708,6 @@
       <button class="thisweek" id="thisWeek" hidden>이번 주</button>
     </div>
     <div class="tools">
-      <button class="pill freebtn" id="freeToggle" aria-pressed="false" title="켜진 사람이 모두 비어 있는 시간을 보여 줘요">빈 시간</button>
       <div class="optwrap">
         <button class="pill optbtn" id="optBtn" aria-expanded="false" aria-haspopup="true" aria-label="더 보기" title="더 보기"><svg viewBox="0 0 20 20" fill="currentColor"><circle cx="4.5" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="15.5" cy="10" r="1.7"/></svg></button>
         <div class="optmenu" id="optMenu" role="menu" hidden>
@@ -905,19 +914,12 @@
 <!-- 설치 안내(아이폰) -->
 <div class="modal-bg" id="excelModal" role="dialog" aria-modal="true" aria-labelledby="excelTitle">
   <div class="modal">
-    <h2 id="excelTitle">엑셀 불러오기 · 저장</h2>
-    <p class="sub">학교·회사 시간표처럼 요일과 시간이 표로 된 엑셀을 읽어서 칠해요.</p>
-    <strong style="font-size:14px">불러오기</strong>
-    <p class="note" id="xlTarget"></p>
-    <div class="row2">
-      <span class="sbtn filelab" id="xlPick">엑셀 파일 고르기<input type="file" id="xlFile" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"></span>
-      <button class="sbtn primary" id="xlApply" hidden>넣기</button>
+    <h2 id="excelTitle">엑셀</h2>
+    <div class="xlgrid">
+      <label class="xlbtn" id="xlPick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg><span id="xlPickTxt">불러오기</span><input type="file" id="xlFile" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"></label>
+      <button class="xlbtn" id="xlSave" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg><span>저장하기</span></button>
     </div>
-    <div class="msg" id="xlMsg"></div>
-    <hr class="divider">
-    <strong style="font-size:14px">저장하기</strong>
-    <p class="note" id="xlOutNote"></p>
-    <div class="row2"><button class="sbtn" id="xlSave">엑셀 파일로 저장</button></div>
+    <button class="sbtn primary xlapply" id="xlApply" type="button" hidden></button>
     <div class="mfoot"><button class="sbtn" data-close>닫기</button></div>
   </div>
 </div>
@@ -1329,7 +1331,7 @@
       if (Array.isArray(p.hidden)) state.hidden = new Set(p.hidden.filter((x) => typeof x === 'string'));
       if (typeof p.me === 'string') state.me = p.me;
       state.meTouched = !!p.meTouched;
-      state.showFree = !!p.showFree;
+      state.showFree = false;   // "빈 시간" 버튼은 없앴어요
       if (['week', 'month', 'range'].includes(p.view)) state.view = p.view;
       state.routine = !!p.routine;
       if (isRoutineKey(p.rweek)) state.rweek = p.rweek;
@@ -1578,7 +1580,7 @@
     const rt = state.routine;
     $('routineToggle').classList.toggle('on', rt);
     $('routineToggle').setAttribute('aria-checked', rt);
-    document.querySelector('.seg button[data-view="range"]').hidden = rt;
+    { const rb = document.querySelector('.seg button[data-view="range"]'); rb.disabled = rt; rb.title = rt ? '루틴 시간표에서는 기간 보기를 쓸 수 없어요' : ''; }
     $('weekLabel').classList.toggle('pick', isRange);
     $('weekLabel').tabIndex = isRange ? 0 : -1;
     $('weekLabel').title = isRange ? '눌러서 기간 고르기' : '';
@@ -1767,9 +1769,6 @@
   }
 
   function renderGrid() {
-    const ft = $('freeToggle');
-    ft.classList.toggle('on', state.showFree);
-    ft.setAttribute('aria-pressed', state.showFree);
     if (typeof renderOptBtn === 'function') renderOptBtn();
     refreshTags();
     if (state.view === 'month') { renderMonth(); return; }
@@ -1821,6 +1820,11 @@
         }
         // 겹친 구간
         blk.className = 'blk ovl' + (sg.people.some((p) => p.id === state.me) ? ' mine' : '');
+        // 겹친 사람들의 색으로 사선 줄무늬 (색을 섞지 않고 나란히)
+        const fills = sg.people.map((p) => colorOf(p.color).fill);   // 같은 일정 이름이어도 사람마다 다르게 보이게 사람 색으로
+        const SW = 7;
+        blk.style.setProperty('--stripe', `repeating-linear-gradient(135deg, ${fills.map((f, k) => `${f} ${k * SW}px ${(k + 1) * SW}px`).join(', ')})`);
+        blk.dataset.n = sg.people.length;
         const ini = dim.ini, step = ini + 1;
         const innerW = colW - dim.side * 2 - dim.pad * 2, innerH = dim.rowH * (sg.end - sg.start) - 6 - 4;
         const perRow = Math.max(1, Math.floor((innerW - ini) / step) + 1);
@@ -2485,11 +2489,7 @@
   document.addEventListener('click', (e) => { if (!e.target.closest('.optwrap')) closeOptMenu(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOptMenu(); });
   // 메뉴 안 버튼을 누르면 메뉴는 닫혀요 (시간대 고르기는 열린 채로)
-  $('optMenu').addEventListener('click', (e) => { if (e.target.closest('.omitem')) setTimeout(closeOptMenu, 0); });
-  $('freeToggle').addEventListener('click', () => {
-    state.showFree = !state.showFree; savePrefs(); renderGrid();
-    if (state.showFree && !peopleList().some((p) => !state.hidden.has(p.id))) flash('켜진 사람이 없어요. 이름 칩을 눌러 사람을 켜 주세요.');
-  });
+  $('optMenu').addEventListener('click', (e) => { const it = e.target.closest('.omitem'); if (it && it.id !== 'routineToggle') setTimeout(closeOptMenu, 0); });
   // 이름 알약을 꾹 누르면 그 사람 일정을 칠해요 (다시 꾹 누르면 그만)
   function pickMe(p) {
     if (state.room) {
@@ -3503,14 +3503,14 @@
     if (!ACCOUNT) return;
     $('pwMsg').textContent = ''; $('pwSetIn').value = ''; $('pwSetIn2').value = ''; $('pwIdIn').value = '';
     const has = !!ACCOUNT.hasPw;
-    $('pwTitle').textContent = has ? '비밀번호 바꾸기' : '아이디 만들기';
+    $('pwTitle').textContent = has ? '비밀번호 변경' : '아이디 만들기';
     $('pwIdIn').hidden = has;
-    $('pwSub').textContent = has ? `아이디 "${ACCOUNT.id || ACCOUNT.name}"의 비밀번호를 바꿔요. 비밀번호를 잊으면 찾을 수 없으니 꼭 기억해 두세요.`
-      : '지금 일정표를 그대로 가진 채 아이디를 만들어요. 다른 기기에서는 이 아이디와 비밀번호로 로그인하면 돼요. 비밀번호를 잊으면 찾을 수 없으니 꼭 기억해 두세요.';
+    $('pwSub').textContent = has ? '' : '지금 일정표를 그대로 가진 채 아이디를 만들어요. 비밀번호를 잊으면 찾을 수 없으니 꼭 기억해 두세요.';
+    $('pwSub').hidden = has;
     openModal('pwModal');
     setTimeout(() => { try { $('pwSetIn').focus(); } catch (e) {} }, 50);
   }
-  $('pwBtn').addEventListener('click', openPwModal);
+  $('pwBtn').addEventListener('click', () => { closeDrawer(); openPwModal(); });
   $('pwSave').addEventListener('click', async () => {
     const pw = $('pwSetIn').value, msg = $('pwMsg');
     const id = cleanId($('pwIdIn').value);
@@ -3524,7 +3524,7 @@
       setAccount({ ...ACCOUNT, ...info });
       $('pwSetIn').value = ''; $('pwSetIn2').value = '';
       msg.textContent = had ? '비밀번호를 바꿨어요.' : `아이디를 만들었어요: ${id}. 다른 기기에서는 이 아이디와 비밀번호로 로그인해 주세요.`;
-      $('pwIdIn').hidden = true; $('pwTitle').textContent = '비밀번호 바꾸기';
+      $('pwIdIn').hidden = true; $('pwTitle').textContent = '비밀번호 변경';
     } catch (e) { msg.textContent = emailErrMsg(e && e.code ? e : emailErr(e)); }
     finally { $('pwSave').disabled = false; }
   });
@@ -3630,7 +3630,7 @@
     $('loginBtn').disabled = $('logoutBtn').disabled = !!busyText || acctBusy;
     if (busyText) { $('loginBtn').textContent = busyText; $('logoutBtn').textContent = busyText; return; }
     $('loginBtn').textContent = '로그인'; $('logoutBtn').textContent = '로그아웃';
-    $('pwBtn').textContent = ACCOUNT && ACCOUNT.hasPw ? '비밀번호 바꾸기' : '아이디 만들기';
+    $('pwBtn').textContent = ACCOUNT && ACCOUNT.hasPw ? '비밀번호 변경' : '아이디 만들기';
     if (ACCOUNT) {
       $('acctName').textContent = ACCOUNT.id || ACCOUNT.name || ACCOUNT.email || '내 계정';
       $('acctMail').textContent = ACCOUNT.id ? '' : ACCOUNT.hasGoogle ? (ACCOUNT.email || '구글로 로그인 중') + ' · 아이디를 만들어 두세요' : (ACCOUNT.email || '');
@@ -3783,32 +3783,33 @@
     if (state.routine) return `${routineLabel(state.rweek)} 루틴`;
     const m = parseKey(state.week); return `${m.getMonth() + 1}월 ${m.getDate()}일 주`;
   };
+  const xlCanImport = () => { const me = state.people[state.me]; return !!(me && canEditPerson(state.me) && !state.readOnly && state.mode !== 'pending'); };
   function renderExcelModal() {
-    const me = state.people[state.me];
-    const ok = me && canEditPerson(state.me) && !state.readOnly && state.mode !== 'pending';
-    $('xlTarget').textContent = ok ? `${me.name}의 ${xlWeekName()}에 넣어요. (이미 칠한 칸은 그대로 두고 더해요)` : '먼저 위에서 내 이름을 꾹 눌러 칠할 사람을 골라 주세요.';
-    $('xlPick').classList.toggle('off', !ok);
-    $('xlFile').disabled = !ok;
-    $('xlOutNote').textContent = `지금 보는 ${state.view === 'week' || state.view === 'month' ? xlWeekName() : '기간'}의 켜진 사람 일정을 요일×시간 표로 저장해요.`;
     $('xlApply').hidden = !xlPending;
+    if (xlPending) {
+      const b = entry(state.me, xlWeek()), have = new Set(b && Array.isArray(b.cells) ? b.cells : []);
+      const n = Object.keys(xlPending).filter((k) => !have.has(k)).length;   // 이미 칠한 칸은 빼고 세요
+      $('xlApply').textContent = n ? `${n}칸 넣기` : '새로 넣을 칸이 없어요';
+      $('xlApply').disabled = !n;
+    }
   }
-  $('openExcel').addEventListener('click', () => { xlPending = null; $('xlMsg').textContent = ''; renderExcelModal(); openModal('excelModal'); loadXLSX().catch(() => {}); });
+  $('openExcel').addEventListener('click', () => { xlPending = null; $('xlPickTxt').textContent = '불러오기'; renderExcelModal(); openModal('excelModal'); loadXLSX().catch(() => {}); });
+  $('xlPick').addEventListener('click', (e) => {
+    if (!xlCanImport()) { e.preventDefault(); flash('먼저 이름을 꾹 눌러 칠할 사람을 골라 주세요.'); }
+  });
   $('xlFile').addEventListener('change', async (e) => {
     const f = e.target.files && e.target.files[0]; e.target.value = '';
     if (!f) return;
-    const msg = $('xlMsg'); xlPending = null; renderExcelModal();
-    msg.textContent = '읽는 중…';
+    xlPending = null; renderExcelModal();
+    $('xlPickTxt').textContent = '읽는 중…';
     try {
       const XLSX = await loadXLSX();
       const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: false });
       const out = parseWorkbook(XLSX, wb);
-      if (!out) { msg.textContent = '요일(월·화·수…)과 시간(9:00, 9시 …)이 있는 표를 찾지 못했어요. 시간표 모양의 엑셀인지 확인해 주세요.'; return; }
-      xlPending = out;
-      const keys = Object.keys(out);
-      const names = [...new Set(Object.values(out))];
-      const days = [...new Set(keys.map((k) => Number(k.split('-')[0])))].sort().map((d) => DAYS[d]).join('·');
-      msg.textContent = `${days}요일 ${keys.length}칸을 찾았어요: ${names.slice(0, 5).join(', ')}${names.length > 5 ? ` 외 ${names.length - 5}개` : ''}. "넣기"를 누르면 칠해져요.`;
-    } catch (er) { msg.textContent = '엑셀 파일을 열지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.'; }
+      if (!out) flash('요일과 시간이 있는 시간표 모양의 엑셀이 아니에요.');
+      else xlPending = out;
+    } catch (er) { flash('엑셀 파일을 열지 못했어요. 인터넷 연결을 확인해 주세요.'); }
+    $('xlPickTxt').textContent = '불러오기';
     renderExcelModal();
   });
   $('xlApply').addEventListener('click', () => {
@@ -3853,8 +3854,7 @@
       XLSX.utils.book_append_sheet(wb, ws, '시간표');
       const name = state.routine ? `우리일정_${routineLabel(state.rweek)}루틴` : `우리일정_${state.view === 'range' ? state.range.start + '_' + state.range.end : state.week}`;
       XLSX.writeFile(wb, `${name}.xlsx`);
-      $('xlMsg').textContent = '';
-    } catch (e) { $('xlMsg').textContent = '엑셀 파일을 만들지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.'; }
+    } catch (e) { flash('엑셀 파일을 만들지 못했어요. 인터넷 연결을 확인해 주세요.'); }
     finally { btn.disabled = false; }
   });
   $('licBtn').addEventListener('click', () => { closeDrawer(); openModal('licModal'); });
