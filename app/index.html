@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <title>우리 일정</title>
 <meta name="theme-color" content="#F5F5F8">
 <meta name="color-scheme" content="light">
@@ -190,7 +190,7 @@
   .updatebar .sbtn{height:34px;display:inline-flex;align-items:center;text-decoration:none}
 
   /* 시작 화면 (로그인) */
-  .splash{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:24px;background:var(--bg);animation:splashIn .22s ease-out}
+  .splash{position:fixed;left:0;right:0;top:var(--vvt,0);height:var(--vvh,100%);z-index:90;display:grid;place-items:center;padding:24px;background:var(--bg);animation:splashIn .22s ease-out}
   .splash[hidden]{display:none}
   .splash{overflow:hidden;overscroll-behavior:none;touch-action:none}
   .splash input, .splash button{touch-action:manipulation}
@@ -210,11 +210,11 @@
   .splashbox h2{font-family:var(--disp);font-weight:700;font-size:34px;margin:0;letter-spacing:-.5px}
   .splashbox p{margin:4px 0 22px;color:var(--muted);font-size:15px}
   .splashform{width:100%;display:flex;flex-direction:column;gap:8px}
-  .splash .splashform input.tin{width:100%;height:46px;min-height:46px;padding:0 14px;font-size:16px;border-radius:12px;background:#fff;box-sizing:border-box}
+  .splash .splashform input.tin{flex:none;display:block;width:100%;height:48px;min-height:48px;margin:0;padding:0 14px;font-size:16px;line-height:48px;border-radius:12px;background:#fff;box-sizing:border-box}
   .splashmsg{min-height:18px;font-size:13px;color:var(--sun);text-align:left;line-height:1.4}
   .splashmsg:empty{min-height:0}
-  .splashgo{width:100%;height:48px;font-size:15.5px;border-radius:12px}
-  .splashnew{width:100%;height:44px;border-radius:12px}
+  .splash .sbtn.splashgo{width:100%;height:48px;font-size:15.5px;border-radius:12px}
+  .splash .sbtn.splashnew{width:100%;height:48px;border-radius:12px}
   .splashskip{margin-top:14px;font-size:14px}
   .splashbox small{margin-top:22px;color:var(--muted);font-size:12px;line-height:1.5}
   @keyframes splashIn{from{opacity:0}to{opacity:1}}
@@ -314,7 +314,7 @@
   .card.loading{position:relative}
   .card.loading::after{content:'불러오는 중…';position:absolute;inset:0;display:grid;place-items:center;background:rgba(255,255,255,.72);border-radius:inherit;font-size:14px;color:#767684;z-index:5}
   .painting .blk.mine{box-shadow:inset 0 0 0 2px var(--lineC)}
-  .painting .blk.ovl.mine{box-shadow:inset 0 0 0 2.5px var(--ink)}
+  .painting .blk.ovl.mine{box-shadow:inset 0 0 0 3px var(--ink)}
   /* 이름표: 블록 색이 진해도 읽히도록 반투명 흰 바탕 */
   .lbl{position:absolute;left:7px;max-width:calc(100% - 13px);z-index:1;display:flex;align-items:center;gap:4px;padding:1px 7px 1px 2px;
        border-radius:9px;background:rgba(255,255,255,.86);font-size:13px;line-height:17px;font-weight:500;color:var(--ink);pointer-events:none;white-space:nowrap;overflow:hidden}
@@ -389,9 +389,9 @@
   .linkbtn[hidden]{display:none}
 
   /* 대화상자 */
-  .modal-bg{position:fixed;inset:0;background:rgba(43,43,43,.28);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+  .modal-bg{position:fixed;left:0;right:0;top:var(--vvt,0);height:var(--vvh,100%);background:rgba(43,43,43,.28);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
   .modal-bg.open{display:flex}
-  .modal{background:#FFFFFF;border:1.5px solid var(--bd);border-radius:16px;width:min(440px,100%);max-height:90vh;overflow:auto;padding:22px 22px 18px}
+  .modal{background:#FFFFFF;border:1.5px solid var(--bd);border-radius:16px;width:min(440px,100%);max-height:calc(var(--vvh,100vh) - 32px);overflow:auto;padding:22px 22px 18px}
   .modal h2{font-family:var(--disp);font-weight:700;font-size:22px;margin:0 0 4px}
   .modal .sub{color:var(--muted);font-size:13px;margin:0 0 16px}
   .prow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
@@ -413,7 +413,7 @@
   .sw.custom svg{width:14px;height:14px}
   .sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
   .swnote{flex-basis:100%;font-size:12px;color:var(--muted)}
-  .tin{flex:1;min-width:0;height:40px;border:1.5px solid var(--bd);border-radius:10px;padding:0 12px;background:#fff}
+  .tin{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:40px;border:1.5px solid var(--bd);border-radius:10px;padding:0 12px;background:#fff}
   .tin:focus{outline:2px solid #F0D27A;outline-offset:0}
   .sbtn{height:40px;border:1.5px solid var(--bd);border-radius:10px;background:#fff;padding:0 14px;font-weight:700;font-size:14px;white-space:nowrap}
   .sbtn.primary{background:var(--ink);color:#fff}
@@ -504,10 +504,8 @@
   .dhead.today small,.mday.today .mnum,.dhead.today:not(:has(small)) .dn{background:#FFD95A;color:var(--ink)}
   .blk{box-shadow:none;border-radius:12px}
   .painting .blk.mine{box-shadow:inset 0 0 0 2px var(--lineC)}
-  .blk.ovl{background:var(--stripe,#fff);box-shadow:none}
-  .blk.ovl .ovlinis{background:rgba(255,255,255,.94);border-radius:999px;padding:1px}
-  .blk.ovl .ovltxt{background:rgba(255,255,255,.94);border-radius:6px;padding:0 4px;margin-top:1px}
-  .painting .blk.ovl.mine{box-shadow:inset 0 0 0 2.5px var(--ink)}
+  .blk.ovl{background:#FFE27A;box-shadow:inset 0 0 0 2px var(--ink)}
+  .painting .blk.ovl.mine{box-shadow:inset 0 0 0 3px var(--ink)}
   .ini{border:none}
   .ovlinis .ini.more{background:var(--soft)}
   .lbl{background:rgba(255,255,255,.9)}
@@ -554,12 +552,11 @@
   .rangepick{display:flex;flex-direction:column;gap:10px}
   .rangepick label{display:flex;align-items:center;gap:12px;font-weight:600;font-size:14px}
   .rangepick .tin{flex:1;height:44px}
-  .sblic{align-self:flex-start;margin:10px 6px 0;font-size:12px;color:var(--muted)}
-  .liclist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-  .liclist li{padding:10px 12px;border-radius:12px;background:var(--soft);font-size:14px}
-  .liclist small{display:block;margin-top:2px;color:var(--muted);font-size:12px}
 
   @media (max-width:640px){
+    /* 휴대폰: 창과 로그인 화면은 위쪽에 두어서 자판이 올라와도 자리가 안 바뀌게 */
+    .modal-bg{align-items:flex-start;padding-top:max(16px, 6vh)}
+    .splash{place-items:start center;padding-top:max(32px, 9vh)}
     .wrap{padding:calc(20px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(36px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
     .foot{flex-direction:column;align-items:flex-start}
     h1{font-size:26px}
@@ -639,8 +636,8 @@
     <h2 id="splashTitle">우리 일정</h2>
     <p>같이 비는 시간, 한눈에</p>
     <form class="splashform" id="splashForm" autocomplete="on" onsubmit="return false">
-      <input class="tin" id="splashId" type="text" placeholder="아이디" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
-      <input class="tin" id="splashPw" type="password" placeholder="비밀번호" autocomplete="current-password">
+      <input class="tin" id="splashId" type="text" placeholder="아이디" autocomplete="off" name="uid" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
+      <input spellcheck="false" autocapitalize="off" autocorrect="off" class="tin" id="splashPw" type="password" placeholder="비밀번호" autocomplete="off" name="upw">
       <div class="splashmsg" id="splashMsg" role="status"></div>
       <button class="sbtn primary splashgo" id="splashLogin" type="submit">로그인</button>
       <button class="sbtn splashnew" id="splashNew" type="button">새 아이디 만들기</button>
@@ -678,7 +675,6 @@
       <div class="acctrow"><span class="acctdot" id="acctDot"></span><span class="acctwho"><b id="acctName"></b><small id="acctMail"></small><span class="acctlinks"><button class="linkbtn" id="pwBtn">아이디 만들기</button><button class="linkbtn" id="logoutBtn">로그아웃</button></span></span></div>
     </div>
   </div>
-  <button class="linkbtn sblic" id="licBtn">글꼴·자료 라이선스</button>
 </aside>
 <div class="scrim" id="scrim"></div>
 <main class="mainarea">
@@ -745,7 +741,7 @@
   <div class="paintbar" id="paintbar" hidden>
     <span class="pbwho"><span class="dot" id="pbDot"></span><b id="pbName"></b></span>
     <div class="recent" id="recentLabels"></div>
-    <input class="tin pbinput" id="labelInput" maxlength="12" autocomplete="off" aria-label="새 일정 이름" enterkeyhint="done" hidden>
+    <input spellcheck="false" autocapitalize="off" autocorrect="off" class="tin pbinput" id="labelInput" maxlength="12" autocomplete="off" aria-label="새 일정 이름" enterkeyhint="done" hidden>
   </div>
   <div class="lcpanel" id="lcPanel" hidden></div>
 
@@ -783,7 +779,7 @@
     <hr class="divider">
     <div class="prow" id="addRow">
       <span class="dot" id="newDot"></span>
-      <input class="tin" id="newName" maxlength="10" placeholder="새 이름">
+      <input spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" class="tin" id="newPerson" maxlength="10" placeholder="추가할 사람">
       <button class="sbtn primary" id="addBtn">추가</button>
     </div>
     <p class="note" id="addNote"></p>
@@ -817,8 +813,8 @@
     <h2 id="emailTitle">로그인</h2>
     <p class="sub">처음이면 쓰고 싶은 아이디와 비밀번호를 적고 "새 아이디 만들기"를 눌러 주세요. 다른 기기에서 같은 아이디로 로그인하면 일정표가 그대로 보여요.</p>
     <div class="col2">
-      <input class="tin" id="emailIn" type="text" placeholder="아이디 (영문 소문자·숫자 3~20글자)" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
-      <input class="tin" id="pwIn" type="password" placeholder="비밀번호 (6글자 이상)" autocomplete="current-password">
+      <input class="tin" id="emailIn" type="text" placeholder="아이디 (영문 소문자·숫자 3~20글자)" autocomplete="off" name="uid" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
+      <input spellcheck="false" autocapitalize="off" autocorrect="off" class="tin" id="pwIn" type="password" placeholder="비밀번호 (6글자 이상)" autocomplete="off" name="upw">
     </div>
     <div class="row2"><button class="sbtn primary" id="emailGo">로그인</button><button class="sbtn" id="emailNew">새 아이디 만들기</button></div>
     <p class="note">비밀번호를 잊으면 찾을 수 없어요. 꼭 기억해 두세요.</p>
@@ -831,9 +827,9 @@
     <h2 id="pwTitle">아이디 만들기</h2>
     <p class="sub" id="pwSub"></p>
     <div class="col2">
-      <input class="tin" id="pwIdIn" type="text" placeholder="아이디 (영문 소문자·숫자 3~20글자)" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
-      <input class="tin" id="pwSetIn" type="password" placeholder="새 비밀번호 (6글자 이상)" autocomplete="new-password">
-      <input class="tin" id="pwSetIn2" type="password" placeholder="새 비밀번호 한 번 더" autocomplete="new-password">
+      <input class="tin" id="pwIdIn" type="text" placeholder="아이디 (영문 소문자·숫자 3~20글자)" autocomplete="off" name="uid" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
+      <input spellcheck="false" autocapitalize="off" autocorrect="off" class="tin" id="pwSetIn" type="password" placeholder="새 비밀번호 (6글자 이상)" autocomplete="off">
+      <input spellcheck="false" autocapitalize="off" autocorrect="off" class="tin" id="pwSetIn2" type="password" placeholder="새 비밀번호 한 번 더" autocomplete="off">
     </div>
     <div class="row2"><button class="sbtn primary" id="pwSave">저장</button></div>
     <div class="msg" id="pwMsg"></div>
@@ -846,16 +842,16 @@
     <div id="roomOut">
       <p class="sub">같은 방에 들어온 사람끼리 일정이 실시간으로 맞춰져요.</p>
       <strong class="sect">새 방 만들기</strong>
-      <label class="flabel" for="roomNameIn">방 이름 <small>모두에게 보여요</small></label>
-      <input class="tin full" id="roomNameIn" maxlength="20" placeholder="예: 동아리 회의">
-      <label class="flabel" for="myNameIn">방에서 쓸 내 이름 <small>비우면 1번</small></label>
-      <input class="tin full" id="myNameIn" maxlength="10" placeholder="예: 재원">
+      <label class="flabel" for="roomTitleIn">방 이름 <small>모두에게 보여요</small></label>
+      <input spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" class="tin full" id="roomTitleIn" maxlength="20" placeholder="예: 동아리 회의">
+      <label class="flabel" for="myPersonIn">방에서 쓸 내 이름 <small>비우면 1번</small></label>
+      <input spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" class="tin full" id="myPersonIn" maxlength="10" placeholder="예: 재원">
       <p class="note" id="createNote"></p>
       <div class="row2"><button class="sbtn primary" id="createRoom">새 방 만들기</button></div>
       <hr class="divider">
       <strong class="sect">방 코드로 들어가기</strong>
       <label class="flabel" for="joinCode">받은 방 코드 <small>내 다른 기기의 연결 코드(20글자)도 넣을 수 있어요</small></label>
-      <div class="row2"><input class="tin" id="joinCode" placeholder="예: ABCD-EFGH-JKLM" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1"><button class="sbtn primary" id="joinRoom">들어가기</button></div>
+      <div class="row2"><input autocorrect="off" class="tin" id="joinCode" placeholder="예: ABCD-EFGH-JKLM" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1"><button class="sbtn primary" id="joinRoom">들어가기</button></div>
       <p class="note">들어가면 나는 다음 번호(2번, 3번…)가 돼요. 다른 사람 일정은 그 사람만 고칠 수 있어요.</p>
     </div>
     <div id="roomIn" hidden>
@@ -875,7 +871,7 @@
             <div class="row2"><button class="sbtn primary" id="copyLink">코드 보내기</button></div>
           </div>
         </div>
-        <div class="row2"><input class="tin" id="linkIn" placeholder="다른 기기에서 받은 20글자 코드" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1"><button class="sbtn" id="linkInBtn">연결하기</button></div>
+        <div class="row2"><input autocorrect="off" class="tin" id="linkIn" placeholder="다른 기기에서 받은 20글자 코드" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1"><button class="sbtn" id="linkInBtn">연결하기</button></div>
       </div>
       <hr class="divider">
       <div class="row2"><button class="sbtn danger" id="leaveRoom">방 나가기</button></div>
@@ -932,20 +928,6 @@
       <label>끝<input class="tin" type="date" id="rangeEnd"></label>
     </div>
     <div class="mfoot"><button class="sbtn primary" data-close>확인</button></div>
-  </div>
-</div>
-<div class="modal-bg" id="licModal" role="dialog" aria-modal="true" aria-labelledby="licTitle">
-  <div class="modal">
-    <h2 id="licTitle">글꼴·자료 라이선스</h2>
-    <p class="sub">우리 일정에 쓰인 외부 글꼴과 자료예요. 모두 무료로 쓸 수 있어요.</p>
-    <ul class="liclist">
-      <li><b>Pretendard</b> 본문 글꼴<small>SIL Open Font License 1.1</small></li>
-      <li><b>IBM Plex Sans KR</b> 제목 글꼴<small>SIL Open Font License 1.1 · IBM</small></li>
-      <li><b>Firebase</b> 함께 쓰기·로그인<small>Apache License 2.0 · Google</small></li>
-      <li><b>SheetJS</b> 엑셀 불러오기<small>Apache License 2.0 · SheetJS LLC</small></li>
-      <li><b>한국 공휴일 데이터</b><small>MIT License · hyunbinseo/holidays-kr (원자료: 월력요항)</small></li>
-    </ul>
-    <div class="mfoot"><button class="sbtn" data-close>닫기</button></div>
   </div>
 </div>
 <div class="modal-bg" id="installModal" role="dialog" aria-modal="true" aria-labelledby="installTitle">
@@ -1339,7 +1321,7 @@
       const h = p.hours;
       if (h && Number.isInteger(h.start) && Number.isInteger(h.end) && h.start >= 0 && h.end <= 24 && h.end > h.start) state.hours = { start: h.start, end: h.end };
       if (p.range && isDateKey(p.range.start) && isDateKey(p.range.end)) { const r = normRange(p.range.start, p.range.end); state.range = { start: r.start, end: r.end }; }
-      if (Array.isArray(p.recent)) state.recent = p.recent.map(cleanLabel).filter(Boolean).slice(0, 8);
+      if (Array.isArray(p.recent)) state.recent = p.recent.map(cleanLabel).filter(Boolean).slice(0, 20);
       if (typeof p.label === 'string') state.label = cleanLabel(p.label);
       if (p.labelColors && typeof p.labelColors === 'object') { state.labelColors = {}; Object.entries(p.labelColors).slice(0, 200).forEach(([k, v]) => { const n = cleanLabel(k); const c = cleanColor(v); if (n && c !== null && c !== undefined) state.labelColors[n] = c; }); }
     } catch (e) { /* 저장소 없음 */ }
@@ -1743,7 +1725,12 @@
     $('pbName').textContent = me.name;
     const mine = [];
     neededWeeks().forEach((wk) => Object.values(labelsOf(state.me, wk)).forEach((l) => mine.push(l)));
-    const list = [...new Set([...(state.label ? [state.label] : []), ...state.recent, ...mine])].slice(0, 12);
+    let grew = false;
+    mine.forEach((l) => { if (!state.recent.includes(l)) { state.recent.push(l); grew = true; } });
+    if (state.recent.length > 20) state.recent = state.recent.slice(-20);
+    if (grew) savePrefs();
+    let list = state.recent.slice(0, 12);
+    if (state.label && !list.includes(state.label)) list = [...list.slice(0, 11), state.label];   // 고른 일정도 자리 그대로
     const box = $('recentLabels');
     box.innerHTML = '';
     list.forEach((l) => {
@@ -1820,10 +1807,6 @@
         }
         // 겹친 구간
         blk.className = 'blk ovl' + (sg.people.some((p) => p.id === state.me) ? ' mine' : '');
-        // 겹친 사람들의 색으로 사선 줄무늬 (색을 섞지 않고 나란히)
-        const fills = sg.people.map((p) => colorOf(p.color).fill);   // 같은 일정 이름이어도 사람마다 다르게 보이게 사람 색으로
-        const SW = 7;
-        blk.style.setProperty('--stripe', `repeating-linear-gradient(135deg, ${fills.map((f, k) => `${f} ${k * SW}px ${(k + 1) * SW}px`).join(', ')})`);
         blk.dataset.n = sg.people.length;
         const ini = dim.ini, step = ini + 1;
         const innerW = colW - dim.side * 2 - dim.pad * 2, innerH = dim.rowH * (sg.end - sg.start) - 6 - 4;
@@ -2229,7 +2212,7 @@
       if (sigOf(s, l) !== d.before.get(wk)) saveCells(wk, d.pid, [...s].sort(), l);
     }
     if (!state.routine) offerRepeat(d);
-    if (d.mode === 'paint' && d.label) { state.recent = [d.label, ...state.recent.filter((x) => x !== d.label)].slice(0, 8); savePrefs(); }
+    if (d.mode === 'paint' && d.label && !state.recent.includes(d.label)) { state.recent = [...state.recent, d.label].slice(-20); savePrefs(); }
     renderGrid(); renderPaintbar(); renderFoot();
   }
   // 반복: 방금 칠하거나 지운 칸을 앞으로의 주(매주 26주) 또는 달(매월 12개월, 같은 주차·요일)에도 똑같이
@@ -2449,7 +2432,7 @@
     if (i.hidden) return;
     const v = cleanLabel(i.value);
     i.hidden = true; i.value = '';
-    if (v) { state.label = v; state.recent = [v, ...state.recent.filter((x) => x !== v)].slice(0, 8); savePrefs(); }
+    if (v) { state.label = v; if (!state.recent.includes(v)) state.recent = [...state.recent, v].slice(-20); savePrefs(); }
     renderPaintbar(); renderHint();
   }
   $('labelInput').addEventListener('blur', commitLabel);
@@ -2528,6 +2511,13 @@
     bg.addEventListener('click', (e) => { if (e.target === bg || e.target.hasAttribute('data-close')) bg.classList.remove('open'); });
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('.modal-bg.open').forEach((m) => m.classList.remove('open')); });
+  (function keepToVisibleViewport() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const root = document.documentElement.style;
+    const upd = () => { root.setProperty('--vvh', `${vv.height}px`); root.setProperty('--vvt', `${vv.offsetTop}px`); };
+    vv.addEventListener('resize', upd); vv.addEventListener('scroll', upd); upd();
+  })();
   // 웹(안드로이드 크롬·홈 화면 앱)의 뒤로 가기: 창·메뉴·서랍이 열려 있으면 그것만 닫아요 (앱이 뒤로 빠지지 않게)
   // 뒤로 가기로 창을 닫을 때 브라우저가 스크롤 위치를 멋대로 되돌리지 않게 (창이 열린 동안 위치는 우리가 지켜요)
   try { history.scrollRestoration = 'manual'; } catch (e) {}
@@ -2637,7 +2627,7 @@
     const nc = colorOf(freeColor());
     $('newDot').style.background = full ? '#fff' : nc.fill;
     $('newDot').style.borderColor = full ? '#DADAE2' : nc.line;
-    $('newName').disabled = full || state.readOnly;
+    $('newPerson').disabled = full || state.readOnly;
     $('addBtn').disabled = full || state.readOnly;
     $('addNote').textContent = state.room ? '함께 쓰는 방에서는 친구가 방 코드로 들어오면 2번, 3번…으로 자동으로 생겨요. 각자 자기 이름·색·일정만 바꿀 수 있어요.'
       : state.readOnly ? '보기 전용이라 바꿀 수 없어요.' : '';
@@ -2689,7 +2679,7 @@
     wrap.appendChild(note);
     return wrap;
   }
-  function openPeople() { swatchFor = ''; rowMenuFor = ''; renderPeopleModal(); refreshDbSched(); openModal('peopleModal'); if (!$('newName').disabled && !peopleList().length) $('newName').focus(); }
+  function openPeople() { swatchFor = ''; rowMenuFor = ''; renderPeopleModal(); refreshDbSched(); openModal('peopleModal'); if (!$('newPerson').disabled && !peopleList().length) $('newPerson').focus(); }
   // 사람 하나 더하기. 처음 더하는 사람은 바로 "나"가 돼서 칠할 수 있어요.
   function newPersonId(name) {
     const first = !peopleList().length;
@@ -2702,15 +2692,15 @@
   }
   function addPerson() {
     if (state.room) return;   // 방에서는 각자 들어와서 자기 사람이 생겨요
-    const name = cleanName($('newName').value);
+    const name = cleanName($('newPerson').value);
     if (!name || state.readOnly) return;
     const id = newPersonId(name);
-    $('newName').value = '';
+    $('newPerson').value = '';
     renderPeopleModal(); renderAll();
-    if (!$('newName').disabled) $('newName').focus();
+    if (!$('newPerson').disabled) $('newPerson').focus();
   }
   $('addBtn').addEventListener('click', addPerson);
-  $('newName').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addPerson(); } });
+  $('newPerson').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addPerson(); } });
 
   // 한 사람의 일정을 모든 주에서 비우기.
   // 지우는 대신 "빈 일정"으로 덮어써서, 친구에게 보내는 코드·링크에도 비운 상태가 전해지고
@@ -3618,7 +3608,9 @@
       saveCals();
       await accountImpl.logout();
       await openCalendar();
-      flash(`로그아웃했어요. 내 일정표 ${kept}개는 이 기기에 사본으로 남겼어요.${rooms ? ' 함께 쓰는 방은 다시 로그인하면 돌아와요.' : ''}`);
+      closeDrawer();
+      try { sessionStorage.removeItem(SS_SPLASH); } catch (e) {}
+      maybeShowSplash();   // 처음 로그인 화면으로
     } catch (e) { flash('로그아웃하지 못했어요. 다시 해 주세요.'); }
     finally { acctBusy = false; renderAccount(); }
   }
@@ -3857,7 +3849,6 @@
     } catch (e) { flash('엑셀 파일을 만들지 못했어요. 인터넷 연결을 확인해 주세요.'); }
     finally { btn.disabled = false; }
   });
-  $('licBtn').addEventListener('click', () => { closeDrawer(); openModal('licModal'); });
   $('loginBtn').addEventListener('click', doLogin);
   $('logoutBtn').addEventListener('click', () => {
     const b = $('logoutBtn');
@@ -3910,8 +3901,8 @@
     }
     const meP = !state.room ? state.people[state.me] : null;
     if (!inRoom) {
-      $('roomNameIn').value = state.room ? '' : curCal().name;
-      $('myNameIn').value = meP ? meP.name : '';
+      $('roomTitleIn').value = state.room ? '' : curCal().name;
+      $('myPersonIn').value = meP ? meP.name : '';
     }
     $('createNote').textContent = meP
       ? `나는 1번(방장)이 되고, "${meP.name}"의 일정이 같이 올라가요.`
@@ -4011,8 +4002,8 @@
   // 새 방: 새 일정표로 방을 만들고 나는 1번 (지금 일정표는 그대로)
   $('createRoom').addEventListener('click', async () => {
     const msg = $('roomMsg');
-    const roomName = cleanCalName($('roomNameIn').value) || cleanCalName(curCal().name) || '함께 쓰는 일정';
-    const myName = cleanName($('myNameIn').value) || '1번';
+    const roomName = cleanCalName($('roomTitleIn').value) || cleanCalName(curCal().name) || '함께 쓰는 일정';
+    const myName = cleanName($('myPersonIn').value) || '1번';
     const meP = !state.room ? state.people[state.me] : null;   // 지금 일정표에서 칠하고 있는 사람
     const myRows = meP ? Object.values(state.busy).filter((b) => b.pid === state.me && Array.isArray(b.cells) && b.cells.length) : [];
     roomBusyUI(true);
