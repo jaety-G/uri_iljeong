@@ -65,7 +65,7 @@
   .sblabel{font-size:12px;color:var(--muted);padding:0 10px 6px}
   .callist .sblabel{padding:10px 10px 6px}
   .callist .sblabel:first-child{padding-top:0}
-  .callist{display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;min-height:0;padding:0 2px}
+  .callist{display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;min-height:0;padding:0 2px;overscroll-behavior:contain}
   .calitem{position:relative;display:flex;align-items:center;gap:6px;min-height:38px;padding:0 4px 0 10px;border:1.5px solid transparent;border-radius:9px;cursor:pointer;font-size:14px}
   .calitem:hover{background:rgba(43,43,43,.05)}
   .calitem.on{background:#fff;border-color:var(--ink);font-weight:700}
@@ -167,9 +167,19 @@
   .pill{height:44px;border:1.5px solid var(--bd);border-radius:10px;background:#fff;padding:0 16px;font-weight:700;font-size:14px;
         display:inline-flex;align-items:center;gap:8px}
   .pill.on{background:#FFF0B3}
-  .timepick{padding:0 6px 0 14px;gap:2px}
+  .timepick{padding:6px 6px 6px 14px;gap:2px}
   .timepick label{font-weight:700;margin-right:4px}
   .timepick select{border:none;background:transparent;font-weight:700;height:40px;padding:0 2px;cursor:pointer;outline:none}
+  /* 시간대: 위아래로 밀어서 고르는 휠 */
+  .wheels{display:flex;align-items:center;gap:6px}
+  .wheeldash{color:var(--muted);font-weight:600}
+  .wheelbox{position:relative;display:block;width:66px;height:96px;border-radius:14px;background:var(--soft);overflow:hidden}
+  .wheelbox::before{content:'';position:absolute;left:4px;right:4px;top:33px;height:30px;border-radius:9px;background:#fff;pointer-events:none}
+  .wheel{position:relative;display:block;height:100%;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;touch-action:pan-y}
+  .wheel::-webkit-scrollbar{display:none}
+  .wheel i{display:block;height:33px}
+  .wheel b{display:block;height:30px;line-height:30px;text-align:center;scroll-snap-align:center;font-size:15px;font-weight:600;color:#A8A8B4;cursor:pointer;font-style:normal}
+  .wheel b.on{color:var(--ink);font-weight:700;font-size:16px}
 
   /* 새 버전 알림 (안드로이드 앱) */
   .updatebar{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;margin:0 0 18px;padding:10px 12px 10px 16px;border:1.5px dashed var(--bd);border-radius:12px;background:#FFF0B3;font-size:14px}
@@ -246,7 +256,7 @@
   /* 첫 시작 */
   .startcard{margin:-4px 0 14px;padding:14px 16px;border:1.5px solid var(--bd);border-radius:14px;background:#FFFFFF}
   .startcard[hidden]{display:none}
-  .startcard p{margin:4px 0 0;font-size:13px;color:var(--muted);line-height:1.55}
+  .startcard p{margin:0;font-size:13px;color:var(--muted);line-height:1.55}
 
   /* 칠하기 막대 */
   .paintbar{display:flex;align-items:center;gap:8px;margin:-4px 0 12px;flex-wrap:nowrap}
@@ -558,7 +568,7 @@
     .navbtn{width:44px;height:44px}
     .menubtn{width:44px;height:44px;margin-left:-8px}
     .toolbar{margin:16px 0 12px;gap:10px}
-    .timepick{padding:0 4px 0 12px}
+    .timepick{padding:6px 4px 6px 12px}
     .paintbar .pbinput{flex:0 0 132px;min-width:0}
     :root{--rowH:42px;--tcol:46px}
     /* 휴대폰: 한 주를 가로 스크롤 없이 한 화면에 */
@@ -689,9 +699,14 @@
           <button class="omitem omroom" id="roomBtn" role="menuitem" hidden>함께 쓰기</button>
           <div class="omrow timepick" title="표에 보일 시간대">
             <label for="hourStart">시간대</label>
-            <span><select id="hourStart" aria-label="시작 시각"></select> – <select id="hourEnd" aria-label="끝 시각"></select></span>
+            <span class="wheels">
+              <span class="wheelbox"><span class="wheel" id="wheelStart" role="listbox" aria-label="시작 시각"></span></span>
+              <span class="wheeldash">–</span>
+              <span class="wheelbox"><span class="wheel" id="wheelEnd" role="listbox" aria-label="끝 시각"></span></span>
+              <select id="hourStart" aria-label="시작 시각" hidden></select><select id="hourEnd" aria-label="끝 시각" hidden></select>
+            </span>
           </div>
-          <button class="omitem" id="routineToggle" role="menuitemcheckbox" aria-checked="false"><span>루틴 시간표 <small>날짜 없이 매주 반복</small></span><i class="omsw"></i></button>
+          <button class="omitem" id="routineToggle" role="menuitemcheckbox" aria-checked="false"><span>루틴 시간표</span><i class="omsw"></i></button>
           <button class="omitem" id="copyLastWeek" hidden>지난주 내 일정 가져오기</button>
           <button class="omitem" id="weekToRoutine" hidden>보던 주를 루틴으로 가져오기</button>
           <hr>
@@ -712,7 +727,6 @@
   <p class="metip" id="meTip" hidden>이름을 <b>꾹</b> 누르면 그 사람 일정을 칠할 수 있어요.</p>
 
   <div class="startcard" id="startCard" hidden>
-    <strong>처음 오셨네요. 내 이름부터 적어 주세요.</strong>
     <p>이름을 적으면 바로 바쁜 시간을 칠할 수 있어요. 친구는 나중에 "함께 쓰기"로 초대하거나 + 버튼으로 더하면 돼요.</p>
     <div class="row2"><input class="tin" id="startName" maxlength="10" placeholder="내 이름" autocomplete="off" style="flex:0 1 220px"><button class="sbtn primary" id="startBtn">시작하기</button></div>
     <button class="linkbtn" id="startLogin" hidden>다른 기기에서 쓰던 게 있나요? 아이디로 로그인해서 불러오기</button>
@@ -1631,6 +1645,7 @@
     }
     $('hourStart').value = String(state.hours.start);
     $('hourEnd').value = String(state.hours.end);
+    if (typeof syncWheels === 'function') syncWheels();
   }
 
   // 한국 공휴일 (공공데이터 기준, 대체·임시공휴일 포함 — 2024~2027). 그 밖의 해는 날짜가 정해진 공휴일만 표시해요.
@@ -2369,6 +2384,39 @@
     state.hours = { start: s, end: e };
     savePrefs(); renderAll();
   }
+  // 시간대 휠: 위아래로 밀면 가운데 칸이 골라져요 (숨긴 select와 같이 맞춰 둬요)
+  const WHEEL_H = 30;
+  function buildWheel(el, from, to) {
+    el.innerHTML = '<i></i>' + Array.from({ length: to - from + 1 }, (_, i) => `<b data-v="${from + i}" role="option">${from + i}시</b>`).join('') + '<i></i>';
+    el.dataset.from = from;
+    let t = null;
+    el.addEventListener('scroll', () => {
+      if (el._setting) return;
+      clearTimeout(t);
+      t = setTimeout(() => {
+        const v = Number(el.dataset.from) + Math.round(el.scrollTop / WHEEL_H);
+        const sel = el.id === 'wheelStart' ? $('hourStart') : $('hourEnd');
+        if (String(v) !== sel.value) { sel.value = String(v); onHoursInput(el.id === 'wheelStart' ? 'start' : 'end'); }
+        else markWheel(el, v);
+      }, 130);
+    }, { passive: true });
+    el.addEventListener('click', (e) => { const b = e.target.closest('b'); if (b) el.scrollTo({ top: (Number(b.dataset.v) - Number(el.dataset.from)) * WHEEL_H, behavior: 'smooth' }); });
+  }
+  function markWheel(el, v) { el.querySelectorAll('b').forEach((b) => { const on = Number(b.dataset.v) === v; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); }); }
+  function setWheel(el, v) {
+    markWheel(el, v);
+    const top = (v - Number(el.dataset.from)) * WHEEL_H;
+    if (Math.abs(el.scrollTop - top) < 2) return;
+    el._setting = true; el.scrollTop = top;
+    requestAnimationFrame(() => { el._setting = false; });
+  }
+  function syncWheels() {
+    if ($('optMenu').hidden) return;
+    setWheel($('wheelStart'), state.hours.start);
+    setWheel($('wheelEnd'), state.hours.end);
+  }
+  buildWheel($('wheelStart'), 0, 23);
+  buildWheel($('wheelEnd'), 1, 24);
   $('hourStart').addEventListener('change', () => onHoursInput('start'));
   $('hourEnd').addEventListener('change', () => onHoursInput('end'));
   $('labelInput').addEventListener('input', (e) => {
@@ -2407,7 +2455,7 @@
     $('optBtn').classList.toggle('on', open);
   }
   function closeOptMenu() { if (!$('optMenu').hidden) { $('optMenu').hidden = true; renderOptBtn(); } }
-  $('optBtn').addEventListener('click', (e) => { e.stopPropagation(); $('optMenu').hidden = !$('optMenu').hidden; renderOptBtn(); });
+  $('optBtn').addEventListener('click', (e) => { e.stopPropagation(); $('optMenu').hidden = !$('optMenu').hidden; renderOptBtn(); syncWheels(); });
   document.addEventListener('click', (e) => { if (!e.target.closest('.optwrap')) closeOptMenu(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOptMenu(); });
   // 메뉴 안 버튼을 누르면 메뉴는 닫혀요 (시간대 고르기는 열린 채로)
@@ -4206,6 +4254,26 @@
   document.addEventListener('click', closeCalMenu);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeCalMenu(); closeDrawer(); } });
 
+  // 휴대폰 서랍 메뉴가 열려 있는 동안 뒤 화면이 같이 스크롤되지 않게 고정해요
+  (() => {
+    const app = $('app'), body = document.body;
+    let lockedY = null;
+    const lock = () => {
+      if (lockedY !== null) return;
+      lockedY = window.scrollY;
+      Object.assign(body.style, { position: 'fixed', top: `-${lockedY}px`, left: '0', right: '0', width: '100%' });
+    };
+    const unlock = () => {
+      if (lockedY === null) return;
+      const y = lockedY; lockedY = null;
+      Object.assign(body.style, { position: '', top: '', left: '', right: '', width: '' });
+      window.scrollTo(0, y);
+    };
+    const sync = () => (app.classList.contains('drawer') && isNarrow() ? lock() : unlock());
+    new MutationObserver(sync).observe(app, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', sync);
+    $('scrim').addEventListener('touchmove', (e) => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+  })();
   // 메뉴바를 손가락으로 밀어서 열고 닫기 (휴대폰: 왼쪽 끝에서 오른쪽으로 밀면 열리고, 왼쪽으로 밀면 닫혀요)
   (() => {
     const app = $('app'), side = document.querySelector('.sidebar'), scrim = $('scrim');
