@@ -16,15 +16,15 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard-dynamic-subset.css">
-<link rel="preload" href="fonts/Maplestory-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;600;700&display=swap">
 <style>
-  /* 제목 글꼴: 메이플스토리 서체 — 저작권은 넥슨코리아, 무료(상업적 이용 가능). 안내 전문은 fonts/LICENSE-Maplestory.txt */
-  @font-face{font-family:'Maplestory';font-weight:700;font-display:swap;src:url(fonts/Maplestory-Bold.woff2) format('woff2')}
-  @font-face{font-family:'Maplestory';font-weight:300;font-display:swap;src:url(fonts/Maplestory-Light.woff2) format('woff2')}
+  /* 글꼴: 제목 IBM Plex Sans KR, 본문 Pretendard (둘 다 SIL Open Font License 1.1, 무료·상업적 이용 가능). 라이선스 안내는 LICENSES.txt */
   :root{
     --bg:#F5F5F8; --ink:#2A2A33; --line:#F0F0F4; --muted:#767684; --bd:#E4E4EB; --soft:#EFEFF4;
     --accent:#E5534B; --sat:#3A6BC2; --sun:#D2453B; --rowH:44px; --tcol:56px;
-    --disp:'Maplestory','Pretendard',sans-serif;
+    --disp:'IBM Plex Sans KR','Pretendard',sans-serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink)}
@@ -48,9 +48,9 @@
   #roomOut[hidden],#roomIn[hidden],#deviceBox[hidden],#linkBox[hidden],#makeBox[hidden]{display:none}
 
   /* 왼쪽 메뉴바 (일정표 목록) */
-  .app{display:flex;min-height:100vh}
+  .app{display:flex;min-height:100vh;min-height:100dvh}
   .mainarea{flex:1;min-width:0}
-  .sidebar{width:252px;flex:none;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;background:#ECECF2;border-right:1.5px solid #E4E4EB;
+  .sidebar{width:252px;flex:none;position:sticky;top:0;height:100vh;height:100dvh;display:flex;flex-direction:column;background:#ECECF2;border-right:1.5px solid #E4E4EB;
            padding:calc(18px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left))}
   .app.collapsed .sidebar,.app.noside .sidebar,.app.noside .menubtn{display:none}
   .sbhead{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 16px 8px}
@@ -78,6 +78,8 @@
   .calmore{width:28px;height:28px;opacity:0}
   .calmore svg{width:16px;height:16px}
   .calitem:hover .calmore,.calitem.on .calmore,.calmore:focus-visible{opacity:1}
+  @media (hover:none){ .calmore{opacity:1} }
+  html,body{overscroll-behavior-y:none}
   .calmenu{position:absolute;right:2px;top:36px;z-index:20;display:flex;flex-direction:column;min-width:150px;padding:4px;background:#FFFFFF;border:1.5px solid var(--bd);border-radius:10px;font-weight:400}
   .calmenu button{border:none;background:transparent;text-align:left;padding:8px 10px;border-radius:7px;font-size:13px}
   .calmenu button:hover{background:#ECECF2}
@@ -109,9 +111,10 @@
   .navbtn{width:38px;height:38px;border:none;background:transparent;border-radius:50%;display:grid;place-items:center}
   .navbtn:hover{background:#EBEBF0}
   .navbtn svg{width:18px;height:18px}
-  .weeklabel{font-weight:700;font-size:16px;min-width:140px;text-align:center;white-space:nowrap}
+  .weeklabel{font-weight:700;font-size:16px;width:176px;height:26px;line-height:26px;flex:none;text-align:center;white-space:nowrap;border:none;background:none;padding:0;color:inherit;cursor:default;overflow:hidden;text-overflow:ellipsis}
+  .weeklabel.pick{cursor:pointer;text-decoration:underline dotted 1.5px;text-underline-offset:5px}
   .thisweek{border:1.5px solid var(--bd);background:#fff;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:500;margin-left:6px}
-  .thisweek[hidden]{display:none}
+  .thisweek[hidden]{visibility:hidden}
   .headright{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap}
   .seg{display:inline-flex;border:1.5px solid var(--bd);border-radius:999px;overflow:hidden;background:#fff}
   .seg button{border:none;background:transparent;padding:7px 15px;font-size:14px;font-weight:700;white-space:nowrap}
@@ -120,10 +123,10 @@
   .seg button[hidden]{display:none}
   .pill.datetoggle{height:36px;border-radius:999px;padding:0 14px;font-size:13px}
   .pill.datetoggle.on{background:#FFF0B3}
-  .navbtn[hidden]{display:none}
+  .navbtn[hidden]{display:grid;visibility:hidden}   /* 숨겨도 자리는 남겨서 날짜 칸이 움직이지 않게 */
   .rangebox{display:inline-flex;align-items:center;gap:6px;font-weight:700}
 
-  .rangebox[hidden],.card[hidden],.paintbar[hidden],.weeklabel[hidden]{display:none}
+  .card[hidden],.paintbar[hidden],.weeklabel[hidden]{display:none}
 
   /* 칩 줄 */
   .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 16px;flex-wrap:wrap}
@@ -260,7 +263,7 @@
 
   /* 표 */
   .card{background:#fff;border:1.5px solid var(--bd);border-radius:16px;padding:6px 8px 14px;isolation:isolate}
-  .scroller{overflow:auto;-webkit-overflow-scrolling:touch;max-height:max(420px, calc(100vh - 96px));overscroll-behavior:contain}
+  .scroller{overflow:auto;-webkit-overflow-scrolling:touch;max-height:max(420px, calc(100vh - 96px));max-height:max(420px, calc(100dvh - 96px));overscroll-behavior:contain}
   .scroller.snap{scroll-snap-type:x mandatory;scroll-padding-left:32px}
   .scroller.snap .day{scroll-snap-align:start}
   .pager{display:flex;justify-content:center;align-items:center;gap:8px;padding:6px 0 4px;border-bottom:1px dashed #E4E4EB}
@@ -511,6 +514,22 @@
   /* 알림 */
   .hint.flash{border-radius:999px;padding:10px 18px}
   .roomcode{border:none;background:var(--soft);border-radius:16px}
+  .paintbar.ghost{visibility:hidden}
+  .pbrepeat{flex:none;height:36px;border:none;border-radius:12px;background:#fff;padding:0 8px;font-size:13px;font-weight:600;color:var(--ink)}
+  .pbrepeat[hidden]{display:none}
+  #pbDot.pick{cursor:pointer;width:18px;height:18px;box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--bd)}
+  .lcpanel{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:-6px 0 12px;padding:10px 12px;border-radius:16px;background:#fff}
+  .lcpanel[hidden]{display:none}
+  .lctitle{flex-basis:100%;font-size:13px;font-weight:600;color:var(--muted)}
+  .rdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
+  .filelab.off{opacity:.4;pointer-events:none}
+  .rangepick{display:flex;flex-direction:column;gap:10px}
+  .rangepick label{display:flex;align-items:center;gap:12px;font-weight:600;font-size:14px}
+  .rangepick .tin{flex:1;height:44px}
+  .sblic{align-self:flex-start;margin:10px 6px 0;font-size:12px;color:var(--muted)}
+  .liclist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .liclist li{padding:10px 12px;border-radius:12px;background:var(--soft);font-size:14px}
+  .liclist small{display:block;margin-top:2px;color:var(--muted);font-size:12px}
 
   @media (max-width:640px){
     .wrap{padding:calc(20px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(36px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
@@ -532,11 +551,10 @@
     /* "이번 주"는 날짜 이동 칸을 밀지 않게 화면 아래에 따로 떠요 */
     body:has(#thisWeek:not([hidden])) .hint.flash{bottom:calc(72px + env(safe-area-inset-bottom))}
     body:has(#thisWeek:not([hidden])) .wrap{padding-bottom:calc(80px + env(safe-area-inset-bottom))}
-    .thisweek{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));z-index:30;margin:0;height:40px;padding:0 20px;font-size:14px;font-weight:700;background:#FFF0B3}
+    .thisweek{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));z-index:30;margin:0;height:40px;padding:0 20px;font-size:14px;font-weight:700;background:var(--ink);color:#fff}
     .weeklabel{font-size:14px;min-width:0;width:108px;flex:none}   /* 날짜 글자 길이가 달라도 화살표가 안 움직이게 폭 고정 */
     .seg{grid-column:1 / -1;grid-row:2;justify-self:start}   /* 주 이동 칸 폭에 눌려 글씨가 세로로 서지 않게 두 칸을 다 씀 */
     .tools{grid-column:2;grid-row:2;justify-self:end}
-    header:has(#rangeBox:not([hidden])) .weeknav{grid-column:1 / -1;grid-row:3;justify-self:start}
     .navbtn{width:44px;height:44px}
     .menubtn{width:44px;height:44px;margin-left:-8px}
     .toolbar{margin:16px 0 12px;gap:10px}
@@ -621,19 +639,20 @@
     <span class="sbtitle" aria-label="우리 일정"><svg class="sblogo" viewBox="0 0 120 84" aria-hidden="true"><circle cx="38" cy="52" r="26" fill="#F2A385" stroke="#2B2B2B" stroke-width="3" style="mix-blend-mode:multiply"/><circle cx="82" cy="52" r="26" fill="#93CFC3" stroke="#2B2B2B" stroke-width="3" style="mix-blend-mode:multiply"/><circle cx="60" cy="30" r="23" fill="#C9E37A" stroke="#2B2B2B" stroke-width="3"/><path d="M52.5 28v1M67.5 28v1M55 35.5q5 4 10 0" fill="none" stroke="#2B2B2B" stroke-width="3.2" stroke-linecap="round"/></svg></span>
     <button class="iconbtn" id="sideClose" aria-label="메뉴 닫기" title="메뉴 닫기"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5"/><path d="M7.5 3.5v13"/></svg></button>
   </div>
-  <button class="newcal" id="newCal"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>새로 만들기</button>
+  <button class="newcal" id="newCal"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>새 일정표</button>
   <div class="callist" id="calList"></div>
   <div class="acct" id="acctBox" hidden>
     <div id="acctOut">
-      <p>아이디로 로그인하면 다른 기기에서도 내 일정표가 그대로 보여요.</p>
+      <p>로그인하면 다른 기기에서도 내 일정표를 그대로 볼 수 있어요.</p>
       <button class="sbtn primary" id="loginBtn">로그인 · 아이디 만들기</button>
-      <button class="linkbtn acctemail" id="emailLoginBtn" hidden>이메일로 로그인</button>
+      <button class="linkbtn acctemail" id="emailLoginBtn" hidden>아이디로 로그인</button>
     </div>
     <div id="acctIn" hidden>
       <div class="acctrow"><span class="acctdot" id="acctDot"></span><span class="acctwho"><b id="acctName"></b><small id="acctMail"></small></span></div>
       <div class="acctlinks"><button class="linkbtn" id="pwBtn">아이디 만들기</button><button class="linkbtn" id="logoutBtn">로그아웃</button></div>
     </div>
   </div>
+  <button class="linkbtn sblic" id="licBtn">글꼴·자료 라이선스</button>
 </aside>
 <div class="scrim" id="scrim"></div>
 <main class="mainarea">
@@ -653,20 +672,17 @@
       <button data-view="week" role="tab">주간</button><button data-view="month" role="tab">월간</button><button data-view="range" role="tab">기간</button>
     </div>
     <div class="weeknav">
-      <button class="navbtn" id="prevWeek" aria-label="지난 주">
+      <button class="navbtn" id="prevWeek" aria-label="지난주">
         <svg viewBox="0 0 20 20" fill="none" stroke="#2B2B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4.5 7 10l5.5 5.5"/></svg>
       </button>
-      <span class="weeklabel" id="weekLabel"></span>
-      <span class="rangebox" id="rangeBox" hidden>
-        <label class="datebtn"><span id="rangeStartTxt"></span><input type="date" id="rangeStart" aria-label="시작 날짜"></label><span>~</span><label class="datebtn"><span id="rangeEndTxt"></span><input type="date" id="rangeEnd" aria-label="끝 날짜"></label>
-      </span>
+      <button type="button" class="weeklabel" id="weekLabel" tabindex="-1"></button>
       <button class="navbtn" id="nextWeek" aria-label="다음 주">
         <svg viewBox="0 0 20 20" fill="none" stroke="#2B2B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5 13 10l-5.5 5.5"/></svg>
       </button>
       <button class="thisweek" id="thisWeek" hidden>이번 주</button>
     </div>
     <div class="tools">
-      <button class="pill freebtn" id="freeToggle" aria-pressed="false" title="모두 비어 있는 시간을 노란 빗금으로 보여 줘요">빈 시간</button>
+      <button class="pill freebtn" id="freeToggle" aria-pressed="false" title="켜진 사람이 모두 비어 있는 시간을 보여 줘요">빈 시간</button>
       <div class="optwrap">
         <button class="pill optbtn" id="optBtn" aria-expanded="false" aria-haspopup="true" aria-label="더 보기" title="더 보기"><svg viewBox="0 0 20 20" fill="currentColor"><circle cx="4.5" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="15.5" cy="10" r="1.7"/></svg></button>
         <div class="optmenu" id="optMenu" role="menu" hidden>
@@ -679,7 +695,8 @@
           <button class="omitem" id="copyLastWeek" hidden>지난주 내 일정 가져오기</button>
           <button class="omitem" id="weekToRoutine" hidden>보던 주를 루틴으로 가져오기</button>
           <hr>
-          <button class="omitem" id="shareLink">링크로 한 번 보내기</button>
+          <button class="omitem" id="shareLink">링크 공유</button>
+          <button class="omitem" id="openExcel">엑셀 불러오기 · 저장</button>
           <button class="omitem" id="openShare">받은 링크 붙여넣기 · 백업</button>
           <button class="omitem" id="installBtn" hidden>앱으로 설치</button>
         </div>
@@ -696,7 +713,7 @@
 
   <div class="startcard" id="startCard" hidden>
     <strong>처음 오셨네요. 내 이름부터 적어 주세요.</strong>
-    <p>이름을 적으면 바로 내 바쁜 시간을 칠할 수 있어요. 친구는 나중에 "함께 쓰기"로 초대하거나 + 버튼으로 더하면 돼요.</p>
+    <p>이름을 적으면 바로 바쁜 시간을 칠할 수 있어요. 친구는 나중에 "함께 쓰기"로 초대하거나 + 버튼으로 더하면 돼요.</p>
     <div class="row2"><input class="tin" id="startName" maxlength="10" placeholder="내 이름" autocomplete="off" style="flex:0 1 220px"><button class="sbtn primary" id="startBtn">시작하기</button></div>
     <button class="linkbtn" id="startLogin" hidden>다른 기기에서 쓰던 게 있나요? 아이디로 로그인해서 불러오기</button>
   </div>
@@ -704,8 +721,14 @@
   <div class="paintbar" id="paintbar" hidden>
     <span class="pbwho"><span class="dot" id="pbDot"></span><b id="pbName"></b></span>
     <input class="tin pbinput" id="labelInput" maxlength="12" placeholder="일정 이름 (선택)" autocomplete="off" aria-label="일정 이름">
+    <select class="pbrepeat" id="repeatSel" aria-label="반복">
+      <option value="">반복 안 함</option>
+      <option value="w">매주</option>
+      <option value="m">매월</option>
+    </select>
     <div class="recent" id="recentLabels"></div>
   </div>
+  <div class="lcpanel" id="lcPanel" hidden></div>
 
   <div class="card" id="tableCard">
     <div class="pager" id="pager" hidden></div>
@@ -753,15 +776,15 @@
   <div class="modal">
     <h2 id="shareTitle">받은 링크 붙여넣기 · 백업</h2>
     <p class="sub" id="shareSub"></p>
-    <strong style="font-size:14px">받은 링크나 JSON 붙여넣기</strong>
-    <textarea class="tin" id="importText" placeholder="카톡에서 받은 링크를 길게 눌러 복사한 뒤 여기에 붙여 넣으세요" style="margin-top:6px"></textarea>
+    <strong style="font-size:14px">받은 링크나 백업 붙여넣기</strong>
+    <textarea class="tin" id="importText" placeholder="받은 링크를 길게 눌러 복사한 뒤 여기에 붙여 넣어 주세요" style="margin-top:6px"></textarea>
     <div class="row2">
       <button class="sbtn primary" id="importBtn">합치기</button>
       <span class="sbtn filelab">파일에서 고르기<input type="file" id="importFile" accept=".json,application/json,text/plain"></span>
     </div>
     <div class="msg" id="shareMsg"></div>
     <hr class="divider">
-    <strong style="font-size:14px">전체 백업 (JSON)</strong>
+    <strong style="font-size:14px">백업 (지금 일정표 전체)</strong>
     <textarea class="tin" id="exportText" readonly style="margin-top:6px"></textarea>
     <div class="row2"><button class="sbtn" id="copyBtn">복사하기</button></div>
     <div class="mfoot"><button class="sbtn" data-close>닫기</button></div>
@@ -772,7 +795,7 @@
 <div class="modal-bg" id="emailModal" role="dialog" aria-modal="true" aria-labelledby="emailTitle">
   <div class="modal">
     <h2 id="emailTitle">로그인</h2>
-    <p class="sub">처음이면 원하는 아이디와 비밀번호를 적고 "새 아이디 만들기"를 눌러 주세요. 다른 기기에서도 같은 아이디로 로그인하면 일정표가 그대로 보여요.</p>
+    <p class="sub">처음이면 쓰고 싶은 아이디와 비밀번호를 적고 "새 아이디 만들기"를 눌러 주세요. 다른 기기에서 같은 아이디로 로그인하면 일정표가 그대로 보여요.</p>
     <div class="col2">
       <input class="tin" id="emailIn" type="text" placeholder="아이디 (영문 소문자·숫자 3~20글자)" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
       <input class="tin" id="pwIn" type="password" placeholder="비밀번호 (6글자 이상)" autocomplete="current-password">
@@ -790,6 +813,7 @@
     <div class="col2">
       <input class="tin" id="pwIdIn" type="text" placeholder="아이디 (영문 소문자·숫자 3~20글자)" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20">
       <input class="tin" id="pwSetIn" type="password" placeholder="새 비밀번호 (6글자 이상)" autocomplete="new-password">
+      <input class="tin" id="pwSetIn2" type="password" placeholder="새 비밀번호 한 번 더" autocomplete="new-password">
     </div>
     <div class="row2"><button class="sbtn primary" id="pwSave">저장</button></div>
     <div class="msg" id="pwMsg"></div>
@@ -810,7 +834,7 @@
       <div class="row2"><button class="sbtn primary" id="createRoom">새 방 만들기</button></div>
       <hr class="divider">
       <strong class="sect">방 코드로 들어가기</strong>
-      <label class="flabel" for="joinCode">받은 방 코드 <small>내 다른 기기의 20글자 연결 코드도 돼요</small></label>
+      <label class="flabel" for="joinCode">받은 방 코드 <small>내 다른 기기의 연결 코드(20글자)도 넣을 수 있어요</small></label>
       <div class="row2"><input class="tin" id="joinCode" placeholder="예: ABCD-EFGH-JKLM" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1"><button class="sbtn primary" id="joinRoom">들어가기</button></div>
       <p class="note">들어가면 나는 다음 번호(2번, 3번…)가 돼요. 다른 사람 일정은 그 사람만 고칠 수 있어요.</p>
     </div>
@@ -818,7 +842,7 @@
       <p class="sub">이 방에 들어온 사람끼리 일정이 실시간으로 맞춰지고 있어요.</p>
       <div class="roomcode" id="roomCode"></div>
       <div class="row2"><button class="sbtn primary" id="copyInvite">친구 초대하기</button></div>
-      <p class="note">친구는 앱 아래 "함께 쓰기 → 방 코드로 들어가기"에 이 코드를 넣으면 돼요.</p>
+      <p class="note">친구는 ⋯ 메뉴의 "함께 쓰기"에서 이 코드를 넣으면 들어올 수 있어요.</p>
       <div id="deviceBox">
         <hr class="divider">
         <strong style="font-size:14px">내 다른 기기 연결</strong>
@@ -858,8 +882,8 @@
 <!-- 링크 보내기(공유 시트가 없을 때) -->
 <div class="modal-bg" id="linkOutModal" role="dialog" aria-modal="true" aria-labelledby="linkOutTitle">
   <div class="modal">
-    <h2 id="linkOutTitle">링크로 한 번 보내기</h2>
-    <p class="sub" id="linkOutSub">이 링크를 친구에게 보내 주세요. 친구가 "우리 일정"에서 열면 지금 내 화면의 사람과 일정이 친구 쪽에 합쳐져요.</p>
+    <h2 id="linkOutTitle">링크 공유</h2>
+    <p class="sub" id="linkOutSub">이 링크를 친구에게 보내 주세요. 친구가 열면 지금 보이는 사람과 일정이 친구의 일정표에 합쳐져요.</p>
     <textarea class="tin" id="linkOutText" readonly></textarea>
     <div class="row2"><button class="sbtn primary" id="linkOutCopy">복사하기</button></div>
     <div class="msg" id="linkOutMsg"></div>
@@ -868,6 +892,49 @@
 </div>
 
 <!-- 설치 안내(아이폰) -->
+<div class="modal-bg" id="excelModal" role="dialog" aria-modal="true" aria-labelledby="excelTitle">
+  <div class="modal">
+    <h2 id="excelTitle">엑셀 불러오기 · 저장</h2>
+    <p class="sub">학교·회사 시간표처럼 요일과 시간이 표로 된 엑셀을 읽어서 칠해요.</p>
+    <strong style="font-size:14px">불러오기</strong>
+    <p class="note" id="xlTarget"></p>
+    <div class="row2">
+      <span class="sbtn filelab" id="xlPick">엑셀 파일 고르기<input type="file" id="xlFile" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"></span>
+      <button class="sbtn primary" id="xlApply" hidden>넣기</button>
+    </div>
+    <div class="msg" id="xlMsg"></div>
+    <hr class="divider">
+    <strong style="font-size:14px">저장하기</strong>
+    <p class="note" id="xlOutNote"></p>
+    <div class="row2"><button class="sbtn" id="xlSave">엑셀 파일로 저장</button></div>
+    <div class="mfoot"><button class="sbtn" data-close>닫기</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="rangeModal" role="dialog" aria-modal="true" aria-labelledby="rangeTitle">
+  <div class="modal">
+    <h2 id="rangeTitle">기간 고르기</h2>
+    <p class="sub">최대 31일까지 볼 수 있어요.</p>
+    <div class="rangepick">
+      <label>시작<input class="tin" type="date" id="rangeStart"></label>
+      <label>끝<input class="tin" type="date" id="rangeEnd"></label>
+    </div>
+    <div class="mfoot"><button class="sbtn primary" data-close>확인</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="licModal" role="dialog" aria-modal="true" aria-labelledby="licTitle">
+  <div class="modal">
+    <h2 id="licTitle">글꼴·자료 라이선스</h2>
+    <p class="sub">우리 일정에 쓰인 외부 글꼴과 자료예요. 모두 무료로 쓸 수 있어요.</p>
+    <ul class="liclist">
+      <li><b>Pretendard</b> 본문 글꼴<small>SIL Open Font License 1.1</small></li>
+      <li><b>IBM Plex Sans KR</b> 제목 글꼴<small>SIL Open Font License 1.1 · IBM</small></li>
+      <li><b>Firebase</b> 함께 쓰기·로그인<small>Apache License 2.0 · Google</small></li>
+      <li><b>SheetJS</b> 엑셀 불러오기<small>Apache License 2.0 · SheetJS LLC</small></li>
+      <li><b>한국 공휴일 데이터</b><small>MIT License · hyunbinseo/holidays-kr (원자료: 월력요항)</small></li>
+    </ul>
+    <div class="mfoot"><button class="sbtn" data-close>닫기</button></div>
+  </div>
+</div>
 <div class="modal-bg" id="installModal" role="dialog" aria-modal="true" aria-labelledby="installTitle">
   <div class="modal">
     <div id="installIOS">
@@ -958,7 +1025,7 @@
   const IS_WEB = /^https?:$/.test(location.protocol) && !IS_NATIVE;
   const IS_ARTIFACT = !!(window.claude && typeof window.claude.use === 'function');   // claude.ai 안에서 열림
   const LEGACY_NOTE = '이 방은 예전 방식으로 만들어져서 더 이상 고칠 수 없어요. "함께 쓰기"에서 새 방을 만들어 주세요.';
-  const DEFAULT_HINT = '이름을 눌러 일정을 겹쳐 보세요. 색이 겹쳐 진해진 곳은 여러 명이 바쁜 시간이고, 아무 색도 없는 칸은 고른 사람 모두 비어 있는 시간이에요.';
+  const DEFAULT_HINT = '이름을 눌러 일정을 겹쳐 보세요. 테두리가 있는 칸은 여러 명이 바쁜 시간이고, 빈칸은 모두 비어 있는 시간이에요.';
 
   const $ = (id) => document.getElementById(id);
   const pad = (n) => String(n).padStart(2, '0');
@@ -1012,6 +1079,8 @@
     rweek: 'RW',              // 루틴에서 보고 있는 주: RW(매주) 또는 RM1~RM5(매달 n주차)
     label: '',                // 지금 칠하는 일정 이름
     recent: [],               // 최근 쓴 일정 이름
+    labelColors: {},          // 개인 일정표: 일정 이름별 색 (이름 → 색 번호나 색 코드)
+    repeat: '',               // 칠할 때 반복: '' / 'w'(매주) / 'm'(매월) — 저장하지 않음
     hidden: new Set(),
     me: '',
     showFree: false,
@@ -1084,14 +1153,14 @@
     if (!c) return;
     c.pinnedAt = c.pinnedAt ? 0 : Date.now();
     saveCals(); renderSidebar();
-    flash(c.pinnedAt ? `"${c.name}"을(를) 맨 위에 고정했어요.` : `"${c.name}" 고정을 풀었어요.`);
+    flash(c.pinnedAt ? `"${c.name}" 일정표를 맨 위에 고정했어요.` : `"${c.name}" 고정을 풀었어요.`);
   }
   function toggleMain(id) {
     const c = CALS.list.find((x) => x.id === id);
     if (!c) return;
     CALS.main = CALS.main === id ? '' : id;
     saveCals(); renderSidebar();
-    flash(CALS.main ? `"${c.name}"을(를) 메인 일정표로 정했어요. 앱을 열면 이 일정표가 먼저 보여요.` : '메인 일정표를 풀었어요. 앱을 열면 마지막에 보던 일정표가 보여요.');
+    flash(CALS.main ? `"${c.name}" 일정표를 메인으로 정했어요. 앱을 열면 이 일정표가 먼저 보여요.` : '메인 일정표를 풀었어요. 앱을 열면 마지막에 보던 일정표가 보여요.');
   }
   function renameCalendar(id, name) {
     const n = cleanCalName(name), c = CALS.list.find((x) => x.id === id);
@@ -1260,6 +1329,7 @@
       if (p.range && isDateKey(p.range.start) && isDateKey(p.range.end)) { const r = normRange(p.range.start, p.range.end); state.range = { start: r.start, end: r.end }; }
       if (Array.isArray(p.recent)) state.recent = p.recent.map(cleanLabel).filter(Boolean).slice(0, 8);
       if (typeof p.label === 'string') state.label = cleanLabel(p.label);
+      if (p.labelColors && typeof p.labelColors === 'object') { state.labelColors = {}; Object.entries(p.labelColors).slice(0, 200).forEach(([k, v]) => { const n = cleanLabel(k); const c = cleanColor(v); if (n && c !== null && c !== undefined) state.labelColors[n] = c; }); }
     } catch (e) { /* 저장소 없음 */ }
   }
   function savePrefs() {
@@ -1267,7 +1337,7 @@
       localStorage.setItem(prefKey(), JSON.stringify({
         hidden: [...state.hidden], me: state.me, meTouched: !!state.meTouched, showFree: state.showFree,
         view: state.view, hours: state.hours, range: { start: state.range.start, end: state.range.end },
-        recent: state.recent, label: state.label, routine: state.routine, rweek: state.rweek,
+        recent: state.recent, label: state.label, routine: state.routine, rweek: state.rweek, labelColors: state.labelColors,
       }));
     } catch (e) {}
   }
@@ -1320,6 +1390,21 @@
     return ('#' + f(0) + f(8) + f(4)).toUpperCase();
   }
   const BASE_PALETTE = [0, 1, 2, 3, 4, ...EXTRA_COLORS];
+  // 개인 일정표(함께 쓰기 방이 아닌 곳)에서는 일정 이름마다 색을 따로 써요. 처음 보는 이름은 안 쓴 색부터 자동으로.
+  const useLabelColors = () => !state.room;
+  function labelColor(label) {
+    if (!label) return null;
+    if (state.labelColors[label] === undefined) {
+      const used = new Set(Object.values(state.labelColors).map(String));
+      const free = BASE_PALETTE.find((c) => !used.has(String(c)));
+      state.labelColors[label] = free !== undefined ? free : BASE_PALETTE[Object.keys(state.labelColors).length % BASE_PALETTE.length];
+      clearTimeout(labelColorSave); labelColorSave = setTimeout(savePrefs, 300);
+    }
+    return colorOf(state.labelColors[label]);
+  }
+  let labelColorSave = null;
+  // 막대 색: 개인 일정표에서 이름이 있으면 일정 색, 아니면 사람 색
+  const blockColor = (p, label) => (useLabelColors() && label ? labelColor(label) : colorOf(p.color));
   const paletteAt = (i) => (i < BASE_PALETTE.length ? cleanColor(BASE_PALETTE[i]) : hslHex(((i - BASE_PALETTE.length) * 137.508 + 20) % 360, 0.55 + (i % 3) * 0.08, 0.78 + (i % 2) * 0.04));
   function nextColor(usedSet, prefer = 0) {
     for (let i = prefer; i < prefer + 400; i++) { const c = paletteAt(i); if (!usedSet.has(String(c))) return c; }
@@ -1484,8 +1569,9 @@
     $('routineToggle').classList.toggle('on', rt);
     $('routineToggle').setAttribute('aria-checked', rt);
     document.querySelector('.seg button[data-view="range"]').hidden = rt;
-    $('weekLabel').hidden = isRange;
-    $('rangeBox').hidden = !isRange;
+    $('weekLabel').classList.toggle('pick', isRange);
+    $('weekLabel').tabIndex = isRange ? 0 : -1;
+    $('weekLabel').title = isRange ? '눌러서 기간 고르기' : '';
     let atNow = false;
     if (rt) {
       // 루틴: 매주는 넘길 게 없고, 매달 n주차는 1~5주차 사이를 넘겨요
@@ -1508,9 +1594,8 @@
       atNow = state.month === monthKeyOf(now);
     } else {
       if (document.activeElement !== $('rangeStart')) $('rangeStart').value = state.range.start;
-      const shortDate = (k) => { const d = new Date(k + 'T00:00'); return `${d.getMonth() + 1}/${d.getDate()}(${DAYS[dayIdx(d)]})`; };
-      $('rangeStartTxt').textContent = shortDate(state.range.start);
-      $('rangeEndTxt').textContent = shortDate(state.range.end);
+      const md = (k) => { const d = new Date(k + 'T00:00'); return `${d.getMonth() + 1}/${d.getDate()}`; };
+      $('weekLabel').textContent = `${md(state.range.start)} – ${md(state.range.end)}`;
       if (document.activeElement !== $('rangeEnd')) $('rangeEnd').value = state.range.end;
       const t = dayKey(now);
       atNow = state.range.start <= t && t <= state.range.end;
@@ -1630,13 +1715,21 @@
   // 칠하기 막대: 지금 칠할 일정 이름 + 최근 이름
   function renderPaintbar() {
     const me = state.people[state.me];
-    const show = !!(me && !state.readOnly && state.view !== 'month' && state.mode !== 'pending');
+    const show = !!(me && !state.readOnly && state.mode !== 'pending');
     $('paintbar').hidden = !show;
+    $('paintbar').classList.toggle('ghost', state.view === 'month');   // 월간에서는 칠할 수 없지만 자리는 그대로
     if (!show) return;
-    const c = colorOf(me.color);
+    // 점: 개인 일정표에서 일정 이름을 골랐으면 그 일정 색(누르면 색 바꾸기), 아니면 사람 색
+    const lc = useLabelColors() && state.label;
+    const c = lc ? labelColor(state.label) : colorOf(me.color);
     $('pbDot').style.background = c.fill;
     $('pbDot').style.borderColor = c.line;
+    $('pbDot').classList.toggle('pick', !!lc);
+    $('pbDot').title = lc ? `"${state.label}" 색 바꾸기` : '';
+    if (!lc) $('lcPanel').hidden = true;
     $('pbName').textContent = me.name;
+    $('repeatSel').hidden = state.routine;   // 루틴은 원래 매주(매달) 반복이라 필요 없어요
+    $('repeatSel').value = state.repeat;
     if (document.activeElement !== $('labelInput')) $('labelInput').value = state.label;
     const mine = [];
     neededWeeks().forEach((wk) => Object.values(labelsOf(state.me, wk)).forEach((l) => mine.push(l)));
@@ -1647,6 +1740,7 @@
       const b = document.createElement('button');
       b.className = 'rchip' + (l === state.label ? ' on' : '');
       b.textContent = l;
+      if (useLabelColors()) { const cc = labelColor(l); const dt = document.createElement('i'); dt.className = 'rdot'; dt.style.background = cc.fill; b.prepend(dt); }
       b.addEventListener('click', () => {
         state.label = state.label === l ? '' : l;
         savePrefs(); renderPaintbar(); renderHint();
@@ -1690,7 +1784,7 @@
         blk.style.top = `calc(var(--rowH) * ${sg.start} + 3px)`;
         blk.style.height = `calc(var(--rowH) * ${sg.end - sg.start} - 6px)`;
         if (sg.people.length === 1) {
-          const p = sg.people[0], c = colorOf(p.color);
+          const p = sg.people[0], c = blockColor(p, sg.labels[0]);
           blk.className = 'blk' + (p.id === state.me ? ' mine' : '');
           blk.style.background = c.fill;
           blk.style.setProperty('--lineC', c.line);
@@ -1826,8 +1920,12 @@
         if (who.length) {
           const dots = document.createElement('div');
           dots.className = 'mdots';
-          who.slice(0, 4).forEach((p) => { const c = colorOf(p.color); const dt = document.createElement('i'); dt.style.background = c.fill; dt.style.borderColor = c.line; dots.appendChild(dt); });
-          if (who.length > 4) { const more = document.createElement('b'); more.textContent = `+${who.length - 4}`; dots.appendChild(more); }
+          // 개인 일정표는 일정 색, 함께 쓰는 방은 사람 색
+          const cols = useLabelColors()
+            ? [...new Map(info.events.map((e) => (e.people.length === 1 ? blockColor(e.people[0], e.label) : { fill: '#fff', line: '#2A2A33' })).map((c) => [c.fill, c])).values()]
+            : who.map((p) => colorOf(p.color));
+          cols.slice(0, 4).forEach((c) => { const dt = document.createElement('i'); dt.style.background = c.fill; dt.style.borderColor = c.line; if (c.fill === '#fff') dt.style.boxShadow = 'inset 0 0 0 1.5px #2A2A33'; dots.appendChild(dt); });
+          if (cols.length > 4) { const more = document.createElement('b'); more.textContent = `+${cols.length - 4}`; dots.appendChild(more); }
           cell.appendChild(dots);
         }
         if (state.showFree && visible.length && info.free.length && !info.all) { const f = document.createElement('div'); f.className = 'mfreebar'; cell.appendChild(f); }
@@ -1835,7 +1933,7 @@
         info.events.slice(0, 3).forEach((e) => {
           const row = document.createElement('div');
           row.className = 'mev';
-          if (e.people.length === 1) { const c = colorOf(e.people[0].color); row.style.background = c.fill; row.style.borderLeftColor = c.line; }
+          if (e.people.length === 1) { const c = blockColor(e.people[0], e.label); row.style.background = c.fill; row.style.borderLeftColor = c.line; }
           else row.classList.add('multi');
           appendInitials(row, e.people);
           const tm = document.createElement('em'); tm.textContent = shortRange(hours, e.start, e.end);
@@ -1890,7 +1988,7 @@
     info.events.forEach((e) => {
       const row = document.createElement('div');
       row.className = 'mdrow';
-      const c = colorOf(e.people[0].color);
+      const c = blockColor(e.people[0], e.label);
       row.style.borderLeftColor = e.people.length === 1 ? c.line : 'var(--ink)';
       row.style.background = e.people.length === 1 ? c.fill : '#F3F3F7';
       const tm = document.createElement('em'); tm.textContent = hourRange(hours, e.start, e.end);
@@ -1915,7 +2013,7 @@
     return;
     const me = state.people[state.me];
     if (state.mode === 'pending') h.textContent = '일정을 불러오는 중이에요…';
-    else if (!peopleList().length) h.textContent = !$('startCard').hidden ? '위 칸에 내 이름을 적으면 바로 시작할 수 있어요.' : '+ 버튼을 눌러 함께 볼 사람을 추가해 보세요.';
+    else if (!peopleList().length) h.textContent = !$('startCard').hidden ? '위 칸에 내 이름을 적으면 바로 시작할 수 있어요.' : '+ 버튼을 눌러 함께 볼 사람을 더해 보세요.';
     else if (state.routine && state.view === 'month') h.textContent = '날짜 없이 매달 반복되는 루틴이에요(1~5주차). 주차나 칸을 누르면 그 주차 표로 들어가 칠할 수 있어요. 매주 반복되는 시간표는 "주간"에 있어요.';
     else if (state.view === 'month') h.textContent = window.matchMedia('(max-width:640px)').matches
       ? '색 점은 그날 일정이 있는 사람이에요. 날짜를 누르면 아래에 누가 언제 바쁜지와 모두 빈 시간이 보여요.'
@@ -1926,7 +2024,7 @@
     else if (me && !state.readOnly) h.textContent = state.label
       ? `${me.name}의 "${state.label}" 일정을 칠하는 중이에요. 칸을 누르거나 끌어서 칠하고, 같은 이름으로 칠한 칸을 다시 누르면 지워져요.`
       : `${me.name}의 바쁜 시간을 칠하는 중이에요. 위 "일정 이름"을 적고 칠하면 칸에 이름이 같이 보여요. 칠한 칸을 다시 누르면 지워져요.`;
-    else h.textContent = state.routine ? `날짜 없이 요일과 시간만으로 저장되는 ${routineLabel(state.rweek)} 루틴이에요. 학교 시간표처럼 칠해 두세요.` : DEFAULT_HINT;
+    else h.textContent = state.routine ? `날짜 없이 요일과 시간만 저장하는 ${routineLabel(state.rweek)} 루틴이에요. 학교 시간표처럼 칠해 두세요.` : DEFAULT_HINT;
   }
   function flash(msg, ms) {
     const h = $('hint');
@@ -1939,13 +2037,13 @@
     let s;
     if (state.mode === 'pending') s = '불러오는 중…';
     else if (state.mode === 'db') {
-      if (state.readOnly) s = '보기 전용이에요 — 칠하려면 소유자에게 편집 권한을 받아 주세요.';
+      if (state.readOnly) s = '보기 전용이에요. 칠하려면 주인에게 편집 권한을 받아 주세요.';
       else s = state.saving > 0 ? '저장 중…' : state.room ? `방 ${fmtRoom(state.room)}에서 함께 쓰는 중 · 자동 저장돼요`
         : ACCOUNT && !IS_ARTIFACT ? '내 계정에 저장돼요 · 다른 기기에서 같은 아이디로 로그인하면 그대로 보여요' : '모두와 함께 보는 일정 · 자동 저장돼요';
     } else s = !localOK ? '저장할 수 없는 환경이에요 · "받은 링크 붙여넣기 · 백업"에서 따로 보관해 주세요'
       : ACCOUNT_OK ? '이 기기에만 저장돼요 · 로그인하면 다른 기기에서도 그대로, 친구와는 "함께 쓰기"로'
       : CLOUD_READY && !IS_ARTIFACT ? '이 기기에만 저장돼요 · 친구와 같이 쓰려면 "함께 쓰기"를 눌러 보세요'
-      : '이 기기에 저장돼요 · "링크로 한 번 보내기"로 친구와 맞춰 보세요';
+      : '이 기기에 저장돼요 · "링크 공유"로 친구와 맞춰 보세요';
     $('status').textContent = state.statusNote || '';   // 평소 저장 상태 글은 안 보여요 (문제가 있을 때만)
     const me = state.people[state.me];
     $('copyLastWeek').hidden = state.routine || !(me && !state.readOnly && state.mode !== 'pending' && state.view === 'week' && cellsOf(state.me, state.week).size === 0);
@@ -1985,7 +2083,7 @@
     else if (code === 'quota_exceeded') state.statusNote = '저장 공간이 가득 찼어요. 지난 일정을 정리해 주세요.';
     else if (code === 'permission_denied') state.statusNote = state.room ? '저장할 권한이 없어요. 예전 방식으로 만든 방이면 "함께 쓰기"에서 새 방을 만들어 주세요.' : '공유 저장소에 저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.';
     else if (code === 'revoked') { state.readOnly = true; }
-    else state.statusNote = '저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.';
+    else state.statusNote = '저장하지 못했어요. 잠시 뒤 다시 해 주세요.';
     renderAll();
   }
   const queues = {};
@@ -2024,6 +2122,8 @@
     const s = new Set(b && Array.isArray(b.cells) ? b.cells.filter(validCell) : []);
     const l = { ...((b && b.labels) || {}) };
     drag.sets.set(wk, s); drag.labels.set(wk, l); drag.before.set(wk, sigOf(s, l));
+    if (!drag.orig) drag.orig = new Map();
+    drag.orig.set(wk, { s: new Set(s), l: { ...l } });
   }
   function applyCell(wk, key) {
     ensureDragWeek(wk);
@@ -2109,8 +2209,51 @@
       const l = d.labels.get(wk);
       if (sigOf(s, l) !== d.before.get(wk)) saveCells(wk, d.pid, [...s].sort(), l);
     }
+    if (state.repeat && !state.routine) repeatDrag(d);
     if (d.mode === 'paint' && d.label) { state.recent = [d.label, ...state.recent.filter((x) => x !== d.label)].slice(0, 8); savePrefs(); }
     renderGrid(); renderPaintbar(); renderFoot();
+  }
+  // 반복: 방금 칠하거나 지운 칸을 앞으로의 주(매주 26주) 또는 달(매월 12개월, 같은 주차·요일)에도 똑같이
+  const REPEAT_WEEKS = 26, REPEAT_MONTHS = 12;
+  async function repeatDrag(d) {
+    const ops = new Map();   // 대상 주 → [{key, on, label}]
+    const push = (wk, op) => { if (!ops.has(wk)) ops.set(wk, []); ops.get(wk).push(op); };
+    for (const [wk, s] of d.sets) {
+      if (!isDateKey(wk) || !d.orig || !d.orig.has(wk)) continue;
+      const o = d.orig.get(wk), l = d.labels.get(wk);
+      const changed = [];
+      s.forEach((k) => { if (!o.s.has(k) || (o.l[k] || '') !== (l[k] || '')) changed.push({ key: k, on: true, label: l[k] || '' }); });
+      o.s.forEach((k) => { if (!s.has(k)) changed.push({ key: k, on: false, label: '' }); });
+      changed.forEach((op) => {
+        const [dd] = op.key.split('-').map(Number);
+        if (state.repeat === 'w') { for (let i = 1; i <= REPEAT_WEEKS; i++) push(shiftWeek(wk, i), op); }
+        else {
+          const date = addDays(parseKey(wk), dd), nth = Math.ceil(date.getDate() / 7);
+          for (let i = 1; i <= REPEAT_MONTHS; i++) {
+            const first = new Date(date.getFullYear(), date.getMonth() + i, 1);
+            const t = addDays(first, ((date.getDay() - first.getDay() + 7) % 7) + 7 * (nth - 1));
+            if (t.getMonth() !== first.getMonth()) continue;   // 그 달에 5번째 요일이 없으면 건너뛰어요
+            push(weekKey(mondayOf(t)), op);
+          }
+        }
+      });
+    }
+    if (!ops.size) return;
+    // 서버 일정표는 아직 안 불러온 주가 있어서, 이 사람의 일정을 한 번 읽어 와서 합쳐요
+    let remote = null;
+    if (state.mode === 'db' && db) {
+      try { const snap = await db.collection('busy').where('pid', '==', d.pid).get(); remote = {}; snap.docs.forEach((x) => { const v = x.data(); if (v && v.week) remote[v.week] = v; }); }
+      catch (e) { flash('반복할 주를 불러오지 못해서 이번 주에만 칠했어요.'); return; }
+    }
+    ops.forEach((list, wk) => {
+      const b = (remote && remote[wk]) || entry(d.pid, wk);
+      const set = new Set(b && Array.isArray(b.cells) ? b.cells.filter(validCell) : []);
+      const labs = { ...((b && b.labels) || {}) };
+      list.forEach((op) => { if (op.on) { set.add(op.key); if (op.label) labs[op.key] = op.label; else delete labs[op.key]; } else { set.delete(op.key); delete labs[op.key]; } });
+      saveCells(wk, d.pid, [...set].sort(), labs);
+    });
+    renderGrid();
+    flash(state.repeat === 'w' ? `앞으로 ${REPEAT_WEEKS}주에도 똑같이 반영했어요.` : `앞으로 ${REPEAT_MONTHS}개월에도 똑같이 반영했어요.`);
   }
   tbody.addEventListener('pointerup', (e) => {
     // 길게 누르기 전에 뗐으면: 톡 = 한 칸 칠하기/지우기
@@ -2139,13 +2282,21 @@
     if (state.routine && v === 'range') v = 'week';
     state.view = v; savePrefs(); onViewChange();
   }
-  $('routineToggle').addEventListener('click', () => {
+  $('routineToggle').addEventListener('click', async () => {
     state.routine = !state.routine;
     if (state.routine) { state.rweek = 'RW'; if (state.view === 'range') state.view = 'week'; }
     savePrefs(); onViewChange();
-    flash(state.routine ? '루틴 시간표예요. 날짜 없이 요일과 시간만으로 저장되고, 날짜 달력과는 따로 있어요.' : '날짜 달력으로 돌아왔어요. 루틴은 "루틴 시간표"를 다시 누르면 그대로 있어요.');
+    if (!state.routine) return;
+    // 루틴이 비어 있으면 보던 주 시간표를 그대로 가져와요
+    let empty;
+    if (state.mode === 'db') {
+      try { const snap = await db.collection('busy').where('week', '==', 'RW').get(); empty = !snap.docs.some((x) => { const v = x.data(); return v && canEditPerson(v.pid) && Array.isArray(v.cells) && v.cells.length; }); }
+      catch (e) { empty = false; }
+    } else empty = !Object.values(state.busy).some((b) => b.week === 'RW' && canEditPerson(b.pid) && b.cells && b.cells.length);
+    if (empty && state.routine) copyWeekToRoutine(true);
   });
-  $('weekToRoutine').addEventListener('click', async () => {
+  $('weekToRoutine').addEventListener('click', () => copyWeekToRoutine(false));
+  async function copyWeekToRoutine(auto) {
     // 날짜 달력에서 마지막으로 보던 주(state.week)의 모든 사람 일정을 매주 루틴으로 복사
     const src = state.week;
     let rows = [];
@@ -2161,8 +2312,9 @@
     });
     renderGrid(); renderPaintbar(); renderFoot();
     const mon = parseKey(src);
+    if (auto) { if (n) flash(`${mon.getMonth() + 1}월 ${mon.getDate()}일 주 시간표를 루틴으로 가져왔어요.`); return; }
     flash(n ? `${mon.getMonth() + 1}월 ${mon.getDate()}일 주의 일정을 매주 루틴으로 옮겼어요. (${n}명)` : `${mon.getMonth() + 1}월 ${mon.getDate()}일 주에는 옮길 일정이 없어요. 날짜 달력에서 옮길 주를 먼저 열어 주세요.`);
-  });
+  }
   document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
     if (state.routine && b.dataset.view === 'week') state.rweek = 'RW';   // 루틴에서 "주간" 탭 = 매주 표
     setView(b.dataset.view);
@@ -2187,6 +2339,7 @@
   $('nextWeek').addEventListener('click', () => shiftView(1));
   // 날짜 칸을 누르면 달력이 바로 열리게 (컴퓨터)
   ['rangeStart', 'rangeEnd'].forEach((id) => $(id).addEventListener('click', (e) => { try { e.target.showPicker && e.target.showPicker(); } catch (er) {} }));
+  $('weekLabel').addEventListener('click', () => { if (state.view === 'range' && !state.routine) openModal('rangeModal'); });
   $('thisWeek').addEventListener('click', () => {
     const now = new Date();
     if (state.view === 'week') state.week = thisWeekKey();
@@ -2220,8 +2373,30 @@
   $('hourEnd').addEventListener('change', () => onHoursInput('end'));
   $('labelInput').addEventListener('input', (e) => {
     state.label = cleanLabel(e.target.value);
-    savePrefs(); renderHint();
-    document.querySelectorAll('#recentLabels .rchip').forEach((b) => b.classList.toggle('on', b.textContent === state.label));
+    savePrefs(); renderHint(); renderPaintbar();
+  });
+  $('repeatSel').addEventListener('change', (e) => {
+    state.repeat = ['w', 'm'].includes(e.target.value) ? e.target.value : '';
+    if (state.repeat) flash(state.repeat === 'w' ? '이제 칠하면 앞으로 26주(6개월) 같은 요일·시간에도 칠해져요.' : '이제 칠하면 앞으로 12개월 매달 같은 주차·요일에도 칠해져요.', 4000);
+  });
+  // 일정 색 바꾸기 (개인 일정표)
+  $('pbDot').addEventListener('click', () => {
+    if (!useLabelColors() || !state.label) return;
+    const box = $('lcPanel');
+    if (!box.hidden) { box.hidden = true; return; }
+    box.innerHTML = '';
+    const t = document.createElement('span'); t.className = 'lctitle'; t.textContent = `"${state.label}" 색`; box.appendChild(t);
+    const cur = String(state.labelColors[state.label]);
+    BASE_PALETTE.forEach((c) => {
+      const b = document.createElement('button');
+      const cc = colorOf(c);
+      b.className = 'sw' + (String(c) === cur ? ' on' : '');
+      b.style.background = cc.fill;
+      b.setAttribute('aria-label', '이 색으로');
+      b.addEventListener('click', () => { state.labelColors[state.label] = c; savePrefs(); box.hidden = true; renderAll(); });
+      box.appendChild(b);
+    });
+    box.hidden = false;
   });
   $('labelInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); e.target.blur(); } });
   // 휴대폰 ⋯ 보기 설정: 시간대·모두 빈 시간 펼치기/접기 (켜져 있으면 버튼이 노랗게)
@@ -2249,11 +2424,11 @@
     }
     if (state.readOnly) { flash('보기 전용이라 칠할 수 없어요.'); return; }
     state.meTouched = true;
-    if (state.me === p.id) { state.me = ''; savePrefs(); renderAll(); flash(`${p.name} 일정 칠하기를 멈췄어요.`); return; }
+    if (state.me === p.id) { state.me = ''; savePrefs(); renderAll(); flash('칠하기를 멈췄어요.'); return; }
     state.me = p.id;
     state.hidden.delete(p.id);
     savePrefs(); renderAll();
-    flash(`${p.name} 일정을 칠해요. 칸을 누르면 칠해지고, 이름을 다시 꾹 누르면 멈춰요.`);
+    flash(`${p.name} 일정을 칠해요. 다시 꾹 누르면 멈춰요.`);
   }
   $('copyLastWeek').addEventListener('click', async () => {
     const me = state.me; if (!state.people[me]) return;
@@ -2279,6 +2454,30 @@
     bg.addEventListener('click', (e) => { if (e.target === bg || e.target.hasAttribute('data-close')) bg.classList.remove('open'); });
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('.modal-bg.open').forEach((m) => m.classList.remove('open')); });
+  // 웹(안드로이드 크롬·홈 화면 앱)의 뒤로 가기: 창·메뉴·서랍이 열려 있으면 그것만 닫아요 (앱이 뒤로 빠지지 않게)
+  (function backCloses() {
+    if (window.Capacitor) return;   // 안드로이드 앱은 아래 App 플러그인이 맡아요
+    const anyOpen = () => !!document.querySelector('.modal-bg.open') || $('app').classList.contains('drawer') || !$('optMenu').hidden;
+    const closeAll = () => {
+      document.querySelectorAll('.modal-bg.open').forEach((m) => m.classList.remove('open'));
+      $('app').classList.remove('drawer');
+      if (!$('optMenu').hidden) { $('optMenu').hidden = true; try { renderOptBtn(); } catch (e) {} }
+    };
+    let pushed = false, skipPop = false;
+    const sync = () => {
+      const open = anyOpen();
+      if (open && !pushed) { try { history.pushState({ uiLayer: 1 }, ''); pushed = true; } catch (e) {} }
+      else if (!open && pushed) { pushed = false; skipPop = true; try { history.back(); } catch (e) { skipPop = false; } }
+    };
+    window.addEventListener('popstate', () => {
+      if (skipPop) { skipPop = false; return; }
+      if (pushed) { pushed = false; closeAll(); }
+    });
+    const mo = new MutationObserver(() => setTimeout(sync, 0));
+    document.querySelectorAll('.modal-bg').forEach((m) => mo.observe(m, { attributes: true, attributeFilter: ['class'] }));
+    mo.observe($('app'), { attributes: true, attributeFilter: ['class'] });
+    mo.observe($('optMenu'), { attributes: true, attributeFilter: ['hidden'] });
+  })();
   // 안드로이드 뒤로 가기: 열린 창이 있으면 닫고, 없으면 앱을 닫아요.
   const appPlugin = nativePlugin('App');
   if (appPlugin && typeof appPlugin.addListener === 'function') {
@@ -2429,7 +2628,7 @@
     newPersonId(name);
     $('startName').value = '';
     renderAll();
-    flash(`${name}님, 이제 칸을 누르거나 끌어서 바쁜 시간을 칠해 보세요. 위에 "일정 이름"을 적으면 칸에 같이 보여요.`);
+    flash(`${name}님, 칸을 눌러 바쁜 시간을 칠해 보세요.`);
   }
   function addPerson() {
     if (state.room) return;   // 방에서는 각자 들어와서 자기 사람이 생겨요
@@ -2544,7 +2743,7 @@
       try { data = payloadToData(JSON.parse(b64url.dec(lm[1]))); }
       catch (e) { msg.textContent = '링크가 잘렸거나 잘못됐어요. 링크 전체를 다시 복사해 주세요.'; return; }
     } else {
-      try { data = JSON.parse(raw); } catch (e) { msg.textContent = '받은 링크나 JSON 전체를 붙여 넣어 주세요.'; return; }
+      try { data = JSON.parse(raw); } catch (e) { msg.textContent = '받은 링크나 백업 글 전체를 붙여 넣어 주세요.'; return; }
     }
     if (!data || !Array.isArray(data.people) || !Array.isArray(data.busy)) { msg.textContent = '"우리 일정"에서 내보낸 내용이 아닌 것 같아요.'; return; }
     const r = await mergeData(data);
@@ -2640,12 +2839,12 @@
   }
   $('shareLink').addEventListener('click', async () => {
     if (state.mode === 'pending') return;
-    if (!peopleList().length) { flash('보낼 사람이 아직 없어요. + 버튼으로 사람을 먼저 추가해 주세요.'); return; }
+    if (!peopleList().length) { flash('보낼 사람이 아직 없어요. + 버튼으로 사람을 먼저 더해 주세요.'); return; }
     const payload = buildLinkPayload();
     const code = b64url.enc(JSON.stringify(payload));
     const who = payload.f ? `${payload.f}의 ` : '';
     if (!IS_WEB) {   // 설치한 앱: 링크 대신 붙여 넣는 코드
-      const text = `[우리 일정] ${who}일정 코드예요. 앱 아래 "받은 코드 붙여넣기"에 이 글을 통째로 붙여 넣어 주세요.\n#s=${code}`;
+      const text = `[우리 일정] ${who}일정 코드예요. ⋯ 메뉴의 "받은 코드 붙여넣기"에 이 글을 통째로 붙여 넣어 주세요.\n#s=${code}`;
       const share = nativePlugin('Share');
       if (share) {   // 안드로이드: 카카오톡 등으로 바로 보내는 공유 창
         try { await share.share({ title: '우리 일정', text, dialogTitle: '일정 코드 보내기' }); return; }
@@ -2666,7 +2865,7 @@
   });
   $('linkOutCopy').addEventListener('click', async () => {
     const t = $('linkOutText');
-    try { await navigator.clipboard.writeText(t.value); $('linkOutMsg').textContent = '복사했어요. 카카오톡 등에 붙여 넣어 보내 주세요.'; }
+    try { await navigator.clipboard.writeText(t.value); $('linkOutMsg').textContent = '복사했어요. 메신저에 붙여 넣어 보내 주세요.'; }
     catch (e) { t.focus(); t.select(); $('linkOutMsg').textContent = '자동 복사가 막혔어요. 선택된 글을 직접 복사해 주세요.'; }
   });
   let pendingLink = null;
@@ -2675,7 +2874,7 @@
     const m = location.hash.match(/^#s=([A-Za-z0-9_-]+)$/);
     if (!m) return;
     try { pendingLink = payloadToData(JSON.parse(b64url.dec(m[1]))); }
-    catch (e) { clearHash(); flash('받은 링크가 잘못됐거나 잘렸어요. 다시 보내 달라고 해 주세요.'); return; }
+    catch (e) { clearHash(); flash('받은 링크가 잘렸거나 잘못됐어요. 다시 보내 달라고 해 주세요.'); return; }
     const names = pendingLink.people.map((p) => cleanName(p.name)).filter(Boolean);
     $('linkInSub').textContent = `${pendingLink.from ? pendingLink.from + '님이' : '누군가'} 보낸 일정이에요. ${names.join(', ')}의 일정을 내 앱에 합칠까요? 같은 사람은 더 최근에 고친 일정으로 바뀌어요.`;
     $('linkInMsg').textContent = (isIOS && !isStandalone())
@@ -2843,6 +3042,7 @@
       const appMod = await import(base + 'firebase-app.js');
       const fs = await import(base + 'firebase-firestore.js');
       const authMod = await import(base + 'firebase-auth.js');
+      try { appMod.setLogLevel && appMod.setLogLevel('silent'); fs.setLogLevel && fs.setLogLevel('silent'); } catch (e) {}   // 개발용 경고 글은 안 띄워요
       const app = appMod.getApps().find((x) => x.name === '[DEFAULT]') || appMod.initializeApp(FIREBASE_CONFIG);
       const auth = authMod.getAuth(app);
       if (auth.authStateReady) await auth.authStateReady();
@@ -2957,7 +3157,7 @@
     bad_email: '아이디는 영문 소문자·숫자·점(.)·밑줄(_)·빼기(-)로 3~20글자예요.',
     too_many: '여러 번 틀려서 잠시 막혔어요. 조금 뒤에 다시 해 주세요.',
     pw_not_enabled: '아이디 로그인이 아직 켜지지 않았어요. (Firebase → Authentication → 로그인 방법 → 이메일/비밀번호)',
-    recent: '보안을 위해 다시 로그인한 뒤에 바꿀 수 있어요. 로그아웃 후 다시 로그인하고 해 주세요.',
+    recent: '보안을 위해 다시 로그인해야 바꿀 수 있어요. 로그아웃했다가 다시 로그인한 뒤 해 주세요.',
     network: '인터넷 연결을 확인하고 다시 해 주세요.',
   }[e && e.code] || '잠시 뒤 다시 해 주세요.');
   // 잠깐 쓰는 두 번째 연결 (이 기기 로그인은 그대로 둔 채 계정 uid만 확인)
@@ -3215,13 +3415,6 @@
     const email = idEmail(id);
     if (pw.length < 6) { msg.textContent = emailErrMsg({ code: 'weak' }); return; }
     if (acctBusy) return;
-    if (create && $(ui.pw).type === 'password') {
-      // 비밀번호는 찾을 수 없어서, 만들기 전에 눈으로 한 번 확인하게 해요
-      const eye = $(ui.pw).parentNode.querySelector('.pweye');
-      if (eye) eye.click(); else $(ui.pw).type = 'text';
-      msg.textContent = '비밀번호가 맞는지 보고, "새 아이디 만들기"를 한 번 더 눌러 주세요. 잊으면 찾을 수 없어요.';
-      return;
-    }
     ui.btns.forEach((b) => { $(b).disabled = true; });
     msg.textContent = create ? '아이디를 만드는 중…' : '로그인하는 중…';
     let r;
@@ -3229,7 +3422,7 @@
     catch (e) { msg.textContent = emailErrMsg(e && e.code ? e : emailErr(e)); ui.btns.forEach((b) => { $(b).disabled = false; }); return; }
     ui.btns.forEach((b) => { $(b).disabled = false; });
     $(ui.pw).value = ''; msg.textContent = '';
-    { const eye = $(ui.pw).parentNode.querySelector('.pweye'); if (eye && $(ui.pw).type === 'text') eye.click(); }
+    { const eye = $(ui.pw).parentNode.querySelector('.pweye'); if (eye && $(ui.pw).type === 'text') eye.click(); }   // 다음에 열 때는 다시 가려진 채로
     if (ui.modal) closeModal(ui.modal); else hideSplash();
     await finishLogin(r);
   }
@@ -3240,7 +3433,7 @@
   // 다른 기기용 비밀번호
   function openPwModal() {
     if (!ACCOUNT) return;
-    $('pwMsg').textContent = ''; $('pwSetIn').value = ''; $('pwIdIn').value = '';
+    $('pwMsg').textContent = ''; $('pwSetIn').value = ''; $('pwSetIn2').value = ''; $('pwIdIn').value = '';
     const has = !!ACCOUNT.hasPw;
     $('pwTitle').textContent = has ? '비밀번호 바꾸기' : '아이디 만들기';
     $('pwIdIn').hidden = has;
@@ -3254,13 +3447,14 @@
     const pw = $('pwSetIn').value, msg = $('pwMsg');
     const id = cleanId($('pwIdIn').value);
     if (!ACCOUNT.hasPw && !validId(id)) { msg.textContent = emailErrMsg({ code: 'bad_email' }); return; }
+    if (pw.length >= 6 && pw !== $('pwSetIn2').value) { msg.textContent = '두 비밀번호가 달라요. 같은 비밀번호를 두 번 적어 주세요.'; return; }
     if (pw.length < 6) { msg.textContent = emailErrMsg({ code: 'weak' }); return; }
     $('pwSave').disabled = true; msg.textContent = '저장하는 중…';
     try {
       const had = !!ACCOUNT.hasPw;
       const info = await accountImpl.setPassword(pw, had ? '' : idEmail(id));
       setAccount({ ...ACCOUNT, ...info });
-      $('pwSetIn').value = '';
+      $('pwSetIn').value = ''; $('pwSetIn2').value = '';
       msg.textContent = had ? '비밀번호를 바꿨어요.' : `아이디를 만들었어요: ${id}. 다른 기기에서는 이 아이디와 비밀번호로 로그인해 주세요.`;
       $('pwIdIn').hidden = true; $('pwTitle').textContent = '비밀번호 바꾸기';
     } catch (e) { msg.textContent = emailErrMsg(e && e.code ? e : emailErr(e)); }
@@ -3331,7 +3525,7 @@
       if (LOGIN_LANDING) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
       flash(LOGIN_LANDING
         ? '로그인했어요! 이제 홈 화면의 "우리 일정" 앱으로 돌아가면 그대로 로그인돼 있어요.'
-        : `${info.name || info.email || '내 계정'}(으)로 로그인했어요. 같은 계정으로 다른 기기에서 로그인하면 일정표가 그대로 보여요.${merged ? ` 방에서 따로 들어가 있던 나 ${merged}명을 하나로 합쳤어요.` : ''}`);
+        : `${info.name || info.email || '내 계정'} 아이디로 로그인했어요. 다른 기기에서도 같은 아이디로 로그인하면 일정표가 그대로 보여요.${merged ? ` 방에서 따로 들어가 있던 나 ${merged}명을 하나로 합쳤어요.` : ''}`);
     } catch (e) {
       const er = e && e.code ? e : authErr(e);
       if (er.code !== 'cancel') flash(loginErrMsg(er));
@@ -3372,7 +3566,7 @@
     $('pwBtn').textContent = ACCOUNT && ACCOUNT.hasPw ? '비밀번호 바꾸기' : '아이디 만들기';
     if (ACCOUNT) {
       $('acctName').textContent = ACCOUNT.id || ACCOUNT.name || ACCOUNT.email || '내 계정';
-      $('acctMail').textContent = ACCOUNT.id ? '아이디로 로그인 중' : ACCOUNT.hasGoogle ? (ACCOUNT.email || '구글로 로그인 중') + ' · 아이디를 만들어 두세요' : (ACCOUNT.email || '');
+      $('acctMail').textContent = ACCOUNT.id ? '' : ACCOUNT.hasGoogle ? (ACCOUNT.email || '구글로 로그인 중') + ' · 아이디를 만들어 두세요' : (ACCOUNT.email || '');
       $('acctDot').textContent = (ACCOUNT.name || ACCOUNT.email || '나').trim().charAt(0).toUpperCase();
     }
   }
@@ -3400,7 +3594,7 @@
   }
   // 비밀번호 칸에 보기(눈) 버튼
   const EYE = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M1.8 10S5 4.5 10 4.5 18.2 10 18.2 10 15 15.5 10 15.5 1.8 10 1.8 10Z"/><circle cx="10" cy="10" r="2.6"/></svg>';
-  ['splashPw', 'pwIn', 'pwSetIn'].forEach((id) => {
+  ['splashPw', 'pwIn', 'pwSetIn', 'pwSetIn2'].forEach((id) => {
     const inp = $(id);
     const wrap = document.createElement('span'); wrap.className = 'pwwrap';
     inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
@@ -3415,6 +3609,188 @@
   $('splashId').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); $('splashPw').focus(); } });
   $('splash').addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });   // 로그인 화면은 밀어도 움직이지 않게
   $('splashSkip').addEventListener('click', () => { try { sessionStorage.setItem(SS_SPLASH, '1'); } catch (e) {} hideSplash(); });
+  /* ---------- 엑셀 불러오기·저장 ----------
+     SheetJS(Apache-2.0)는 엑셀 창을 열 때만 불러와요.
+     불러오기: 요일 머리줄(월·화… / Mon…)과 시간 칸(9:00, 9시, 1교시 09:00~09:50, 오후 2시 …)을 정규식으로 찾아요.
+     표가 가로·세로 어느 쪽이든(요일이 위 줄이든 왼쪽 칸이든) 읽고, 합친 칸(병합)은 그 범위 전체로 봐요. */
+  const XLSX_URL = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+  let xlsxLoading = null, xlPending = null;
+  function loadXLSX() {
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    if (!xlsxLoading) xlsxLoading = new Promise((ok, no) => {
+      const sc = document.createElement('script'); sc.src = XLSX_URL; sc.async = true;
+      sc.onload = () => (window.XLSX ? ok(window.XLSX) : no(new Error('xlsx')));
+      sc.onerror = () => { xlsxLoading = null; no(new Error('xlsx')); };
+      document.head.appendChild(sc);
+    });
+    return xlsxLoading;
+  }
+  const DAY_RE = /^\s*(월|화|수|목|금|토|일)(?:요일)?\s*(?:\(.*\))?\s*$|^\s*(mon|tue|wed|thu|fri|sat|sun)[a-z]*\.?\s*$/i;
+  const DAY_EN = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 };
+  function dayOf(v) {
+    const m = String(v == null ? '' : v).match(DAY_RE);
+    if (!m) return -1;
+    return m[1] ? DAYS.indexOf(m[1]) : DAY_EN[m[2].toLowerCase().slice(0, 3)];
+  }
+  // 시간 글자 → [시작(분), 끝(분) 또는 null]
+  function timeOf(v) {
+    if (typeof v === 'number' && v >= 0 && v < 1) { const m = Math.round(v * 1440); return [m, null]; }   // 엑셀 시간 값
+    const t = String(v == null ? '' : v).trim();
+    if (!t) return null;
+    const one = (str, pm) => {
+      const m = str.match(/(오전|오후|am|pm)?\s*(\d{1,2})\s*(?::|시|\.)?\s*(\d{2})?\s*(?:분)?\s*(am|pm)?/i);
+      if (!m) return null;
+      let h = Number(m[2]); const mi = Number(m[3] || 0);
+      const ap = (m[1] || m[4] || pm || '').toLowerCase();
+      if ((ap === '오후' || ap === 'pm') && h < 12) h += 12;
+      if ((ap === '오전' || ap === 'am') && h === 12) h = 0;
+      if (h > 24 || mi > 59) return null;
+      return { min: h * 60 + mi, ap };
+    };
+    const cleaned = t.replace(/^\s*\d+\s*교시\s*/, '');
+    if (!/\d/.test(cleaned)) return null;
+    const parts = cleaned.split(/\s*(?:~|-|–|—|to)\s*/i);
+    const a = one(parts[0]);
+    if (!a) return null;
+    const b = parts[1] ? one(parts[1], a.ap) : null;
+    return [a.min, b ? b.min : null];
+  }
+  function sheetMatrix(XLSX, ws) {
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+    (ws['!merges'] || []).forEach((m) => {
+      const v = rows[m.s.r] ? rows[m.s.r][m.s.c] : '';
+      for (let r = m.s.r; r <= m.e.r; r++) for (let c = m.s.c; c <= m.e.c; c++) { if (!rows[r]) rows[r] = []; if (r !== m.s.r || c !== m.s.c) rows[r][c] = { merged: v }; }
+    });
+    return rows;
+  }
+  const cellText = (v) => (v && typeof v === 'object' && 'merged' in v ? v.merged : v);
+  // rows: 2차원 배열. 요일이 한 줄에 3개 이상 나란히 있는 줄을 머리줄로 봐요.
+  function parseGrid(rows) {
+    for (let r = 0; r < Math.min(rows.length, 30); r++) {
+      const row = rows[r] || [];
+      const cols = {};
+      row.forEach((v, c) => { const d = dayOf(cellText(v)); if (d >= 0) cols[c] = d; });
+      if (Object.keys(cols).length < 3) continue;
+      const dayCols = Object.keys(cols).map(Number);
+      const firstDay = Math.min(...dayCols);
+      // 시간 칸: 요일 칸 왼쪽에서 시간이 가장 많이 읽히는 칸
+      let tc = -1, best = 0;
+      for (let c = 0; c < firstDay; c++) {
+        let n = 0; for (let i = r + 1; i < rows.length; i++) if (timeOf(cellText((rows[i] || [])[c]))) n++;
+        if (n > best) { best = n; tc = c; }
+      }
+      if (tc < 0 || best < 1) continue;
+      const slots = [];   // [{row, start, end}]
+      for (let i = r + 1; i < rows.length; i++) { const t = timeOf(cellText((rows[i] || [])[tc])); if (t) slots.push({ row: i, start: t[0], end: t[1] }); }
+      slots.forEach((sl, k) => { if (sl.end == null) sl.end = slots[k + 1] && slots[k + 1].start > sl.start ? slots[k + 1].start : sl.start + 60; });
+      const out = {};   // key 'd-h' → label
+      slots.forEach((sl, k) => {
+        const lastRow = slots[k + 1] ? slots[k + 1].row : sl.row + 1;
+        dayCols.forEach((c) => {
+          let raw = '';
+          for (let i = sl.row; i < lastRow; i++) { const v = cellText((rows[i] || [])[c]); if (v !== '' && v != null) { raw = v; break; } }
+          const label = String(raw).split(/\r?\n/)[0].replace(/\s+/g, ' ').trim();
+          if (!label || dayOf(label) >= 0) return;
+          for (let h = Math.floor(sl.start / 60); h < Math.ceil(sl.end / 60) && h < 24; h++) out[`${cols[c]}-${h}`] = cleanLabel(label);
+        });
+      });
+      if (Object.keys(out).length) return out;
+    }
+    return null;
+  }
+  function parseWorkbook(XLSX, wb) {
+    for (const name of wb.SheetNames) {
+      const rows = sheetMatrix(XLSX, wb.Sheets[name]);
+      let out = parseGrid(rows);
+      if (!out) {   // 요일이 왼쪽 칸에 세로로 있으면 뒤집어서 다시
+        const w = Math.max(0, ...rows.map((r) => (r || []).length));
+        const tr = Array.from({ length: w }, (_, c) => rows.map((r) => (r || [])[c] === undefined ? '' : (r || [])[c]));
+        out = parseGrid(tr);
+      }
+      if (out) return out;
+    }
+    return null;
+  }
+  const xlWeek = () => (state.routine ? state.rweek : state.week);
+  const xlWeekName = () => {
+    if (state.routine) return `${routineLabel(state.rweek)} 루틴`;
+    const m = parseKey(state.week); return `${m.getMonth() + 1}월 ${m.getDate()}일 주`;
+  };
+  function renderExcelModal() {
+    const me = state.people[state.me];
+    const ok = me && canEditPerson(state.me) && !state.readOnly && state.mode !== 'pending';
+    $('xlTarget').textContent = ok ? `${me.name}의 ${xlWeekName()}에 넣어요. (이미 칠한 칸은 그대로 두고 더해요)` : '먼저 위에서 내 이름을 꾹 눌러 칠할 사람을 골라 주세요.';
+    $('xlPick').classList.toggle('off', !ok);
+    $('xlFile').disabled = !ok;
+    $('xlOutNote').textContent = `지금 보는 ${state.view === 'week' || state.view === 'month' ? xlWeekName() : '기간'}의 켜진 사람 일정을 요일×시간 표로 저장해요.`;
+    $('xlApply').hidden = !xlPending;
+  }
+  $('openExcel').addEventListener('click', () => { xlPending = null; $('xlMsg').textContent = ''; renderExcelModal(); openModal('excelModal'); loadXLSX().catch(() => {}); });
+  $('xlFile').addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    const msg = $('xlMsg'); xlPending = null; renderExcelModal();
+    msg.textContent = '읽는 중…';
+    try {
+      const XLSX = await loadXLSX();
+      const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: false });
+      const out = parseWorkbook(XLSX, wb);
+      if (!out) { msg.textContent = '요일(월·화·수…)과 시간(9:00, 9시 …)이 있는 표를 찾지 못했어요. 시간표 모양의 엑셀인지 확인해 주세요.'; return; }
+      xlPending = out;
+      const keys = Object.keys(out);
+      const names = [...new Set(Object.values(out))];
+      const days = [...new Set(keys.map((k) => Number(k.split('-')[0])))].sort().map((d) => DAYS[d]).join('·');
+      msg.textContent = `${days}요일 ${keys.length}칸을 찾았어요: ${names.slice(0, 5).join(', ')}${names.length > 5 ? ` 외 ${names.length - 5}개` : ''}. "넣기"를 누르면 칠해져요.`;
+    } catch (er) { msg.textContent = '엑셀 파일을 열지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.'; }
+    renderExcelModal();
+  });
+  $('xlApply').addEventListener('click', () => {
+    if (!xlPending || !state.people[state.me] || !canEditPerson(state.me)) return;
+    const wk = xlWeek(), hours = hoursList();
+    const b = entry(state.me, wk);
+    const set = new Set(b && Array.isArray(b.cells) ? b.cells.filter(validCell) : []);
+    const labs = { ...((b && b.labels) || {}) };
+    let n = 0;
+    Object.entries(xlPending).forEach(([k, l]) => { if (!validCell(k) || set.has(k)) return; set.add(k); if (l) labs[k] = l; n++; });   // 이미 칠한 칸은 그대로
+    saveCells(wk, state.me, [...set].sort(), labs);
+    // 표 시간대 밖이면 시간대를 넓혀서 보이게
+    const hs = Object.keys(xlPending).map((k) => Number(k.split('-')[1]));
+    const lo = Math.min(...hs), hi = Math.max(...hs) + 1;
+    if (lo < state.hours.start || hi > state.hours.end) { state.hours = { start: Math.min(lo, state.hours.start), end: Math.max(hi, state.hours.end) }; savePrefs(); tableSig = ''; buildTable(); }
+    Object.values(xlPending).forEach((l) => { if (l && !state.recent.includes(l)) state.recent = [...state.recent, l].slice(-8); });
+    xlPending = null; savePrefs();
+    closeModal('excelModal'); renderAll();
+    flash(`${state.people[state.me].name}의 ${xlWeekName()}에 ${n}칸을 넣었어요.`);
+  });
+  $('xlSave').addEventListener('click', async () => {
+    const btn = $('xlSave'); btn.disabled = true;
+    try {
+      const XLSX = await loadXLSX();
+      const hours = hoursList();
+      const visible = peopleList().filter((p) => !state.hidden.has(p.id));
+      const specs = state.view === 'range' && !state.routine ? cols.map((c) => ({ wk: c.wk, d: c.d, date: c.date })) : DAYS.map((_, d) => ({ wk: xlWeek(), d, date: state.routine ? null : addDays(parseKey(state.week), d) }));
+      const head = ['시간', ...specs.map((c) => (c.date ? `${DAYS[c.d]} ${c.date.getMonth() + 1}/${c.date.getDate()}` : DAYS[c.d]))];
+      const aoa = [head];
+      hours.forEach((h) => {
+        const row = [`${pad(h)}:00-${pad(h + 1)}:00`];
+        specs.forEach((c) => {
+          const key = `${c.d}-${h}`;
+          const who = visible.filter((p) => cellsOf(p.id, c.wk).has(key)).map((p) => { const l = labelsOf(p.id, c.wk)[key]; return visible.length > 1 ? (l ? `${p.name}: ${l}` : p.name) : (l || '바쁨'); });
+          row.push(who.join(', '));
+        });
+        aoa.push(row);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = [{ wch: 13 }, ...specs.map(() => ({ wch: 16 }))];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '시간표');
+      const name = state.routine ? `우리일정_${routineLabel(state.rweek)}루틴` : `우리일정_${state.view === 'range' ? state.range.start + '_' + state.range.end : state.week}`;
+      XLSX.writeFile(wb, `${name}.xlsx`);
+      $('xlMsg').textContent = '';
+    } catch (e) { $('xlMsg').textContent = '엑셀 파일을 만들지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.'; }
+    finally { btn.disabled = false; }
+  });
+  $('licBtn').addEventListener('click', () => { closeDrawer(); openModal('licModal'); });
   $('loginBtn').addEventListener('click', doLogin);
   $('startLogin').addEventListener('click', doLogin);
   $('logoutBtn').addEventListener('click', () => {
@@ -3431,7 +3807,7 @@
     ACCOUNT = saved; renderAccount();
     try {
       const info = await accountImpl.info();
-      if (!info) { setAccount(null); flash('구글 로그인이 풀렸어요. 왼쪽 메뉴에서 다시 로그인해 주세요.'); openCalendar(); return; }   // 로그인이 풀렸어요
+      if (!info) { setAccount(null); flash('로그인이 풀렸어요. 왼쪽 메뉴에서 다시 로그인해 주세요.'); openCalendar(); return; }   // 로그인이 풀렸어요
       setAccount(info);
       await subscribeCals();
     } catch (e) { /* 인터넷이 없으면 저장해 둔 계정으로 계속 써요 */ }
@@ -3549,7 +3925,7 @@
     const pd = pdoc.data() || {};
     const devs = Array.isArray(pd.devices) ? pd.devices : [];
     const name = cleanName(pd.name) || '나';
-    if (pid === uid || devs.includes(uid)) return `이미 연결된 기기예요. 이 기기도 "${name}"(으)로 쓰고 있어요.`;
+    if (pid === uid || devs.includes(uid)) return `이미 연결된 기기예요. 이 기기도 "${name}" 이름으로 쓰고 있어요.`;
     if (devs.length >= 5) throw { code: 'too_many_devices' };
     const own = await cdb.doc(`people/${uid}`).get();
     await cdb.doc(`people/${pid}`).set({ ...pd, devices: [...devs, uid], via: link });
@@ -3765,7 +4141,7 @@
       mode: 'pending', people: {}, busy: {}, room: '', authUid: '', myUid: '', roomOwner: '', roomCreatedAt: 0, legacyRoom: false, linkCode: '', linkExp: 0, readOnly: false, saving: 0, statusNote: '', peopleLoaded: false,
       view: 'week', week: thisWeekKey(), month: monthKeyOf(new Date()), routine: false, rweek: 'RW',
       range: { start: thisWeekKey(), end: dayKey(addDays(mondayOf(new Date()), 13)) },
-      hours: { start: 9, end: 21 }, label: '', recent: [], hidden: new Set(), me: '', showFree: false,
+      hours: { start: 9, end: 21 }, label: '', recent: [], labelColors: {}, repeat: '', hidden: new Set(), me: '', showFree: false,
     });
     loadPrefs(); renderSidebar(); renderAll();
     const cal = curCal();
@@ -3906,10 +4282,10 @@
 
   async function init() {
     if (!IS_WEB) {
-      $('shareLink').textContent = '코드로 한 번 보내기';
+      $('shareLink').textContent = '코드 공유';
       $('openShare').textContent = '받은 코드 붙여넣기 · 백업';
       $('shareTitle').textContent = '받은 코드 붙여넣기 · 백업';
-      $('linkOutTitle').textContent = '코드로 한 번 보내기';
+      $('linkOutTitle').textContent = '코드 공유';
       $('linkOutSub').textContent = '아래 글을 복사해 카카오톡 등으로 보내 주세요. 친구가 "우리 일정" 앱의 "받은 코드 붙여넣기"에 넣으면 지금 내 화면의 사람과 일정이 친구 쪽에 합쳐져요.';
       $('importText').placeholder = '받은 일정 코드(또는 링크, JSON)를 여기에 붙여 넣으세요';
     }

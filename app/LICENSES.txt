@@ -1,0 +1,27 @@
+우리 일정 — 함께 쓰는 외부 자료와 라이선스
+(2026-11-12 확인)
+
+1. Pretendard (본문 글꼴)
+   만든 이: Kil Hyung-jin (orioncactus) · SIL Open Font License 1.1
+   무료, 상업적 이용 가능. 글꼴 자체를 따로 팔 수는 없어요.
+   https://github.com/orioncactus/pretendard
+
+2. IBM Plex Sans KR (제목·이름·날짜 글꼴)
+   만든 이: IBM · SIL Open Font License 1.1 (Google Fonts로 불러옴)
+   무료, 상업적 이용 가능. 글꼴 자체를 따로 팔 수는 없어요.
+   https://github.com/IBM/plex
+
+3. Firebase JavaScript SDK (함께 쓰기·로그인)
+   Google · Apache License 2.0
+   https://github.com/firebase/firebase-js-sdk
+
+4. SheetJS Community Edition (엑셀 불러오기, 엑셀 파일을 고를 때만 불러옴)
+   SheetJS LLC · Apache License 2.0
+   https://sheetjs.com
+
+5. 한국 공휴일 데이터 (2024~2027)
+   hyunbinseo/holidays-kr · MIT License
+   원자료: 우주항공청(이전 한국천문연구원) 월력요항
+   https://github.com/hyunbinseo/holidays-kr
+
+앱의 화면, 그림(로고·아이콘), 코드는 "우리 일정" 프로젝트가 직접 만든 것이에요.
