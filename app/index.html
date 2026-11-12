@@ -148,6 +148,7 @@
   .optwrap{position:relative}
   .optmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:40;min-width:240px;padding:6px;border:1.5px solid var(--bd);border-radius:12px;background:#fff}
   .optmenu[hidden]{display:none}
+  .optmenu{max-height:calc(100dvh - 120px);overflow-y:auto;overscroll-behavior:contain}
   .optmenu hr{border:none;border-top:1px dashed #E4E4EB;margin:6px 4px}
   .omrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;font-size:14px;font-weight:600}
   .omrow select{border:1.5px solid var(--bd);border-radius:8px;background:#fff;height:32px;padding:0 4px;font-weight:700}
@@ -224,7 +225,7 @@
 
   /* 계정 (메뉴바 아래) */
   .acct{margin:10px 0 0;padding:12px;border:1.5px solid var(--bd);border-radius:12px;background:#fff}
-  .acct[hidden],#acctIn[hidden],#acctOut[hidden],#startLogin[hidden]{display:none}
+  .acct[hidden],#acctIn[hidden],#acctOut[hidden]{display:none}
   .acct p{margin:0 0 8px;font-size:12.5px;color:var(--muted);line-height:1.5}
   .acct .sbtn{width:100%;height:38px}
   .acctrow{display:flex;align-items:center;gap:9px;min-width:0}
@@ -233,7 +234,6 @@
   .acctwho b{font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .acctwho small{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .acct .linkbtn{margin-top:8px;font-size:12.5px}
-  #startLogin{margin-top:10px;font-size:13px}
   .acct .acctemail{display:block;margin:8px auto 0;font-size:12.5px}
   .acctlinks{display:flex;gap:12px;flex-wrap:wrap}
   .col2{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
@@ -254,9 +254,6 @@
   @media (max-width:640px){ input, select, textarea{font-size:16px !important} }
 
   /* 첫 시작 */
-  .startcard{margin:-4px 0 14px;padding:14px 16px;border:1.5px solid var(--bd);border-radius:14px;background:#FFFFFF}
-  .startcard[hidden]{display:none}
-  .startcard p{margin:0;font-size:13px;color:var(--muted);line-height:1.55}
 
   /* 칠하기 막대 */
   .paintbar{display:flex;align-items:center;gap:8px;margin:-4px 0 12px;flex-wrap:nowrap}
@@ -273,7 +270,7 @@
 
   /* 표 */
   .card{background:#fff;border:1.5px solid var(--bd);border-radius:16px;padding:6px 8px 14px;isolation:isolate}
-  .scroller{overflow:auto;-webkit-overflow-scrolling:touch;max-height:max(420px, calc(100vh - 96px));max-height:max(420px, calc(100dvh - 96px));overscroll-behavior:contain}
+  .scroller{overflow:auto;-webkit-overflow-scrolling:touch;max-height:max(420px, calc(100vh - 96px));max-height:max(420px, calc(100dvh - 96px));overscroll-behavior-x:contain;overscroll-behavior-y:auto}
   .scroller.snap{scroll-snap-type:x mandatory;scroll-padding-left:32px}
   .scroller.snap .day{scroll-snap-align:start}
   .pager{display:flex;justify-content:center;align-items:center;gap:8px;padding:6px 0 4px;border-bottom:1px dashed #E4E4EB}
@@ -458,7 +455,7 @@
   .omrow select{border:none;background:var(--soft);border-radius:10px}
   /* 카드·창·메뉴 */
   .card{border:none;border-radius:26px;padding:6px 6px 12px}
-  .modal{border:none;border-radius:26px}
+  .modal{border:none;border-radius:26px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   .modal-bg{background:rgba(30,30,40,.32)}
   .optmenu,.calmenu{border:1px solid var(--bd);border-radius:18px;box-shadow:0 8px 24px rgba(30,30,40,.08)}
   .optmenu hr{border-top:1px solid var(--line)}
@@ -469,7 +466,6 @@
   .omsw::after{top:3px;left:3px;width:16px;height:16px;background:#fff}
   .omitem.on .omsw{background:var(--ink)}
   .omitem.on .omsw::after{left:17px}
-  .startcard{border:none;background:#fff;border-radius:20px}
   .updatebar{border:none;background:#FFE78A;border-radius:16px}
   /* 메뉴바 */
   .sidebar{background:#ECECF2;border-right:none}
@@ -726,11 +722,6 @@
 
   <p class="metip" id="meTip" hidden>이름을 <b>꾹</b> 누르면 그 사람 일정을 칠할 수 있어요.</p>
 
-  <div class="startcard" id="startCard" hidden>
-    <p>이름을 적으면 바로 바쁜 시간을 칠할 수 있어요. 친구는 나중에 "함께 쓰기"로 초대하거나 + 버튼으로 더하면 돼요.</p>
-    <div class="row2"><input class="tin" id="startName" maxlength="10" placeholder="내 이름" autocomplete="off" style="flex:0 1 220px"><button class="sbtn primary" id="startBtn">시작하기</button></div>
-    <button class="linkbtn" id="startLogin" hidden>다른 기기에서 쓰던 게 있나요? 아이디로 로그인해서 불러오기</button>
-  </div>
 
   <div class="paintbar" id="paintbar" hidden>
     <span class="pbwho"><span class="dot" id="pbDot"></span><b id="pbName"></b></span>
@@ -2028,7 +2019,7 @@
     return;
     const me = state.people[state.me];
     if (state.mode === 'pending') h.textContent = '일정을 불러오는 중이에요…';
-    else if (!peopleList().length) h.textContent = !$('startCard').hidden ? '위 칸에 내 이름을 적으면 바로 시작할 수 있어요.' : '+ 버튼을 눌러 함께 볼 사람을 더해 보세요.';
+    else if (!peopleList().length) h.textContent = '+ 버튼을 눌러 함께 볼 사람을 더해 보세요.';
     else if (state.routine && state.view === 'month') h.textContent = '날짜 없이 매달 반복되는 루틴이에요(1~5주차). 주차나 칸을 누르면 그 주차 표로 들어가 칠할 수 있어요. 매주 반복되는 시간표는 "주간"에 있어요.';
     else if (state.view === 'month') h.textContent = window.matchMedia('(max-width:640px)').matches
       ? '색 점은 그날 일정이 있는 사람이에요. 날짜를 누르면 아래에 누가 언제 바쁜지와 모두 빈 시간이 보여요.'
@@ -2070,10 +2061,7 @@
     $('roomBtn').textContent = state.room ? `함께 쓰는 방 ${fmtRoom(state.room).slice(0, 4)}…` : '함께 쓰기';
   }
 
-  function renderStart() {
-    const mine = state.mode === 'local' || (state.mode === 'db' && !state.room && !!ACCOUNT && !IS_ARTIFACT);
-    $('startCard').hidden = !(mine && !state.readOnly && state.peopleLoaded && !peopleList().length);
-  }
+  function renderStart() {}   // 첫 시작 카드는 없앴어요 (+ 버튼으로 사람을 더해요)
   function renderAll() {
     if (state.me && state.mode !== 'pending' && state.peopleLoaded && !state.people[state.me]) { state.me = ''; savePrefs(); }
     // 직접 고른 적이 없고 사람이 한 명뿐이면 그 사람이 "나" (방에서는 언제나 내 번호가 "나")
@@ -2503,6 +2491,8 @@
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('.modal-bg.open').forEach((m) => m.classList.remove('open')); });
   // 웹(안드로이드 크롬·홈 화면 앱)의 뒤로 가기: 창·메뉴·서랍이 열려 있으면 그것만 닫아요 (앱이 뒤로 빠지지 않게)
+  // 뒤로 가기로 창을 닫을 때 브라우저가 스크롤 위치를 멋대로 되돌리지 않게 (창이 열린 동안 위치는 우리가 지켜요)
+  try { history.scrollRestoration = 'manual'; } catch (e) {}
   (function backCloses() {
     if (window.Capacitor) return;   // 안드로이드 앱은 아래 App 플러그인이 맡아요
     const anyOpen = () => !!document.querySelector('.modal-bg.open') || $('app').classList.contains('drawer') || !$('optMenu').hidden;
@@ -2670,14 +2660,6 @@
     savePrefs();
     return id;
   }
-  function startWithName() {
-    const name = cleanName($('startName').value);
-    if (!name) { $('startName').focus(); return; }
-    newPersonId(name);
-    $('startName').value = '';
-    renderAll();
-    flash(`${name}님, 칸을 눌러 바쁜 시간을 칠해 보세요.`);
-  }
   function addPerson() {
     if (state.room) return;   // 방에서는 각자 들어와서 자기 사람이 생겨요
     const name = cleanName($('newName').value);
@@ -2688,8 +2670,6 @@
     if (!$('newName').disabled) $('newName').focus();
   }
   $('addBtn').addEventListener('click', addPerson);
-  $('startBtn').addEventListener('click', startWithName);
-  $('startName').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); startWithName(); } });
   $('newName').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addPerson(); } });
 
   // 한 사람의 일정을 모든 주에서 비우기.
@@ -3605,10 +3585,9 @@
   function renderAccount(busyText) {
     const box = $('acctBox');
     box.hidden = !ACCOUNT_OK;
-    if (!ACCOUNT_OK) { $('startLogin').hidden = true; return; }
+    if (!ACCOUNT_OK) return;
     $('acctIn').hidden = !ACCOUNT; $('acctOut').hidden = !!ACCOUNT;
     $('loginBtn').disabled = $('logoutBtn').disabled = !!busyText || acctBusy;
-    $('startLogin').hidden = !!ACCOUNT;
     if (busyText) { $('loginBtn').textContent = busyText; $('logoutBtn').textContent = busyText; return; }
     $('loginBtn').textContent = '로그인 · 아이디 만들기'; $('logoutBtn').textContent = '로그아웃';
     $('pwBtn').textContent = ACCOUNT && ACCOUNT.hasPw ? '비밀번호 바꾸기' : '아이디 만들기';
@@ -3620,7 +3599,7 @@
   }
   // 로그인 버튼을 누르려는 순간 미리 연결해 둬요 (구글 창이 바로 뜨도록)
   const warmLogin = () => { if (ACCOUNT_OK && !ACCOUNT && !window.__uriAccountImpl) fbCore().then(ensureSignedIn).catch(() => {}); };
-  ['loginBtn', 'startLogin'].forEach((id) => { $(id).addEventListener('pointerdown', warmLogin); $(id).addEventListener('focus', warmLogin); });
+  ['loginBtn'].forEach((id) => { $(id).addEventListener('pointerdown', warmLogin); $(id).addEventListener('focus', warmLogin); });
   // 시작 화면: 로그인 안 한 웹에서 열면 잠깐 보여요 ("로그인 없이 쓸게요"를 누르면 이 창을 닫을 때까지 다시 안 떠요)
   const SS_SPLASH = 'uri-iljeong:splash-skip';
   function maybeShowSplash() {
@@ -3840,7 +3819,6 @@
   });
   $('licBtn').addEventListener('click', () => { closeDrawer(); openModal('licModal'); });
   $('loginBtn').addEventListener('click', doLogin);
-  $('startLogin').addEventListener('click', doLogin);
   $('logoutBtn').addEventListener('click', () => {
     const b = $('logoutBtn');
     if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = '정말 로그아웃'; setTimeout(() => { delete b.dataset.armed; renderAccount(); }, 3000); return; }
@@ -4254,7 +4232,8 @@
   document.addEventListener('click', closeCalMenu);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeCalMenu(); closeDrawer(); } });
 
-  // 휴대폰 서랍 메뉴가 열려 있는 동안 뒤 화면이 같이 스크롤되지 않게 고정해요
+  // 창(대화상자)이나 휴대폰 서랍 메뉴가 열려 있는 동안 뒤 화면이 같이 스크롤되지 않게 고정해요.
+  // (아이폰에서 뒤 화면이 밀리면 주소창이 접혔다 펴지면서 창·메뉴가 흔들려 보여요)
   (() => {
     const app = $('app'), body = document.body;
     let lockedY = null;
@@ -4269,8 +4248,15 @@
       Object.assign(body.style, { position: '', top: '', left: '', right: '', width: '' });
       window.scrollTo(0, y);
     };
-    const sync = () => (app.classList.contains('drawer') && isNarrow() ? lock() : unlock());
-    new MutationObserver(sync).observe(app, { attributes: true, attributeFilter: ['class'] });
+    const needLock = () => !!document.querySelector('.modal-bg.open') || (app.classList.contains('drawer') && isNarrow());
+    const sync = () => (needLock() ? lock() : unlock());
+    const mo = new MutationObserver(sync);
+    mo.observe(app, { attributes: true, attributeFilter: ['class'] });
+    document.querySelectorAll('.modal-bg').forEach((m) => {
+      mo.observe(m, { attributes: true, attributeFilter: ['class'] });
+      // 창 바깥(어두운 곳)을 밀어도 아무것도 안 움직이게
+      m.addEventListener('touchmove', (e) => { if (e.target === m && e.cancelable) e.preventDefault(); }, { passive: false });
+    });
     window.addEventListener('resize', sync);
     $('scrim').addEventListener('touchmove', (e) => { if (e.cancelable) e.preventDefault(); }, { passive: false });
   })();
@@ -4288,7 +4274,8 @@
       if (IS_ARTIFACT || e.touches.length !== 1 || (drag && drag.touch)) { sw = null; return; }
       const t = e.touches[0];
       const open = isOpen();
-      if (!open && t.clientX <= EDGE) sw = { mode: 'open' };
+      const hs = e.target.closest && e.target.closest('.scroller, .mscroll, .recent, .wheel');
+      if (!open && t.clientX <= EDGE && !(hs && hs.scrollLeft > 0)) sw = { mode: 'open' };
       else if (open && isNarrow() && (side.contains(e.target) || e.target === scrim)) sw = { mode: 'close' };
       else if (open && !isNarrow() && side.contains(e.target)) sw = { mode: 'close' };
       else { sw = null; return; }
