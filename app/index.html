@@ -288,12 +288,17 @@
   .touchpaint{outline:2px dashed var(--accent);outline-offset:-2px}
   .cell.free{background:#FFF6D1}
   .blk{position:absolute;left:4px;right:4px;border-radius:9px;box-shadow:inset 0 0 0 1px var(--lineC);pointer-events:none}
-  .blk.lane{right:auto;left:calc(4px + (100% - 8px) * var(--l) / var(--n));width:calc((100% - 8px) / var(--n) - 2px);border-radius:7px}
-  .lbl.lane{left:calc(6px + (100% - 8px) * var(--l) / var(--n));max-width:calc((100% - 8px) / var(--n) - 6px)}
+  /* 여럿이 겹친 구간: 색을 섞지 않고 흰 바탕 + 진한 테두리 + 겹친 사람 동그라미 */
+  .blk.ovl{background:#F1EDE2;box-shadow:inset 0 0 0 1.5px var(--ink);padding:2px 5px;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:1px}
+  .ovlinis{display:flex;flex-wrap:wrap;row-gap:1px;padding-left:4px}
+  .ovlinis .ini{width:16px;min-width:0;padding:0;margin-left:-4px}
+  .ovlinis .ini.more{background:#fff;border-color:var(--ink);font-size:9px;letter-spacing:-.6px}
+  .ovltxt{max-width:100%;font-size:13px;line-height:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .day.today{background:rgba(43,43,43,.045)}
   .card.loading{position:relative}
   .card.loading::after{content:'불러오는 중…';position:absolute;inset:0;display:grid;place-items:center;background:rgba(255,255,255,.72);border-radius:inherit;font-size:14px;color:#5E5A52;z-index:5}
   .painting .blk.mine{box-shadow:inset 0 0 0 2px var(--lineC)}
+  .painting .blk.ovl.mine{box-shadow:inset 0 0 0 2.5px var(--ink)}
   /* 이름표: 블록 색이 진해도 읽히도록 반투명 흰 바탕 */
   .lbl{position:absolute;left:7px;max-width:calc(100% - 13px);z-index:1;display:flex;align-items:center;gap:4px;padding:1px 7px 1px 2px;
        border-radius:9px;background:rgba(255,255,255,.86);font-size:13px;line-height:17px;font-weight:500;color:var(--ink);pointer-events:none;white-space:nowrap;overflow:hidden}
@@ -440,7 +445,10 @@
     .mday.today .mnum{min-width:21px;height:21px;padding:0 4px}
     .compact .timecol span{right:3px;font-size:11px;letter-spacing:-.4px}
     .compact .blk{left:2px;right:2px;border-radius:6px}
-    .compact .blk.lane{right:auto;left:calc(2px + (100% - 4px) * var(--l) / var(--n));width:calc((100% - 4px) / var(--n) - 1px);border-radius:4px}
+    .compact .blk.ovl{padding:2px 3px}
+    .compact .ovlinis{padding-left:6px}
+    .compact .ovlinis .ini{width:15px;margin-left:-6px}
+    .compact .ovltxt{font-size:11.5px;line-height:14px;letter-spacing:-.3px}
     .compact .lbl{left:3px;max-width:calc(100% - 5px);padding:1px 4px 1px 1px;gap:2px;font-size:11px;line-height:15px;border-radius:7px}
     .compact .ini{min-width:15px;height:15px;font-size:10px}
     .compact .many .ini{width:15px}
@@ -448,7 +456,6 @@
     .compact .lbl:not(.multi){background:transparent;padding:0 1px;left:4px;max-width:calc(100% - 7px);white-space:normal;align-items:flex-start;font-size:11.5px;line-height:14px;font-weight:600;letter-spacing:-.3px}
     .compact .lbl:not(.multi) .ini{display:none}
     .compact .lbl:not(.multi) span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;word-break:keep-all;overflow-wrap:anywhere}
-    .compact .lbl.lane:not(.multi){left:calc(4px + (100% - 8px) * var(--l) / var(--n));max-width:calc((100% - 8px) / var(--n) - 3px);font-size:10.5px}
     .compact .lbl.multi{padding-right:1px}
     .mgrid{min-width:0}
     .mgrid.routine{grid-template-columns:38px repeat(7,minmax(0,1fr))}
@@ -1549,63 +1556,75 @@
     const painting = !!(state.me && state.people[state.me] && !state.readOnly);
     $('table').classList.toggle('painting', painting);
     const hours = hoursList();
+    const compact = $('table').classList.contains('compact');
+    const dim = { rowH: parseFloat(getComputedStyle($('table')).getPropertyValue('--rowH')) || 44, ini: compact ? 15 : 16, side: compact ? 2 : 4, txt: compact ? 14 : 17, lap: compact ? 6 : 4, pad: compact ? 3 : 5 };
 
     cols.forEach((col) => {
       col.el.querySelectorAll('.blk,.lbl').forEach((n) => n.remove());
       const per = visible.map((p) => ({ p, set: cellsOf(p.id, col.wk), labs: labelsOf(p.id, col.wk) }));
-      // 겹치는 일정은 세로로 나눠 나란히 (색을 겹쳐 곱하지 않아서 누가 겹쳤는지 바로 보여요)
-      const runs = [];
-      per.forEach(({ p, labs, set }) => runsOf(set, labs, col.d, hours).forEach((r) => runs.push({ ...r, p })));
-      runs.sort((a, b) => a.start - b.start || b.end - a.end || visible.indexOf(a.p) - visible.indexOf(b.p));
-      let cluster = [], clusterEnd = -1;
-      const flush = () => {
-        const lanes = [];
-        cluster.forEach((r) => {
-          let l = lanes.findIndex((end) => end <= r.start);
-          if (l < 0) { l = lanes.length; lanes.push(0); }
-          lanes[l] = r.end; r.lane = l;
-        });
-        cluster.forEach((r) => { r.n = lanes.length; });
-        cluster = [];
-      };
-      runs.forEach((r) => {
-        if (cluster.length && r.start >= clusterEnd) flush();
-        cluster.push(r); clusterEnd = Math.max(clusterEnd, r.end);
+      // 시간마다 누가 바쁜지 보고, 같은 사람들이 이어지는 구간을 막대 하나로 묶어요.
+      // 혼자면 그 사람 색, 여럿이 겹치면 흰 바탕 + 진한 테두리에 겹친 사람 동그라미 (색을 섞지 않아요)
+      const segs = [];
+      let cur = null;
+      hours.forEach((h, i) => {
+        const key = `${col.d}-${h}`;
+        const who = per.filter(({ set }) => set.has(key));
+        const sig = who.map(({ p, labs }) => p.id + '\u0001' + (labs[key] || '')).join('\u0002');
+        if (cur && sig === cur.sig) { cur.end = i + 1; return; }
+        cur = who.length ? { sig, start: i, end: i + 1, people: who.map((w) => w.p), labels: who.map((w) => w.labs[key] || '') } : null;
+        if (cur) segs.push(cur);
       });
-      flush();
-      const tags = new Map();   // 같은 시각·같은 이름은 이름표 하나에 색 점 여러 개
-      runs.forEach((r) => {
-        const p = r.p, c = colorOf(p.color);
+      const colW = col.el.clientWidth || 46;
+      segs.forEach((sg) => {
         const blk = document.createElement('div');
-        blk.className = 'blk' + (p.id === state.me ? ' mine' : '') + (r.n > 1 ? ' lane' : '');
-        blk.style.background = c.fill;
-        blk.style.setProperty('--lineC', c.line);
-        blk.style.setProperty('--l', r.lane);
-        blk.style.setProperty('--n', r.n);
-        blk.style.top = `calc(var(--rowH) * ${r.start} + 3px)`;
-        blk.style.height = `calc(var(--rowH) * ${r.end - r.start} - 6px)`;
-        col.el.appendChild(blk);
-        if (r.label) {
-          const k = r.start + '|' + r.label;
-          if (!tags.has(k)) tags.set(k, { start: r.start, end: r.end, label: r.label, people: [], lane: r.lane, n: r.n });
-          tags.get(k).people.push(p);
+        blk.style.top = `calc(var(--rowH) * ${sg.start} + 3px)`;
+        blk.style.height = `calc(var(--rowH) * ${sg.end - sg.start} - 6px)`;
+        if (sg.people.length === 1) {
+          const p = sg.people[0], c = colorOf(p.color);
+          blk.className = 'blk' + (p.id === state.me ? ' mine' : '');
+          blk.style.background = c.fill;
+          blk.style.setProperty('--lineC', c.line);
+          col.el.appendChild(blk);
+          if (sg.labels[0]) {
+            const lb = document.createElement('div');
+            lb.className = 'lbl';
+            lb.style.setProperty('--rows', sg.end - sg.start);
+            lb.style.top = `calc(var(--rowH) * ${sg.start} + 5px)`;
+            appendInitials(lb, [p]);
+            const tx = document.createElement('span');
+            tx.textContent = sg.labels[0];
+            lb.appendChild(tx);
+            col.el.appendChild(lb);
+          }
+          return;
         }
-      });
-      const stack = {};   // 같은 칸에서 시작하는 이름표는 아래로 쌓기
-      tags.forEach((t) => {
-        const y = stack[t.start] || 0;
-        stack[t.start] = y + 20;
-        const lb = document.createElement('div');
-        lb.className = (t.people.length > 1 ? 'lbl multi' : 'lbl') + (t.people.length === 1 && t.n > 1 ? ' lane' : '');
-        lb.style.setProperty('--l', t.lane);
-        lb.style.setProperty('--n', t.n);
-        lb.style.setProperty('--rows', t.end - t.start);
-        lb.style.top = `calc(var(--rowH) * ${t.start} + ${5 + y}px)`;
-        appendInitials(lb, t.people);
-        const tx = document.createElement('span');
-        tx.textContent = t.label;
-        lb.appendChild(tx);
-        col.el.appendChild(lb);
+        // 겹친 구간
+        blk.className = 'blk ovl' + (sg.people.some((p) => p.id === state.me) ? ' mine' : '');
+        const ini = dim.ini, step = ini - dim.lap;
+        const innerW = colW - dim.side * 2 - dim.pad * 2, innerH = dim.rowH * (sg.end - sg.start) - 6 - 4;
+        const perRow = Math.max(1, Math.floor((innerW - ini) / step) + 1);
+        const rowsFit = Math.max(1, Math.floor((innerH + 1) / (ini + 1)));
+        const cap = perRow * rowsFit;
+        const shown = sg.people.length > cap ? sg.people.slice(0, Math.max(1, cap - 1)) : sg.people;
+        const box = document.createElement('div');
+        box.className = 'ovlinis';
+        shown.forEach((p) => box.appendChild(initialEl(p, true)));
+        if (shown.length < sg.people.length) {
+          const more = document.createElement('i');
+          more.className = 'ini more';
+          more.textContent = `+${sg.people.length - shown.length}`;
+          box.appendChild(more);
+        }
+        blk.appendChild(box);
+        const common = sg.labels[0] && sg.labels.every((l) => l === sg.labels[0]) ? sg.labels[0] : '';
+        const usedH = Math.ceil((shown.length + (shown.length < sg.people.length ? 1 : 0)) / perRow) * (ini + 1);
+        if (common && usedH + dim.txt <= innerH) {
+          const tx = document.createElement('span');
+          tx.className = 'ovltxt';
+          tx.textContent = common;
+          blk.appendChild(tx);
+        }
+        col.el.appendChild(blk);
       });
       hours.forEach((h, i) => {
         const key = `${col.d}-${h}`;
